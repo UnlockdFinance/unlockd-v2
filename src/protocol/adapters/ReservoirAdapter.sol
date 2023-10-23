@@ -48,8 +48,6 @@ contract ReservoirAdapter is IMarketAdapter {
 
   function sell(SellParams memory params) public payable onlyProtocol {
     IProtocolOwner(params.protocolOwner).execTransaction(
-      address(0),
-      0,
       params.to,
       params.value,
       params.data,

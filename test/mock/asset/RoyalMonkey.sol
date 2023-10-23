@@ -60,7 +60,7 @@ contract RoyalMonkey is ERC721Enumerable, ERC721URIStorage, Ownable {
 
   function supportsInterface(
     bytes4 interfaceId
-  ) public view override(ERC721, ERC721Enumerable) returns (bool) {
+  ) public view override(ERC721URIStorage, ERC721Enumerable) returns (bool) {
     return super.supportsInterface(interfaceId);
   }
 }
