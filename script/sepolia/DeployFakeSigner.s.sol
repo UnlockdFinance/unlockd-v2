@@ -8,7 +8,7 @@ import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedContro
 
 import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 import '../helpers/DeployerHelper.sol';
-import '../../test/mock/signature/SignatureMock.sol';
+import '../../test/test-utils/mock/signature/SignatureMock.sol';
 
 contract DeployFakeSignerScript is DeployerHelper {
   function run() external broadcast {

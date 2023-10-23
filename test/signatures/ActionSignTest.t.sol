@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 
-import '../setups/Setup.sol';
+import '../test-utils/setups/Setup.sol';
 
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';

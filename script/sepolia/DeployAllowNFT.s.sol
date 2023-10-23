@@ -7,11 +7,8 @@ import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
 
 import '../helpers/DeployerHelper.sol';
-import '../../test/mock/asset/RoyalMonkey.sol';
 
 contract DeployAllowNFTScript is DeployerHelper {
-  RoyalMonkey public nft;
-
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
 

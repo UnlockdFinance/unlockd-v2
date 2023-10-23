@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import 'forge-std/Script.sol';
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
 import '../helpers/DeployerHelper.sol';
-import '../../test/mock/asset/RoyalMonkey.sol';
+import '../../test/test-utils/mock/asset/RoyalMonkey.sol';
 
 contract DeployFakeNftsScript is DeployerHelper {
   RoyalMonkey public nft;

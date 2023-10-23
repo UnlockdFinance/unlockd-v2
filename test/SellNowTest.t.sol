@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import './setups/Setup.sol';
+import './test-utils/setups/Setup.sol';
 
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
@@ -13,8 +13,8 @@ import {SellNow, SellNowSign} from '../src/protocol/modules/SellNow.sol';
 import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
 import {DataTypes} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
-import './mock/asset/MintableERC20.sol';
-import {NFTMarket} from './mock/market/NFTMarket.sol';
+import './test-utils/mock/asset/MintableERC20.sol';
+import {NFTMarket} from './test-utils/mock/market/NFTMarket.sol';
 import {console} from 'forge-std/console.sol';
 
 contract SellNowTest is Setup {

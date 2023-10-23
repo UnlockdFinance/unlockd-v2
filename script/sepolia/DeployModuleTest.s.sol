@@ -16,7 +16,7 @@ import {DeployUToken} from '../../src/deployer/DeployUToken.sol';
 import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
 import {DeployUTokenConfig} from '../../src/deployer/DeployUTokenConfig.sol';
 
-import {Test} from '../../test/mock/modules/Test.sol';
+import {Test} from '../../test/test-utils/mock/modules/Test.sol';
 import {Action} from '../../src/protocol/modules/Action.sol';
 import {Auction} from '../../src/protocol/modules/Auction.sol';
 import {BuyNow} from '../../src//protocol/modules/BuyNow.sol';

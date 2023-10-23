@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.19;
 
-import {Errors} from '../../../src/libraries/helpers/Errors.sol';
-import {DataTypes} from '../../../src/types/DataTypes.sol';
-import {BaseSignature} from '../../../src/libraries/base/BaseSignature.sol';
+import {Errors} from '../../../../src/libraries/helpers/Errors.sol';
+import {DataTypes} from '../../../../src/types/DataTypes.sol';
+import {BaseSignature} from '../../../../src/libraries/base/BaseSignature.sol';
 
 contract SignatureMock is BaseSignature {
   string internal constant NAME = 'SignAction';

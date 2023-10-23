@@ -6,9 +6,9 @@ import {ERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {ERC721} from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
-import {IMarketAdapter} from '../../../src/interfaces/adapter/IMarketAdapter.sol';
-import {IACLManager} from '../../../src/interfaces/IACLManager.sol';
-import {DataTypes} from '../../../src/types/DataTypes.sol';
+import {IMarketAdapter} from '../../../../src/interfaces/adapter/IMarketAdapter.sol';
+import {IACLManager} from '../../../../src/interfaces/IACLManager.sol';
+import {DataTypes} from '../../../../src/types/DataTypes.sol';
 
 import {console} from 'forge-std/console.sol';
 

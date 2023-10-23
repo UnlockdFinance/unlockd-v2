@@ -17,10 +17,10 @@ import {DelegationWalletFactory} from '@unlockd-wallet/src/DelegationWalletFacto
 import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
 
 import '../config/Config.sol';
-import '../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
+import '../../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 import './../mock/asset/MintableERC20.sol';
 import './../mock/adapters/MockAdapter.sol';
-import '../../src/libraries/base/InterestRate.sol';
+import '../../../src/libraries/base/InterestRate.sol';
 
 import '../helpers/HelperNFT.sol'; // solhint-disable-line
 import '../helpers/HelperConvert.sol';
@@ -32,30 +32,30 @@ import '../base/NFTBase.sol';
 
 import {Source} from '../mock/chainlink/Source.sol';
 
-import {DeployPeriphery} from '../../src/deployer/DeployPeriphery.sol';
-import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
-import {DeployUToken} from '../../src/deployer/DeployUToken.sol';
-import {DeployUTokenConfig} from '../../src/deployer/DeployUTokenConfig.sol';
+import {DeployPeriphery} from '../../../src/deployer/DeployPeriphery.sol';
+import {DeployProtocol} from '../../../src/deployer/DeployProtocol.sol';
+import {DeployUToken} from '../../../src/deployer/DeployUToken.sol';
+import {DeployUTokenConfig} from '../../../src/deployer/DeployUTokenConfig.sol';
 
-import {DebtToken, IDebtToken} from '../../src/protocol/DebtToken.sol';
-import {UToken, IUToken} from '../../src/protocol/UToken.sol';
+import {DebtToken, IDebtToken} from '../../../src/protocol/DebtToken.sol';
+import {UToken, IUToken} from '../../../src/protocol/UToken.sol';
 
-import {Constants} from '../../src/libraries/helpers/Constants.sol';
-import {Installer} from '../../src/protocol/modules/Installer.sol';
+import {Constants} from '../../../src/libraries/helpers/Constants.sol';
+import {Installer} from '../../../src/protocol/modules/Installer.sol';
 
-import {Manager} from '../../src/protocol/modules/Manager.sol';
-import {Action} from '../../src/protocol/modules/Action.sol';
-import {Auction} from '../../src/protocol/modules/Auction.sol';
-import {BuyNow} from '../../src/protocol/modules/BuyNow.sol';
-import {SellNow} from '../../src/protocol/modules/SellNow.sol';
-import {Market} from '../../src/protocol/modules/Market.sol';
+import {Manager} from '../../../src/protocol/modules/Manager.sol';
+import {Action} from '../../../src/protocol/modules/Action.sol';
+import {Auction} from '../../../src/protocol/modules/Auction.sol';
+import {BuyNow} from '../../../src/protocol/modules/BuyNow.sol';
+import {SellNow} from '../../../src/protocol/modules/SellNow.sol';
+import {Market} from '../../../src/protocol/modules/Market.sol';
 
-import {ReserveOracle, IReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
+import {ReserveOracle, IReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 
-import {Unlockd} from '../../src/protocol/Unlockd.sol';
-import {DataTypes} from '../../src/types/DataTypes.sol';
+import {Unlockd} from '../../../src/protocol/Unlockd.sol';
+import {DataTypes} from '../../../src/types/DataTypes.sol';
 
-import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
+import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
 
 contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
   using stdStorage for StdStorage;

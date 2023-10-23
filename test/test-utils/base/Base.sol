@@ -4,11 +4,11 @@ pragma solidity ^0.8.19;
 import '../mock/asset/MintableERC20.sol';
 import '../mock/yearn/MockYVault.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
-import {ReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
-import {Unlockd} from '../../src/protocol/Unlockd.sol';
-import {UToken} from '../../src/protocol/UToken.sol';
-import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
-import {DataTypes} from '../../src/types/DataTypes.sol';
+import {ReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
+import {Unlockd} from '../../../src/protocol/Unlockd.sol';
+import {UToken} from '../../../src/protocol/UToken.sol';
+import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
+import {DataTypes} from '../../../src/types/DataTypes.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 
 contract Base is Test {

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.19;
 
-import {Errors} from '../../../src/libraries/helpers/Errors.sol';
-import {BaseSignature} from '../../../src/libraries/base/BaseSignature.sol';
-import {CoreStorage} from '../../../src/libraries/storage/CoreStorage.sol';
-import {DataTypes} from '../../../src/types/DataTypes.sol';
-import {LoanLogic} from '../../../src/libraries/logic/LoanLogic.sol';
+import {Errors} from '../../../../src/libraries/helpers/Errors.sol';
+import {BaseSignature} from '../../../../src/libraries/base/BaseSignature.sol';
+import {CoreStorage} from '../../../../src/libraries/storage/CoreStorage.sol';
+import {DataTypes} from '../../../../src/types/DataTypes.sol';
+import {LoanLogic} from '../../../../src/libraries/logic/LoanLogic.sol';
 
 contract TestSign is BaseSignature {
   string internal constant NAME = 'SignTest';

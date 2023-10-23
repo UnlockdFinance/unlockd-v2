@@ -14,8 +14,8 @@ import {ReserveOracle, IReserveOracle} from '../../src/libraries/oracles/Reserve
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 
 import '../helpers/DeployerHelper.sol';
-import '../../test/mock/asset/FTokenERC20.sol';
-import {MockAggregatorV3} from '../../test/mock/aggregator/AggregatorV3.sol';
+import '../../test/test-utils/mock/asset/FTokenERC20.sol';
+import {MockAggregatorV3} from '../../test/test-utils/mock/aggregator/AggregatorV3.sol';
 
 contract DeployFakeUTokenScript is DeployerHelper {
   function run() external broadcast {

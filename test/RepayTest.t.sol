@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import './setups/Setup.sol';
+import './test-utils/setups/Setup.sol';
 
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';

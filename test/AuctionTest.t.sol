@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import './setups/Setup.sol';
+import './test-utils/setups/Setup.sol';
 
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
@@ -14,7 +14,7 @@ import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
 import {Auction, AuctionSign, IAuctionModule} from '../src/protocol/modules/Auction.sol';
 import {DataTypes} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
-import './mock/asset/MintableERC20.sol';
+import './test-utils/mock/asset/MintableERC20.sol';
 
 contract AuctionTest is Setup {
   uint256 internal ACTOR = 1;

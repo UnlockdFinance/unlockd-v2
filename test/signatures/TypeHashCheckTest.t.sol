@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
-import '../setups/Setup.sol';
+import '../test-utils/setups/Setup.sol';
 import {ActionSign} from '../../src/libraries/signatures/ActionSign.sol';
 import {AuctionSign} from '../../src/libraries/signatures/AuctionSign.sol';
 import {BuyNowSign} from '../../src/libraries/signatures/BuyNowSign.sol';

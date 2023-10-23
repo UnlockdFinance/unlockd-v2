@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
-import '../setups/Setup.sol';
+import '../test-utils/setups/Setup.sol';
 import {SellNow, SellNowSign} from '../../src/protocol/modules/SellNow.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {BaseCoreModule} from '../../src/libraries/base/BaseCoreModule.sol';
