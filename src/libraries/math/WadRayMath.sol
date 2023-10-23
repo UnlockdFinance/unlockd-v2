@@ -45,38 +45,38 @@ library WadRayMath {
   }
 
   /**
-   * @dev Multiplies two wad, rounding half up to the nearest wad
-   * @dev assembly optimized for improved gas savings, see https://twitter.com/transmissions11/status/1451131036377571328
-   * @param a Wad
-   * @param b Wad
-   * @return c = a*b, in wad
+   * @dev Solady FixedPointMathLib.sol mulWad (Equivalent to `(x * y) / WAD` rounded up.)
+   * @param x Wad
+   * @param y Wad
+   * @return z = x*y, in wad
    */
-  function wadMul(uint256 a, uint256 b) internal pure returns (uint256 c) {
-    // to avoid overflow, a <= (type(uint256).max - HALF_WAD) / b
+  function wadMul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+    /// @solidity memory-safe-assembly
     assembly {
-      if iszero(or(iszero(b), iszero(gt(a, div(sub(not(0), HALF_WAD), b))))) {
-        revert(0, 0)
+      // Equivalent to `require(y == 0 || x <= type(uint256).max / y)`.
+      if mul(y, gt(x, div(not(0), y))) {
+        mstore(0x00, 0xbac65e5b) // `MulWadFailed()`.
+        revert(0x1c, 0x04)
       }
-
-      c := div(add(mul(a, b), HALF_WAD), WAD)
+      z := div(mul(x, y), WAD)
     }
   }
 
   /**
-   * @dev Divides two wad, rounding half up to the nearest wad
-   * @dev assembly optimized for improved gas savings, see https://twitter.com/transmissions11/status/1451131036377571328
-   * @param a Wad
-   * @param b Wad
-   * @return c = a/b, in wad
+   * @dev Solady FixedPointMathLib.sol divWad (Equivalent to `(x * WAD) / y` rounded down.)
+   * @param x Wad
+   * @param y Wad
+   * @return z = z/y, in wad
    */
-  function wadDiv(uint256 a, uint256 b) internal pure returns (uint256 c) {
-    // to avoid overflow, a <= (type(uint256).max - halfB) / WAD
+  function wadDiv(uint256 x, uint256 y) internal pure returns (uint256 z) {
+    /// @solidity memory-safe-assembly
     assembly {
-      if or(iszero(b), iszero(iszero(gt(a, div(sub(not(0), div(b, 2)), WAD))))) {
-        revert(0, 0)
+      // Equivalent to `require(y != 0 && (WAD == 0 || x <= type(uint256).max / WAD))`.
+      if iszero(mul(y, iszero(mul(WAD, gt(x, div(not(0), WAD)))))) {
+        mstore(0x00, 0x7c5f487d) // `DivWadFailed()`.
+        revert(0x1c, 0x04)
       }
-
-      c := div(add(mul(a, WAD), div(b, 2)), b)
+      z := div(mul(x, WAD), y)
     }
   }
 
