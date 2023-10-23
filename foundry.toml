@@ -1,0 +1,20 @@
+[profile.default]
+solc = '0.8.19'
+src = 'src'
+test = 'test'
+script = 'script'
+out = 'out'
+evm_version = 'paris'
+libs = ['lib']
+remappings = [
+] 
+fs_permissions = [{ access = "read-write", path = "./"}]
+
+[rpc_endpoints]
+mainnet = "${RPC_MAINNET}"
+sepolia = "${RPC_SEPOLIA}"
+[etherscan]
+mainnet={key="${ETHERSCAN_API_KEY_MAINNET}",chainId=1} 
+sepolia={key="${ETHERSCAN_API_KEY_SEPOLIA}",chainId=11155111}
+
+# See more config options https://github.com/gakonst/foundry/tree/master/config

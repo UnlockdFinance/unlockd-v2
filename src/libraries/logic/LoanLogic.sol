@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
+
+import {DataTypes} from '../../types/DataTypes.sol';
+import {GenericLogic} from './GenericLogic.sol';
+
+library LoanLogic {
+  event LoanCreated(address indexed user, bytes32 indexed loanId, uint256 totalAssets);
+
+  bytes32 internal constant TYPEHASH =
+    0x70b588bc2f80ec61e8c608fd04d81549f1e74ef1158984b6a78e9f827ff7ce1a;
+
+  struct ParamsCreateLoan {
+    address msgSender;
+    address uToken;
+    address underlyingAsset;
+    bytes32 loanId;
+    uint88 totalAssets;
+  }
+
+  /**
+   * @dev generate unique loanId, because the nonce is x address and is incremental it should be unique.
+   * @param msgSender address of the user
+   * @param nonce incremental number
+   * @param deadline timestamp
+   * */
+  function generateId(
+    address msgSender,
+    uint256 nonce,
+    uint256 deadline
+  ) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(msgSender, abi.encodePacked(nonce, deadline)));
+  }
+
+  /**
+   * @dev creates a new loan type
+   */
+  function createLoan(DataTypes.Loan storage loan, ParamsCreateLoan memory params) internal {
+    unchecked {
+      loan.loanId = params.loanId;
+      loan.uToken = params.uToken;
+      loan.owner = params.msgSender;
+      loan.underlyingAsset = params.underlyingAsset;
+      loan.totalAssets = params.totalAssets;
+
+      loan.state = DataTypes.LoanState.ACTIVE;
+    }
+    emit LoanCreated(params.msgSender, loan.loanId, params.totalAssets);
+  }
+
+  /**
+   * @dev Freeze loan
+   */
+  function freeze(DataTypes.Loan storage loan) internal {
+    loan.state = DataTypes.LoanState.FREEZE;
+  }
+
+  /**
+   * @dev Activate loan
+   */
+  function activate(DataTypes.Loan storage loan) internal {
+    loan.state = DataTypes.LoanState.ACTIVE;
+  }
+
+  /**
+   * @dev return the loan struct hashed
+   */
+  function getLoanStructHash(
+    uint256 nonce,
+    DataTypes.SignLoanConfig calldata signLoanConfig
+  ) internal pure returns (bytes32) {
+    return
+      keccak256(
+        abi.encode(
+          TYPEHASH,
+          signLoanConfig.loanId,
+          signLoanConfig.aggLoanPrice,
+          signLoanConfig.aggLtv,
+          signLoanConfig.aggLiquidationThreshold,
+          signLoanConfig.totalAssets,
+          nonce,
+          signLoanConfig.deadline
+        )
+      );
+  }
+}
