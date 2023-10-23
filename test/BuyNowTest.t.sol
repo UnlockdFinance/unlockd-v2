@@ -87,42 +87,42 @@ contract BuyNowTest is Setup {
     return (data, sig);
   }
 
-  // function test_buynow_buy() public {
-  //   dataBuyWETHCurrency = ReservoirData({
-  //     blockNumber: block.number,
-  //     nftAsset: address(_nft),
-  //     nftTokenId: _tokenId,
-  //     currency: getAssetAddress('WETH'),
-  //     from: getWalletAddress(ACTOR),
-  //     to: address(_market),
-  //     approval: address(_market),
-  //     approvalTo: address(_market),
-  //     approvalData: '0x',
-  //     data: abi.encodeWithSelector(
-  //       NFTMarket.buy.selector,
-  //       getWalletAddress(ACTOR),
-  //       address(_nft),
-  //       _tokenId,
-  //       getAssetAddress('WETH'),
-  //       1 ether
-  //     ),
-  //     price: 1 ether,
-  //     value: 0
-  //   });
+  function test_buynow_buy() public {
+    dataBuyWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: _tokenId,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.buy.selector,
+        getWalletAddress(ACTOR),
+        address(_nft),
+        _tokenId,
+        getAssetAddress('WETH'),
+        1 ether
+      ),
+      price: 1 ether,
+      value: 0
+    });
 
-  //   vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
-  //   vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
+    vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
+    vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
 
-  //   (DataTypes.SignBuyNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
-  //     _actor
-  //   );
-  //   hoax(_actor);
-  //   IERC20(getAssetAddress('WETH')).approve(address(_unlock), 1 ether);
-  //   hoax(_actor);
-  //   BuyNow(_buyNow).buy(_reservoirAdapter, address(_uTokens['WETH']), 1 ether, data, sig);
-  //   // assertEq(IERC20(getAssetAddress('WETH')).balanceOf(_actor), 1 ether);
-  //   assertEq(IERC721(address(_nft)).ownerOf(_tokenId), getWalletAddress(ACTOR));
-  // }
+    (DataTypes.SignBuyNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _actor
+    );
+    hoax(_actor);
+    IERC20(getAssetAddress('WETH')).approve(address(_unlock), 1 ether);
+    hoax(_actor);
+    BuyNow(_buyNow).buy(_reservoirAdapter, address(_uTokens['WETH']), 1 ether, data, sig);
+    // assertEq(IERC20(getAssetAddress('WETH')).balanceOf(_actor), 1 ether);
+    assertEq(IERC721(address(_nft)).ownerOf(_tokenId), getWalletAddress(ACTOR));
+  }
 
   function test_buynow_buy_with_loan() public {
     dataBuyWETHCurrency = ReservoirData({
