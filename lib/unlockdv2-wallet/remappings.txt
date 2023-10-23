@@ -1,4 +1,0 @@
-ds-test/=lib/forge-std/lib/ds-test/src/
-@openzeppelin/=lib/openzeppelin-contracts/
-forge-std/=lib/forge-std/src/
-@gnosis.pm/safe-contracts/=lib/safe-contracts/
