@@ -1,78 +1,66 @@
-<!-- prettier-ignore-start -->
-```        
-██╗   ██╗███╗   ██╗██╗      ██████╗  ██████╗██╗  ██╗██████╗     ██╗   ██╗██████╗ 
-██║   ██║████╗  ██║██║     ██╔═══██╗██╔════╝██║ ██╔╝██╔══██╗    ██║   ██║╚════██╗
-██║   ██║██╔██╗ ██║██║     ██║   ██║██║     █████╔╝ ██║  ██║    ██║   ██║ █████╔╝
-██║   ██║██║╚██╗██║██║     ██║   ██║██║     ██╔═██╗ ██║  ██║    ╚██╗ ██╔╝██╔═══╝ 
-╚██████╔╝██║ ╚████║███████╗╚██████╔╝╚██████╗██║  ██╗██████╔╝     ╚████╔╝ ███████╗
- ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚═════╝       ╚═══╝  ╚══════╝
-```                                                                                         
-<!-- prettier-ignore-end -->
+## Foundry
 
-![Arquitecture](/_images/arquitecutre.png "Arquitecture")
+**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
-## This project uses Foundry
+Foundry consists of:
 
-Official page : https://book.getfoundry.sh/
+-   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
+-   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
+-   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
+-   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
 
-## Installation
+## Documentation
 
-Install the latest release by using foundryup
+https://book.getfoundry.sh/
 
-This is the easiest option for Linux and macOS users.
+## Usage
 
-Open your terminal and type in the following command:
+### Build
 
-```
-curl -L https://foundry.paradigm.xyz | bash
+```shell
+$ forge build
 ```
 
-This will download foundryup. Then install Foundry by running:
+### Test
 
-```
-foundryup
-```
-
-## Build
-
-```
-forge build
+```shell
+$ forge test
 ```
 
-## Run tests
+### Format
 
-```
-forge test
-```
-
-Useful commands:
-
-#### Show logs on tests
-
-```
-forge test -vv
+```shell
+$ forge fmt
 ```
 
-#### Show logs for all the interactions
+### Gas Snapshots
 
-```
-forge test -vvvv
-```
-
-#### Run test single file
-
-```
-forge test --match-path test/RepayTest.t.sol
+```shell
+$ forge snapshot
 ```
 
-# deploy
+### Anvil
 
-To verify add ' --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA}' on the make script
+```shell
+$ anvil
+```
 
-1 - make deploy-sep-aclmanager
+### Deploy
 
-2 - make deploy-sep-wallet
+```shell
+$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```
 
-3 - make deploy-sep-protocol
+### Cast
 
-4 - (optional) make deploy-sep-nft
+```shell
+$ cast <subcommand>
+```
+
+### Help
+
+```shell
+$ forge --help
+$ anvil --help
+$ cast --help
+```
