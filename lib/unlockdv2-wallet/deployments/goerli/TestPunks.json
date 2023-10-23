@@ -1,0 +1,630 @@
+{
+  "address": "0x93fD9C0704723F366DA247B3f4f4f38a575015EF",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "payable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "Assign",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "fromAddress",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "toAddress",
+          "type": "address"
+        }
+      ],
+      "name": "PunkBought",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "PunkNoLongerForSale",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "minValue",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "toAddress",
+          "type": "address"
+        }
+      ],
+      "name": "PunkOffered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "PunkTransfer",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minSalePriceInWei",
+          "type": "uint256"
+        }
+      ],
+      "name": "offerPunkForSale",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minSalePriceInWei",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "toAddress",
+          "type": "address"
+        }
+      ],
+      "name": "offerPunkForSaleToAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "pendingWithdrawals",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "punkIndexToAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "punkNoLongerForSale",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "punksOfferedForSale",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "isForSale",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "punkIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "seller",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minValue",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "onlySellTo",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct ICryptoPunks.Offer",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "punksRemainingToAssign",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "standard",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "punkIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferPunk",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xc540335230ad3914391990c3c9eca9db652afcbe5d494505d4b9f06bade49f78",
+  "receipt": {
+    "to": null,
+    "from": "0x9be99c3959AC66a5d7257a99C86653bD3f228b49",
+    "contractAddress": "0x93fD9C0704723F366DA247B3f4f4f38a575015EF",
+    "transactionIndex": 71,
+    "gasUsed": "830509",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x5f422ff8177ef86f98ab79c109f4babd698ca2c5cd17cb22a390034dc00fd240",
+    "transactionHash": "0xc540335230ad3914391990c3c9eca9db652afcbe5d494505d4b9f06bade49f78",
+    "logs": [],
+    "blockNumber": 8374965,
+    "cumulativeGasUsed": "12213357",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 2,
+  "solcInputHash": "31c57df646d188b9526cd693d0ef43b2",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"Assign\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"fromAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"toAddress\",\"type\":\"address\"}],\"name\":\"PunkBought\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"PunkNoLongerForSale\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"toAddress\",\"type\":\"address\"}],\"name\":\"PunkOffered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"PunkTransfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"mint\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minSalePriceInWei\",\"type\":\"uint256\"}],\"name\":\"offerPunkForSale\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minSalePriceInWei\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"toAddress\",\"type\":\"address\"}],\"name\":\"offerPunkForSaleToAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"pendingWithdrawals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"punkIndexToAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"punkNoLongerForSale\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"punksOfferedForSale\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"isForSale\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"seller\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minValue\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"onlySellTo\",\"type\":\"address\"}],\"internalType\":\"struct ICryptoPunks.Offer\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"punksRemainingToAssign\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"standard\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"punkIndex\",\"type\":\"uint256\"}],\"name\":\"transferPunk\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/test/TestPunks.sol\":\"TestPunks\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"src/interfaces/ICryptoPunks.sol\":{\"content\":\"// SPDX-License-Identifier: UNLICENSED\\npragma solidity 0.8.17;\\n\\ninterface ICryptoPunks {\\n    struct Offer {\\n        bool isForSale;\\n        uint256 punkIndex;\\n        address seller;\\n        uint256 minValue; // in ether\\n        address onlySellTo; // specify to sell only to a specific person\\n    }\\n\\n    // A record of punks that are offered for sale at a specific minimum value, and perhaps to a specific person\\n    function punksOfferedForSale(uint256 punkIndex) external view returns (Offer memory);\\n\\n    function balanceOf(address owner) external view returns (uint256);\\n\\n    function punkIndexToAddress(uint256 punkIndex) external view returns (address);\\n\\n    function transferPunk(address to, uint256 punkIndex) external;\\n\\n    function offerPunkForSale(uint punkIndex, uint minSalePriceInWei) external;\\n\\n    function offerPunkForSaleToAddress(uint256 punkIndex, uint256 minSalePriceInWei, address toAddress) external;\\n}\\n\",\"keccak256\":\"0xa3c2eb96a76a7ac5465bb18b75859e27bc9ee9423a6e52d9a522c2815fb810db\",\"license\":\"UNLICENSED\"},\"src/test/TestPunks.sol\":{\"content\":\"// SPDX-License-Identifier: UNLICENSED\\npragma solidity 0.8.17;\\n\\nimport \\\"../interfaces/ICryptoPunks.sol\\\";\\n\\ncontract TestPunks is ICryptoPunks {\\n    string public standard = \\\"CryptoPunks\\\";\\n    string public name;\\n    string public symbol;\\n    uint8 public decimals;\\n    uint256 public totalSupply;\\n\\n    uint256 public punksRemainingToAssign = 0;\\n\\n    // A record of punks that are offered for sale at a specific minimum value, and perhaps to a specific person\\n    mapping(uint256 => Offer) internal _punksOfferedForSale;\\n\\n    //mapping (address => uint) public addressToPunkIndex;\\n    mapping(uint256 => address) public override punkIndexToAddress;\\n\\n    /* This creates an array with all balances */\\n    mapping(address => uint256) public override balanceOf;\\n\\n    mapping(address => uint256) public pendingWithdrawals;\\n\\n    event Assign(address indexed to, uint256 punkIndex);\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n    event PunkTransfer(address indexed from, address indexed to, uint256 punkIndex);\\n    event PunkOffered(uint256 indexed punkIndex, uint256 minValue, address indexed toAddress);\\n    event PunkBought(uint256 indexed punkIndex, uint256 value, address indexed fromAddress, address indexed toAddress);\\n    event PunkNoLongerForSale(uint256 indexed punkIndex);\\n\\n    /* Initializes contract with initial supply tokens to the creator of the contract */\\n    constructor() payable {\\n        totalSupply = 10000; // Update total supply\\n        punksRemainingToAssign = totalSupply;\\n        name = \\\"CRYPTOPUNKS\\\"; // Set the name for display purposes\\n        symbol = \\\"C\\\"; // Set the symbol for display purposes\\n        decimals = 0; // Amount of decimals for display purposes\\n    }\\n\\n    function punksOfferedForSale(uint256 punkIndex) external view override returns (Offer memory) {\\n        return _punksOfferedForSale[punkIndex];\\n    }\\n\\n    function mint(address to, uint256 punkIndex) public {\\n        require(punkIndex < 10000, \\\"index >= 10000\\\");\\n        if (punkIndexToAddress[punkIndex] != to) {\\n            if (punkIndexToAddress[punkIndex] != address(0)) {\\n                balanceOf[punkIndexToAddress[punkIndex]]--;\\n            } else {\\n                punksRemainingToAssign--;\\n            }\\n            punkIndexToAddress[punkIndex] = to;\\n            balanceOf[to]++;\\n            emit Assign(to, punkIndex);\\n        }\\n    }\\n\\n    // Transfer ownership of a punk to another user without requiring payment\\n    function transferPunk(address to, uint256 punkIndex) external {\\n        require(punkIndexToAddress[punkIndex] == msg.sender, \\\"sender not owner\\\");\\n        require(punkIndex < 10000, \\\"index >= 10000\\\");\\n        punkIndexToAddress[punkIndex] = to;\\n        balanceOf[msg.sender]--;\\n        balanceOf[to]++;\\n        emit Transfer(msg.sender, to, 1);\\n        emit PunkTransfer(msg.sender, to, punkIndex);\\n    }\\n\\n    function offerPunkForSale(uint punkIndex, uint minSalePriceInWei) external {\\n        require(punkIndexToAddress[punkIndex] == msg.sender, \\\"sender not owner\\\");\\n        require(punkIndex < 10000, \\\"index >= 10000\\\");\\n        _punksOfferedForSale[punkIndex] = Offer(true, punkIndex, msg.sender, minSalePriceInWei, address(0));\\n        emit PunkOffered(punkIndex, minSalePriceInWei, address(0));\\n    }\\n\\n    function offerPunkForSaleToAddress(uint256 punkIndex, uint256 minSalePriceInWei, address toAddress) external {\\n        require(punkIndexToAddress[punkIndex] == msg.sender, \\\"sender not owner\\\");\\n        require(punkIndex < 10000, \\\"index >= 10000\\\");\\n        _punksOfferedForSale[punkIndex] = Offer(true, punkIndex, msg.sender, minSalePriceInWei, toAddress);\\n        emit PunkOffered(punkIndex, minSalePriceInWei, toAddress);\\n    }\\n\\n    function punkNoLongerForSale(uint256 punkIndex) external {\\n        require(punkIndexToAddress[punkIndex] == msg.sender, \\\"sender not owner\\\");\\n        require(punkIndex < 10000, \\\"index >= 10000\\\");\\n        _punksOfferedForSale[punkIndex] = Offer(false, punkIndex, msg.sender, 0, address(0));\\n        emit PunkNoLongerForSale(punkIndex);\\n    }\\n}\\n\",\"keccak256\":\"0xdfb98059851c827ced745578ef439f70d0c701670f763ca5c556d428763e7ee8\",\"license\":\"UNLICENSED\"}},\"version\":1}",
+  "bytecode": "0x60c0604052600b60809081526a43727970746f50756e6b7360a81b60a0526000906200002c908262000147565b50612710600481905560055560408051808201909152600b81526a43525950544f50554e4b5360a81b602082015260019062000069908262000147565b506040805180820190915260018152604360f81b602082015260029062000091908262000147565b506003805460ff1916905562000213565b634e487b7160e01b600052604160045260246000fd5b600181811c90821680620000cd57607f821691505b602082108103620000ee57634e487b7160e01b600052602260045260246000fd5b50919050565b601f8211156200014257600081815260208120601f850160051c810160208610156200011d5750805b601f850160051c820191505b818110156200013e5782815560010162000129565b5050505b505050565b81516001600160401b03811115620001635762000163620000a2565b6200017b81620001748454620000b8565b84620000f4565b602080601f831160018114620001b357600084156200019a5750858301515b600019600386901b1c1916600185901b1785556200013e565b600085815260208120601f198616915b82811015620001e457888601518255948401946001909101908401620001c3565b5085821015620002035787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b610bda80620002236000396000f3fe608060405234801561001057600080fd5b50600436106100f55760003560e01c806370a0823111610097578063c0d6ce6311610066578063c0d6ce63146102df578063c44193c3146102e8578063f3f43703146102fb578063f6eeff1e1461031b57600080fd5b806370a08231146102915780638b72a2ec146102b157806395d89b41146102c4578063bf31196f146102cc57600080fd5b8063313ce567116100d3578063313ce5671461021457806340c10f191461023357806358178168146102485780635a3b7e421461028957600080fd5b806306fdde03146100fa578063088f11f31461011857806318160ddd146101fd575b600080fd5b61010261032e565b60405161010f91906109ac565b60405180910390f35b6101b16101263660046109fa565b6040805160a08101825260008082526020820181905291810182905260608101829052608081019190915250600090815260066020908152604091829020825160a081018452815460ff161515815260018201549281019290925260028101546001600160a01b03908116938301939093526003810154606083015260040154909116608082015290565b6040805182511515815260208084015190820152828201516001600160a01b0390811692820192909252606080840151908201526080928301519091169181019190915260a00161010f565b61020660045481565b60405190815260200161010f565b6003546102219060ff1681565b60405160ff909116815260200161010f565b610246610241366004610a2f565b6103bc565b005b6102716102563660046109fa565b6007602052600090815260409020546001600160a01b031681565b6040516001600160a01b03909116815260200161010f565b610102610503565b61020661029f366004610a59565b60086020526000908152604090205481565b6102466102bf366004610a2f565b610510565b61010261065b565b6102466102da366004610a7b565b610668565b61020660055481565b6102466102f6366004610ab0565b610789565b610206610309366004610a59565b60096020526000908152604090205481565b6102466103293660046109fa565b61089f565b6001805461033b90610ad2565b80601f016020809104026020016040519081016040528092919081815260200182805461036790610ad2565b80156103b45780601f10610389576101008083540402835291602001916103b4565b820191906000526020600020905b81548152906001019060200180831161039757829003601f168201915b505050505081565b61271081106103e65760405162461bcd60e51b81526004016103dd90610b0c565b60405180910390fd5b6000818152600760205260409020546001600160a01b038381169116146104ff576000818152600760205260409020546001600160a01b03161561045e576000818152600760209081526040808320546001600160a01b031683526008909152812080549161045483610b4a565b9190505550610474565b6005805490600061046e83610b4a565b91905055505b600081815260076020908152604080832080546001600160a01b0319166001600160a01b0387169081179091558352600890915281208054916104b683610b61565b9190505550816001600160a01b03167f8a0e37b73a0d9c82e205d4d1a3ff3d0b57ce5f4d7bccf6bac03336dc101cb7ba826040516104f691815260200190565b60405180910390a25b5050565b6000805461033b90610ad2565b6000818152600760205260409020546001600160a01b031633146105465760405162461bcd60e51b81526004016103dd90610b7a565b61271081106105675760405162461bcd60e51b81526004016103dd90610b0c565b600081815260076020908152604080832080546001600160a01b0319166001600160a01b038716179055338352600890915281208054916105a783610b4a565b90915550506001600160a01b03821660009081526008602052604081208054916105d083610b61565b9091555050604051600181526001600160a01b0383169033907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9060200160405180910390a36040518181526001600160a01b0383169033907f05af636b70da6819000c49f85b21fa82081c632069bb626f30932034099107d8906020015b60405180910390a35050565b6002805461033b90610ad2565b6000838152600760205260409020546001600160a01b0316331461069e5760405162461bcd60e51b81526004016103dd90610b7a565b61271083106106bf5760405162461bcd60e51b81526004016103dd90610b0c565b6040805160a0810182526001808252602080830187815233848601908152606085018881526001600160a01b038881166080880181815260008d8152600688528a90209851895460ff191690151517895594519688019690965591516002870180546001600160a01b031990811692851692909217905590516003870155915160049095018054909216941693909317909255915184815285917f3c7b682d5da98001a9b8cbda6c647d2c63d698a4184fd1d55e2ce7b66f5d21eb910160405180910390a3505050565b6000828152600760205260409020546001600160a01b031633146107bf5760405162461bcd60e51b81526004016103dd90610b7a565b61271082106107e05760405162461bcd60e51b81526004016103dd90610b0c565b6040805160a0810182526001808252602080830186815233848601908152606085018781526000608087018181528a8252600686528882209751885460ff191690151517885593519587019590955590516002860180546001600160a01b03199081166001600160a01b0393841617909155915160038701559151600490950180549091169490911693909317909255915183815284917f3c7b682d5da98001a9b8cbda6c647d2c63d698a4184fd1d55e2ce7b66f5d21eb910161064f565b6000818152600760205260409020546001600160a01b031633146108d55760405162461bcd60e51b81526004016103dd90610b7a565b61271081106108f65760405162461bcd60e51b81526004016103dd90610b0c565b6040805160a0810182526000808252602080830185815233848601908152606085018481526080860185815288865260069094528685209551865460ff191690151517865591516001860155516002850180546001600160a01b03199081166001600160a01b0393841617909155915160038601559151600490940180549091169390911692909217909155905182917fb0e0a660b4e50f26f0b7ce75c24655fc76cc66e3334a54ff410277229fa10bd491a250565b600060208083528351808285015260005b818110156109d9578581018301518582016040015282016109bd565b506000604082860101526040601f19601f8301168501019250505092915050565b600060208284031215610a0c57600080fd5b5035919050565b80356001600160a01b0381168114610a2a57600080fd5b919050565b60008060408385031215610a4257600080fd5b610a4b83610a13565b946020939093013593505050565b600060208284031215610a6b57600080fd5b610a7482610a13565b9392505050565b600080600060608486031215610a9057600080fd5b8335925060208401359150610aa760408501610a13565b90509250925092565b60008060408385031215610ac357600080fd5b50508035926020909101359150565b600181811c90821680610ae657607f821691505b602082108103610b0657634e487b7160e01b600052602260045260246000fd5b50919050565b6020808252600e908201526d0696e646578203e3d2031303030360941b604082015260600190565b634e487b7160e01b600052601160045260246000fd5b600081610b5957610b59610b34565b506000190190565b600060018201610b7357610b73610b34565b5060010190565b60208082526010908201526f39b2b73232b9103737ba1037bbb732b960811b60408201526060019056fea26469706673582212207e054b9e95806b131fc3f9002032a59ce530d81e7849ed8d0c9a4cc5797ce4b564736f6c63430008110033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100f55760003560e01c806370a0823111610097578063c0d6ce6311610066578063c0d6ce63146102df578063c44193c3146102e8578063f3f43703146102fb578063f6eeff1e1461031b57600080fd5b806370a08231146102915780638b72a2ec146102b157806395d89b41146102c4578063bf31196f146102cc57600080fd5b8063313ce567116100d3578063313ce5671461021457806340c10f191461023357806358178168146102485780635a3b7e421461028957600080fd5b806306fdde03146100fa578063088f11f31461011857806318160ddd146101fd575b600080fd5b61010261032e565b60405161010f91906109ac565b60405180910390f35b6101b16101263660046109fa565b6040805160a08101825260008082526020820181905291810182905260608101829052608081019190915250600090815260066020908152604091829020825160a081018452815460ff161515815260018201549281019290925260028101546001600160a01b03908116938301939093526003810154606083015260040154909116608082015290565b6040805182511515815260208084015190820152828201516001600160a01b0390811692820192909252606080840151908201526080928301519091169181019190915260a00161010f565b61020660045481565b60405190815260200161010f565b6003546102219060ff1681565b60405160ff909116815260200161010f565b610246610241366004610a2f565b6103bc565b005b6102716102563660046109fa565b6007602052600090815260409020546001600160a01b031681565b6040516001600160a01b03909116815260200161010f565b610102610503565b61020661029f366004610a59565b60086020526000908152604090205481565b6102466102bf366004610a2f565b610510565b61010261065b565b6102466102da366004610a7b565b610668565b61020660055481565b6102466102f6366004610ab0565b610789565b610206610309366004610a59565b60096020526000908152604090205481565b6102466103293660046109fa565b61089f565b6001805461033b90610ad2565b80601f016020809104026020016040519081016040528092919081815260200182805461036790610ad2565b80156103b45780601f10610389576101008083540402835291602001916103b4565b820191906000526020600020905b81548152906001019060200180831161039757829003601f168201915b505050505081565b61271081106103e65760405162461bcd60e51b81526004016103dd90610b0c565b60405180910390fd5b6000818152600760205260409020546001600160a01b038381169116146104ff576000818152600760205260409020546001600160a01b03161561045e576000818152600760209081526040808320546001600160a01b031683526008909152812080549161045483610b4a565b9190505550610474565b6005805490600061046e83610b4a565b91905055505b600081815260076020908152604080832080546001600160a01b0319166001600160a01b0387169081179091558352600890915281208054916104b683610b61565b9190505550816001600160a01b03167f8a0e37b73a0d9c82e205d4d1a3ff3d0b57ce5f4d7bccf6bac03336dc101cb7ba826040516104f691815260200190565b60405180910390a25b5050565b6000805461033b90610ad2565b6000818152600760205260409020546001600160a01b031633146105465760405162461bcd60e51b81526004016103dd90610b7a565b61271081106105675760405162461bcd60e51b81526004016103dd90610b0c565b600081815260076020908152604080832080546001600160a01b0319166001600160a01b038716179055338352600890915281208054916105a783610b4a565b90915550506001600160a01b03821660009081526008602052604081208054916105d083610b61565b9091555050604051600181526001600160a01b0383169033907fddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef9060200160405180910390a36040518181526001600160a01b0383169033907f05af636b70da6819000c49f85b21fa82081c632069bb626f30932034099107d8906020015b60405180910390a35050565b6002805461033b90610ad2565b6000838152600760205260409020546001600160a01b0316331461069e5760405162461bcd60e51b81526004016103dd90610b7a565b61271083106106bf5760405162461bcd60e51b81526004016103dd90610b0c565b6040805160a0810182526001808252602080830187815233848601908152606085018881526001600160a01b038881166080880181815260008d8152600688528a90209851895460ff191690151517895594519688019690965591516002870180546001600160a01b031990811692851692909217905590516003870155915160049095018054909216941693909317909255915184815285917f3c7b682d5da98001a9b8cbda6c647d2c63d698a4184fd1d55e2ce7b66f5d21eb910160405180910390a3505050565b6000828152600760205260409020546001600160a01b031633146107bf5760405162461bcd60e51b81526004016103dd90610b7a565b61271082106107e05760405162461bcd60e51b81526004016103dd90610b0c565b6040805160a0810182526001808252602080830186815233848601908152606085018781526000608087018181528a8252600686528882209751885460ff191690151517885593519587019590955590516002860180546001600160a01b03199081166001600160a01b0393841617909155915160038701559151600490950180549091169490911693909317909255915183815284917f3c7b682d5da98001a9b8cbda6c647d2c63d698a4184fd1d55e2ce7b66f5d21eb910161064f565b6000818152600760205260409020546001600160a01b031633146108d55760405162461bcd60e51b81526004016103dd90610b7a565b61271081106108f65760405162461bcd60e51b81526004016103dd90610b0c565b6040805160a0810182526000808252602080830185815233848601908152606085018481526080860185815288865260069094528685209551865460ff191690151517865591516001860155516002850180546001600160a01b03199081166001600160a01b0393841617909155915160038601559151600490940180549091169390911692909217909155905182917fb0e0a660b4e50f26f0b7ce75c24655fc76cc66e3334a54ff410277229fa10bd491a250565b600060208083528351808285015260005b818110156109d9578581018301518582016040015282016109bd565b506000604082860101526040601f19601f8301168501019250505092915050565b600060208284031215610a0c57600080fd5b5035919050565b80356001600160a01b0381168114610a2a57600080fd5b919050565b60008060408385031215610a4257600080fd5b610a4b83610a13565b946020939093013593505050565b600060208284031215610a6b57600080fd5b610a7482610a13565b9392505050565b600080600060608486031215610a9057600080fd5b8335925060208401359150610aa760408501610a13565b90509250925092565b60008060408385031215610ac357600080fd5b50508035926020909101359150565b600181811c90821680610ae657607f821691505b602082108103610b0657634e487b7160e01b600052602260045260246000fd5b50919050565b6020808252600e908201526d0696e646578203e3d2031303030360941b604082015260600190565b634e487b7160e01b600052601160045260246000fd5b600081610b5957610b59610b34565b506000190190565b600060018201610b7357610b73610b34565b5060010190565b60208082526010908201526f39b2b73232b9103737ba1037bbb732b960811b60408201526060019056fea26469706673582212207e054b9e95806b131fc3f9002032a59ce530d81e7849ed8d0c9a4cc5797ce4b564736f6c63430008110033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 12792,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "standard",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_string_storage"
+      },
+      {
+        "astId": 12794,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "name",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_string_storage"
+      },
+      {
+        "astId": 12796,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "symbol",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_string_storage"
+      },
+      {
+        "astId": 12798,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "decimals",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_uint8"
+      },
+      {
+        "astId": 12800,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "totalSupply",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 12803,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "punksRemainingToAssign",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 12808,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "_punksOfferedForSale",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_mapping(t_uint256,t_struct(Offer)11064_storage)"
+      },
+      {
+        "astId": 12813,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "punkIndexToAddress",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_uint256,t_address)"
+      },
+      {
+        "astId": 12818,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "balanceOf",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 12822,
+        "contract": "src/test/TestPunks.sol:TestPunks",
+        "label": "pendingWithdrawals",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_address,t_uint256)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_uint256,t_address)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_uint256,t_struct(Offer)11064_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct ICryptoPunks.Offer)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Offer)11064_storage"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(Offer)11064_storage": {
+        "encoding": "inplace",
+        "label": "struct ICryptoPunks.Offer",
+        "members": [
+          {
+            "astId": 11055,
+            "contract": "src/test/TestPunks.sol:TestPunks",
+            "label": "isForSale",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool"
+          },
+          {
+            "astId": 11057,
+            "contract": "src/test/TestPunks.sol:TestPunks",
+            "label": "punkIndex",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 11059,
+            "contract": "src/test/TestPunks.sol:TestPunks",
+            "label": "seller",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "astId": 11061,
+            "contract": "src/test/TestPunks.sol:TestPunks",
+            "label": "minValue",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 11063,
+            "contract": "src/test/TestPunks.sol:TestPunks",
+            "label": "onlySellTo",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          }
+        ],
+        "numberOfBytes": "160"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint8": {
+        "encoding": "inplace",
+        "label": "uint8",
+        "numberOfBytes": "1"
+      }
+    }
+  }
+}
