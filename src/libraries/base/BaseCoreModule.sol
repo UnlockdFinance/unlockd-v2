@@ -5,6 +5,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
 import {BaseCore} from './BaseCore.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title BaseCoreModule

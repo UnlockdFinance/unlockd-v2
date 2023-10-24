@@ -98,8 +98,8 @@ contract ACLManager is AccessControl, IACLManager {
   }
 
   /// @inheritdoc IACLManager
-  function isProtocolAdmin(address borrower) external view override returns (bool) {
-    return hasRole(PROTOCOL_ADMIN, borrower);
+  function isProtocolAdmin(address protocol) external view override returns (bool) {
+    return hasRole(PROTOCOL_ADMIN, protocol);
   }
 
   /// @inheritdoc IACLManager

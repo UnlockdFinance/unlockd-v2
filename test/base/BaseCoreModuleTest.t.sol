@@ -30,6 +30,30 @@ contract TestBaseModuleCore is BaseCoreModule {
   function getNumber() external view returns (uint256) {
     return _number;
   }
+
+  function getOnlyAdmin() external view onlyAdmin returns (bool) {
+    return true;
+  }
+
+  function getOnlyGovernance() external view onlyGovernance returns (bool) {
+    return true;
+  }
+
+  function getOnlyEmergency() external view onlyEmergency returns (bool) {
+    return true;
+  }
+
+  function getOnlyByRole() external view onlyRole(keccak256('EMERGENCY_ADMIN')) returns (bool) {
+    return true;
+  }
+
+  function getMsgSender() external view returns (address) {
+    return unpackTrailingParamMsgSender();
+  }
+
+  function getMsgSenderAndProxy() external view returns (address, address) {
+    return unpackTrailingParams();
+  }
 }
 
 contract BaseCoreTest is Setup {
@@ -91,6 +115,121 @@ contract BaseCoreTest is Setup {
     TestBaseModuleCore(_unlockd.moduleIdToProxy(3)).incr();
     assertEq(2, uint256(TestBaseModuleCore(_unlockd.moduleIdToProxy(3)).getNumber()));
     assertEq(2, uint256(TestBaseModuleCore(_unlockd.moduleIdToProxy(2)).getNumber()));
+    vm.stopPrank();
+  }
+
+  function test_role_admin() public {
+    uint256 moduleId = 5;
+    // Prepare
+    vm.startPrank(_admin);
+    address[] memory modules = new address[](1);
+    modules[0] = address(new TestBaseModuleCore(moduleId, version));
+    address installer = _unlockd.moduleIdToProxy(1);
+    Installer(installer).installModules(modules);
+    vm.stopPrank();
+    // Checks
+    address newUser = address(111999999);
+    vm.startPrank(newUser);
+    assertEq(_aclManager.isProtocolAdmin(newUser), false);
+    address moduleAddress = _unlockd.moduleIdToProxy(moduleId);
+
+    vm.expectRevert(abi.encodeWithSelector(Errors.ProtocolAccessDenied.selector));
+    TestBaseModuleCore(moduleAddress).getOnlyAdmin();
+
+    vm.stopPrank();
+    // Add role admin to the userr
+    hoax(_admin);
+    _aclManager.addProtocolAdmin(newUser);
+
+    hoax(newUser);
+    assertEq(TestBaseModuleCore(moduleAddress).getOnlyAdmin(), true);
+    assertEq(_aclManager.isProtocolAdmin(newUser), true);
+  }
+
+  function test_role_governance() public {
+    uint256 moduleId = 5;
+    // Prepare
+    vm.startPrank(_admin);
+    address[] memory modules = new address[](1);
+    modules[0] = address(new TestBaseModuleCore(moduleId, version));
+    address installer = _unlockd.moduleIdToProxy(1);
+    Installer(installer).installModules(modules);
+    vm.stopPrank();
+    // Checks
+    address newUser = address(111999999);
+    vm.startPrank(newUser);
+    assertEq(_aclManager.isGovernanceAdmin(newUser), false);
+    address moduleAddress = _unlockd.moduleIdToProxy(moduleId);
+
+    vm.expectRevert(abi.encodeWithSelector(Errors.GovernanceAccessDenied.selector));
+    TestBaseModuleCore(moduleAddress).getOnlyGovernance();
+
+    vm.stopPrank();
+    // Add role admin to the userr
+    hoax(_admin);
+    _aclManager.addGovernanceAdmin(newUser);
+
+    hoax(newUser);
+    assertEq(TestBaseModuleCore(moduleAddress).getOnlyGovernance(), true);
+    assertEq(_aclManager.isGovernanceAdmin(newUser), true);
+  }
+
+  function test_role_emergency() public {
+    uint256 moduleId = 5;
+    // Prepare
+    vm.startPrank(_admin);
+    address[] memory modules = new address[](1);
+    modules[0] = address(new TestBaseModuleCore(moduleId, version));
+    address installer = _unlockd.moduleIdToProxy(1);
+    Installer(installer).installModules(modules);
+    vm.stopPrank();
+    // Checks
+    address newUser = address(111999999);
+    vm.startPrank(newUser);
+    assertEq(_aclManager.isEmergencyAdmin(newUser), false);
+    address moduleAddress = _unlockd.moduleIdToProxy(moduleId);
+
+    vm.expectRevert(abi.encodeWithSelector(Errors.EmergencyAccessDenied.selector));
+    TestBaseModuleCore(moduleAddress).getOnlyEmergency();
+    vm.expectRevert(abi.encodeWithSelector(Errors.RoleAccessDenied.selector));
+    TestBaseModuleCore(moduleAddress).getOnlyByRole();
+    vm.stopPrank();
+    // Add role admin to the userr
+    hoax(_admin);
+    _aclManager.addEmergencyAdmin(newUser);
+
+    hoax(newUser);
+    assertEq(TestBaseModuleCore(moduleAddress).getOnlyEmergency(), true);
+    hoax(newUser);
+    assertEq(TestBaseModuleCore(moduleAddress).getOnlyByRole(), true);
+
+    assertEq(_aclManager.isEmergencyAdmin(newUser), true);
+  }
+
+  function test_get_msg_sender() public {
+    uint256 moduleId = 5;
+    // Prepare
+    vm.startPrank(_admin);
+    address[] memory modules = new address[](1);
+    modules[0] = address(new TestBaseModuleCore(moduleId, version));
+    address installer = _unlockd.moduleIdToProxy(1);
+    Installer(installer).installModules(modules);
+    vm.stopPrank();
+    // Checks
+    address moduleAddress = _unlockd.moduleIdToProxy(moduleId);
+    // Add role admin to the userr
+
+    hoax(address(111999999));
+    assertEq(TestBaseModuleCore(moduleAddress).getMsgSender(), address(111999999));
+    hoax(address(0));
+    assertEq(TestBaseModuleCore(moduleAddress).getMsgSender(), address(address(0)));
+
+    vm.startPrank(address(12123123123123123));
+
+    (address msgSender, address proxy) = TestBaseModuleCore(moduleAddress).getMsgSenderAndProxy();
+    assertEq(address(12123123123123123), msgSender);
+    assertEq(moduleAddress, proxy);
+
     vm.stopPrank();
   }
 }
