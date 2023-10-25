@@ -68,7 +68,7 @@ forge test --match-path test/RepayTest.t.sol
 #### Run coverage
 
 ```
-forge coverage --ir-minimum
+forge coverage --ir-minimum --report lcov
 ```
 
 # deploy

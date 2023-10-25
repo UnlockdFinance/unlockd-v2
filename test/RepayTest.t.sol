@@ -150,6 +150,15 @@ contract RepayTest is Setup {
     return loanId;
   }
 
+  function generate_borrow(
+    uint256 amountToBorrow,
+    uint256 price,
+    uint256 totalAssets,
+    uint256 totalArray
+  ) external returns (bytes32 loanId) {
+    return _generate_borrow(amountToBorrow, price, totalAssets, totalArray);
+  }
+
   function test_repay_full_borrow() public useActor(ACTOR) {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;

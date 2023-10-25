@@ -37,6 +37,7 @@ contract BaseCoreTest is Setup {
   function test_create_proxy() public {
     address proxy = _test.createProxy(2);
     assertNotEq(proxy, address(0));
+    assertEq(proxy, 0x104fBc016F4bb334D775a19E8A6510109AC63E00);
   }
 
   function test_create_proxy_invalid_id() public {
@@ -49,14 +50,15 @@ contract BaseCoreTest is Setup {
     address proxy = _test.createProxy(999_999_999);
   }
 
-  // function test_internal_call() public {
-  //   TestBaseCore moduleOne = new TestBaseCore();
-  //   address oneProxy = moduleOne.createProxy(2);
-  //   TestBaseCore moduleTwo = new TestBaseCore();
-  //   address twoProxy = moduleTwo.createProxy(3);
-  //   bytes memory result = moduleOne.internalCall(
-  //     3,
-  //     abi.encodeWithSelector(TestBaseCore.getId.selector)
-  //   );
-  // }
+  function test_internal_call() public {
+    TestBaseCore moduleOne = new TestBaseCore();
+    address oneProxy = moduleOne.createProxy(2);
+    TestBaseCore moduleTwo = new TestBaseCore();
+    address twoProxy = moduleTwo.createProxy(3);
+    bytes memory result = moduleOne.internalCall(
+      3,
+      abi.encodeWithSelector(TestBaseCore.getId.selector)
+    );
+    assertEq(result, new bytes(0));
+  }
 }

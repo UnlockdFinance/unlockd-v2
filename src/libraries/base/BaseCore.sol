@@ -7,9 +7,7 @@ import {UnlockdMinimalProxy} from '../proxy/UnlockdMinimalProxy.sol';
 import {Constants} from '../helpers/Constants.sol';
 import {Errors} from '../helpers/Errors.sol';
 
-import {console} from 'forge-std/console.sol';
-
-abstract contract BaseCore is CoreStorage, ICore {
+contract BaseCore is CoreStorage, ICore {
   function _createProxy(uint256 proxyModuleId) internal returns (address) {
     if (proxyModuleId == 0) {
       revert Errors.InvalidModule();
@@ -42,7 +40,6 @@ abstract contract BaseCore is CoreStorage, ICore {
     bytes memory input
   ) internal returns (bytes memory) {
     (bool success, bytes memory result) = _moduleLookup[moduleId].delegatecall(input);
-    console.log('SUCCESS', success);
     if (!success) revertBytes(result);
     return result;
   }
