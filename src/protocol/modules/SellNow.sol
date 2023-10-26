@@ -118,7 +118,9 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         owner: loan.owner
       })
     );
-
+    if (signSellNow.loan.totalAssets != _loans[signSellNow.loan.loanId].totalAssets - 1) {
+      revert Errors.TokenAssetsMismatch();
+    }
     if (signSellNow.loan.totalAssets > 1) {
       // Activate loan
       _loans[loan.loanId].activate();
@@ -191,6 +193,11 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
     // Repay debs and send funds to the user wallet
     if (totalDebt > 0) {
+      // If this is the last nft need to cover the debt
+      if (signSellNow.loan.totalAssets == 0 && signSellNow.marketPrice < totalDebt) {
+        revert Errors.MarketPriceNotCoverDebt();
+      }
+
       SellNowLogic.repayDebtAndUser(
         SellNowLogic.RepayDebtAndUserParams({
           loanId: signSellNow.loan.loanId,
@@ -204,6 +211,9 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         })
       );
 
+      if (signSellNow.loan.totalAssets != _loans[signSellNow.loan.loanId].totalAssets - 1) {
+        revert Errors.TokenAssetsMismatch();
+      }
       // If we don't have more loans we can remoe it
       if (signSellNow.loan.totalAssets == 0) {
         delete _loans[signSellNow.loan.loanId];

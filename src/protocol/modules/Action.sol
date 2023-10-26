@@ -212,6 +212,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       IProtocolOwner(protocolOwner).batchSetToZeroLoanId(signAction.assets);
     }
 
+    if (signAction.loan.totalAssets != _loans[loan.loanId].totalAssets - signAction.assets.length) {
+      revert Errors.TokenAssetsMismatch();
+    }
     // If the loan is full empty we remove the loan
     if (signAction.loan.totalAssets == 0) {
       // We remove the loan

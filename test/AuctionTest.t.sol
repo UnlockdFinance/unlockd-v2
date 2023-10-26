@@ -212,7 +212,11 @@ contract AuctionTest is Setup {
     loanId = bytes32(entries[entries.length - 1].topics[2]);
   }
 
-  function test_bid_zero_liquidation_auction() public {
+  /////////////////////////////////////////////////////////////////////////////////
+  // BID
+  /////////////////////////////////////////////////////////////////////////////////
+
+  function test_auction_bid_zero_liquidation_auction() public {
     bytes32 loanId = _generate_borrow(ACTOR, 1.2 ether, 2 ether, 2, 2);
     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     (
@@ -239,7 +243,7 @@ contract AuctionTest is Setup {
     Auction(_auction).bid(0, 0, signAuction, sig); // BID ON THE ASSET
   }
 
-  function test_bid_liquidation_auction() public returns (bytes32) {
+  function test_auction_bid_liquidation_auction() public returns (bytes32) {
     bytes32 loanId = _generate_borrow(ACTOR, 1.2 ether, 2 ether, 2, 2);
     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     (
@@ -267,7 +271,7 @@ contract AuctionTest is Setup {
     return loanId;
   }
 
-  function test_bid_on_expired_liquidation_auction() public {
+  function test_auction_bid_on_expired_liquidation_auction() public {
     bytes32 loanId = _generate_borrow(ACTOR, 1.2 ether, 2 ether, 2, 2);
     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     address actorThree = getActorWithFunds(ACTORTHREE, 'WETH', 2 ether);
@@ -322,7 +326,7 @@ contract AuctionTest is Setup {
     }
   }
 
-  function test_bid_healty_liquidation_auction() public {
+  function test_auction_bid_healty_liquidation_auction() public {
     bytes32 loanId = _generate_borrow(ACTOR, 1.2 ether, 2 ether, 2, 2);
     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     (
@@ -349,9 +353,13 @@ contract AuctionTest is Setup {
     Auction(_auction).bid(0, 0, signAuction, sig); // BID ON THE ASSET
   }
 
-  function test_redeem_active_liquidation_auction() public {
+  /////////////////////////////////////////////////////////////////////////////////
+  // REDEEM
+  /////////////////////////////////////////////////////////////////////////////////
+
+  function test_auction_redeem_active_liquidation_auction() public {
     vm.recordLogs();
-    bytes32 loanId = test_bid_liquidation_auction();
+    bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     console.log('events', entries.length);
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
@@ -381,9 +389,9 @@ contract AuctionTest is Setup {
     }
   }
 
-  function test_redeem_expired_liquidation_auction() public {
+  function test_auction_redeem_expired_liquidation_auction() public {
     vm.recordLogs();
-    bytes32 loanId = test_bid_liquidation_auction();
+    bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
 
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
@@ -416,8 +424,12 @@ contract AuctionTest is Setup {
     }
   }
 
-  function test_finalize_liquidation_auction() public {
-    bytes32 loanId = test_bid_liquidation_auction();
+  /////////////////////////////////////////////////////////////////////////////////
+  // FINALIZE
+  /////////////////////////////////////////////////////////////////////////////////
+
+  function test_auction_finalize_liquidation_auction() public {
+    bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
 
@@ -446,8 +458,8 @@ contract AuctionTest is Setup {
     }
   }
 
-  function test_finalize_not_ended_liquidation_auction() public {
-    bytes32 loanId = test_bid_liquidation_auction();
+  function test_auction_finalize_not_ended_liquidation_auction() public {
+    bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
 
@@ -474,8 +486,8 @@ contract AuctionTest is Setup {
     }
   }
 
-  function test_finalize_two_times_liquidation_auction() public {
-    bytes32 loanId = test_bid_liquidation_auction();
+  function test_auction_finalize_two_times_liquidation_auction() public {
+    bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
     // END AUCTION

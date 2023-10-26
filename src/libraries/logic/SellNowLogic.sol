@@ -8,6 +8,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {GenericLogic, Errors, DataTypes} from './GenericLogic.sol';
+import {console} from 'forge-std/console.sol';
 
 library SellNowLogic {
   using SafeERC20 for IERC20;
@@ -102,7 +103,7 @@ library SellNowLogic {
     );
 
     // Validate the HF
-    if (hf < GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+    if (params.loan.totalAssets > 0 && hf < GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.UnhealtyLoan();
     }
     return totalDebt;
@@ -122,7 +123,7 @@ library SellNowLogic {
     );
 
     // Validate the HF
-    if (hf >= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+    if (params.loan.totalAssets > 0 && hf >= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
     }
     return totalDebt;

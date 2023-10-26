@@ -62,7 +62,7 @@ library Errors {
   error CollectionNotAllowed();
   error NotAssetOwner();
   error UnsuccessfulExecution();
-
+  error TokenAssetsMismatch();
   error InvalidRecoveredAddress();
   error SenderZeroAddress();
 
@@ -77,7 +77,7 @@ library Errors {
   error GovernanceAccessDenied();
   error EmergencyAccessDenied();
   error RoleAccessDenied();
-
+  error MarketPriceNotCoverDebt();
   ///////////////////////////////////////////
   ///   ROUTER
   ///////////////////////////////////////////

@@ -53,6 +53,7 @@ contract SellNowTest is Setup {
     address user;
     bytes32 loanId;
     uint256 price;
+    uint88 totalAssets;
   }
 
   function _generate_signature_borrow(
@@ -72,12 +73,16 @@ contract SellNowTest is Setup {
     uint256 deadline = block.timestamp + 1000;
 
     // Generate AssetId
-    bytes32[] memory assetsIds = new bytes32[](1);
-    assetsIds[0] = AssetLogic.assetId(address(_nft), 2);
-
+    bytes32[] memory assetsIds = new bytes32[](params.totalAssets);
+    DataTypes.Asset[] memory assets = new DataTypes.Asset[](params.totalAssets);
+    for (uint256 i = 0; i < params.totalAssets; ) {
+      assetsIds[i] = AssetLogic.assetId(address(_nft), i + 1);
+      assets[i] = DataTypes.Asset({collection: address(_nft), tokenId: i + 1});
+      unchecked {
+        i++;
+      }
+    }
     // Generate Assets Array
-    DataTypes.Asset[] memory assets = new DataTypes.Asset[](1);
-    assets[0] = DataTypes.Asset({collection: address(_nft), tokenId: 2});
 
     DataTypes.SignAction memory data;
     DataTypes.EIP712Signature memory sig;
@@ -89,7 +94,7 @@ contract SellNowTest is Setup {
           aggLoanPrice: params.price,
           aggLtv: 6000,
           aggLiquidationThreshold: 6000,
-          totalAssets: 1,
+          totalAssets: params.totalAssets,
           nonce: nonce,
           deadline: deadline
         }),
@@ -107,7 +112,7 @@ contract SellNowTest is Setup {
     return (data, sig, assetsIds, assets);
   }
 
-  function borrow_one_asset() public useActor(ACTOR) returns (bytes32 loanId) {
+  function borrow_asset(uint88 totalNfts) public useActor(ACTOR) returns (bytes32 loanId) {
     uint256 amountToBorrow = 1 ether;
     vm.recordLogs();
     // User doesn't have WETH
@@ -118,7 +123,9 @@ contract SellNowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature_borrow(GenerateSignParams({user: _actor, loanId: 0, price: 2 ether}));
+    ) = _generate_signature_borrow(
+        GenerateSignParams({user: _actor, loanId: 0, price: 2 ether, totalAssets: totalNfts})
+      );
 
     // Borrow amount
     Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
@@ -186,7 +193,11 @@ contract SellNowTest is Setup {
     return (data, sig);
   }
 
-  function test_sellnow_sellnow() public {
+  /////////////////////////////////////////////////////////////////////////////////
+  // SELL
+  /////////////////////////////////////////////////////////////////////////////////
+
+  function test_sellnow_sell_no_loan() public {
     // Preparing data to execute
     dataSellWETHCurrency = ReservoirData({
       blockNumber: block.number,
@@ -225,9 +236,130 @@ contract SellNowTest is Setup {
     assertEq(IERC721(address(_nft)).ownerOf(2), address(_market));
   }
 
-  function test_sellnow_repay_loan_unhealty_loan() public {
+  function test_sellnow_sell_repay_loan() public {
     vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
-    bytes32 loanId = borrow_one_asset();
+    bytes32 loanId = borrow_asset(1);
+    // Preparing data to execute
+    dataSellWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: 1,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
+        getAssetAddress('WETH'),
+        1 ether
+      ),
+      price: 1 ether,
+      value: 0
+    });
+
+    DataTypes.Asset memory asset = DataTypes.Asset({
+      collection: dataSellWETHCurrency.nftAsset,
+      tokenId: dataSellWETHCurrency.nftTokenId
+    });
+
+    (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _actor,
+      LoanData({loanId: loanId, aggLoanPrice: 0, totalAssets: 0})
+    );
+    hoax(_actor);
+    SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
+    assertEq(IERC721(address(_nft)).ownerOf(1), address(_market));
+  }
+
+  function test_sellnow_sell_repay_loan_multiple_assets() public {
+    vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
+    bytes32 loanId = borrow_asset(3);
+    // Preparing data to execute
+    dataSellWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: 1,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
+        getAssetAddress('WETH'),
+        1 ether
+      ),
+      price: 1 ether,
+      value: 0
+    });
+
+    DataTypes.Asset memory asset = DataTypes.Asset({
+      collection: dataSellWETHCurrency.nftAsset,
+      tokenId: dataSellWETHCurrency.nftTokenId
+    });
+
+    (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _actor,
+      LoanData({loanId: loanId, aggLoanPrice: 3 ether, totalAssets: 2})
+    );
+    hoax(_actor);
+    SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
+    assertEq(IERC721(address(_nft)).ownerOf(1), address(_market));
+  }
+
+  function test_sellnow_sell_error_unhealty_loan() public {
+    uint88 totalAssets = 2;
+    vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
+    bytes32 loanId = borrow_asset(totalAssets);
+    // Preparing data to execute
+    dataSellWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: 1,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
+        getAssetAddress('WETH'),
+        0.1 ether
+      ),
+      price: 0.1 ether,
+      value: 0
+    });
+
+    DataTypes.Asset memory asset = DataTypes.Asset({
+      collection: dataSellWETHCurrency.nftAsset,
+      tokenId: dataSellWETHCurrency.nftTokenId
+    });
+
+    (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _actor,
+      LoanData({loanId: loanId, aggLoanPrice: 0.5 ether, totalAssets: 1})
+    );
+    hoax(_actor);
+    vm.expectRevert(abi.encodeWithSelector(Errors.UnhealtyLoan.selector)); // Unhealty loan
+    SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
+
+    assertEq(IERC721(address(_nft)).ownerOf(2), getWalletAddress(ACTOR));
+  }
+
+  function test_sellnow_sell_error_unhealty_loan_with_multiples_assets() public {
+    uint88 totalAssets = 2;
+    vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
+    bytes32 loanId = borrow_asset(totalAssets);
     // Preparing data to execute
     dataSellWETHCurrency = ReservoirData({
       blockNumber: block.number,
@@ -260,20 +392,21 @@ contract SellNowTest is Setup {
       LoanData({loanId: loanId, aggLoanPrice: 1.5 ether, totalAssets: 1})
     );
     hoax(_actor);
-    vm.expectRevert(0x75f1550d); // Unhealty loan
+    vm.expectRevert(abi.encodeWithSelector(Errors.UnhealtyLoan.selector)); // Unhealty loan
     SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
 
     assertEq(IERC721(address(_nft)).ownerOf(2), getWalletAddress(ACTOR));
   }
 
-  function test_sellnow_repay_loan() public {
+  function test_sellnow_sell_error_price_do_not_cover_debt() public {
     vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
-    bytes32 loanId = borrow_one_asset();
+    bytes32 loanId = borrow_asset(1);
     // Preparing data to execute
+    // Current debt of the user is 1 ether
     dataSellWETHCurrency = ReservoirData({
       blockNumber: block.number,
       nftAsset: address(_nft),
-      nftTokenId: 2,
+      nftTokenId: 1,
       currency: getAssetAddress('WETH'),
       from: getWalletAddress(ACTOR),
       to: address(_market),
@@ -283,7 +416,47 @@ contract SellNowTest is Setup {
       data: abi.encodeWithSelector(
         NFTMarket.sell.selector,
         address(_nft),
-        2,
+        1,
+        getAssetAddress('WETH'),
+        0.5 ether
+      ),
+      price: 0.5 ether,
+      value: 0
+    });
+
+    DataTypes.Asset memory asset = DataTypes.Asset({
+      collection: dataSellWETHCurrency.nftAsset,
+      tokenId: dataSellWETHCurrency.nftTokenId
+    });
+
+    (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _actor,
+      LoanData({loanId: loanId, aggLoanPrice: 0, totalAssets: 0})
+    );
+    hoax(_actor);
+    vm.expectRevert(abi.encodeWithSelector(Errors.MarketPriceNotCoverDebt.selector));
+    SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
+  }
+
+  function test_sellnow_sell_error_token_asset_mismatch() public {
+    vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
+    bytes32 loanId = borrow_asset(2);
+    // Preparing data to execute
+    // Current debt of the user is 1 ether
+    dataSellWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: 1,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
         getAssetAddress('WETH'),
         1 ether
       ),
@@ -298,16 +471,14 @@ contract SellNowTest is Setup {
 
     (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
       _actor,
-      LoanData({loanId: loanId, aggLoanPrice: 2.2 ether, totalAssets: 1})
+      LoanData({loanId: loanId, aggLoanPrice: 2 ether, totalAssets: 3})
     );
     hoax(_actor);
+    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
     SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
-    console.log('FINAL_BALANCE', IERC20(getAssetAddress('WETH')).balanceOf(_actor));
-    // assertEq(IERC20(getAssetAddress('WETH')).balanceOf(_actor), 1 ether);
-    assertEq(IERC721(address(_nft)).ownerOf(2), address(_market));
   }
 
-  function test_sellnow_less_price() public {
+  function test_sellnow_sell_error_less_price() public {
     // Preparing data to execute
     dataSellWETHCurrency = ReservoirData({
       blockNumber: block.number,
@@ -347,16 +518,20 @@ contract SellNowTest is Setup {
     assertEq(IERC721(address(_nft)).ownerOf(2), getWalletAddress(ACTOR));
   }
 
-  function test_sellnow_force_sell() public {
-    vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
+  /////////////////////////////////////////////////////////////////////////////////
+  // FORCE SELL
+  /////////////////////////////////////////////////////////////////////////////////
+
+  function test_sellnow_force_sell_only_one_asset() public {
+    vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
 
-    bytes32 loanId = borrow_one_asset();
+    bytes32 loanId = borrow_asset(1);
     // Preparing data to execute
     dataSellWETHCurrency = ReservoirData({
       blockNumber: block.number,
       nftAsset: address(_nft),
-      nftTokenId: 2,
+      nftTokenId: 1,
       currency: getAssetAddress('WETH'),
       from: getWalletAddress(ACTOR),
       to: address(_market),
@@ -366,7 +541,7 @@ contract SellNowTest is Setup {
       data: abi.encodeWithSelector(
         NFTMarket.sell.selector,
         address(_nft),
-        2,
+        1,
         getAssetAddress('WETH'),
         1 ether
       ),
@@ -381,11 +556,94 @@ contract SellNowTest is Setup {
 
     (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
       _admin,
-      LoanData({loanId: loanId, aggLoanPrice: 1 ether, totalAssets: 1}) // Set unhealty loan
+      LoanData({loanId: loanId, aggLoanPrice: 0, totalAssets: 0}) // Set unhealty loan
     );
     hoax(_admin);
     SellNow(_sellNow).forzeSell(_reservoirAdapter, asset, data, sig);
     // Check that the nft is on the market
-    assertEq(IERC721(address(_nft)).ownerOf(2), address(_market));
+    assertEq(IERC721(address(_nft)).ownerOf(1), address(_market));
+  }
+
+  function test_sellnow_force_sell_two_assets() public {
+    vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
+    vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+    uint88 totalAssets = 3;
+    bytes32 loanId = borrow_asset(totalAssets);
+    // Preparing data to execute
+    dataSellWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: 1,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
+        getAssetAddress('WETH'),
+        1 ether
+      ),
+      price: 1 ether,
+      value: 0
+    });
+
+    DataTypes.Asset memory asset = DataTypes.Asset({
+      collection: dataSellWETHCurrency.nftAsset,
+      tokenId: dataSellWETHCurrency.nftTokenId
+    });
+
+    (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _admin,
+      LoanData({loanId: loanId, aggLoanPrice: 1.5 ether, totalAssets: totalAssets - 1}) // Set unhealty loan
+    );
+    hoax(_admin);
+    SellNow(_sellNow).forzeSell(_reservoirAdapter, asset, data, sig);
+    // Check that the nft is on the market
+    assertEq(IERC721(address(_nft)).ownerOf(1), address(_market));
+  }
+
+  function test_sellnow_force_sell_error_token_asset_mismatch() public {
+    vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
+    vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+    uint88 totalAssets = 3;
+    bytes32 loanId = borrow_asset(totalAssets);
+    // Preparing data to execute
+    dataSellWETHCurrency = ReservoirData({
+      blockNumber: block.number,
+      nftAsset: address(_nft),
+      nftTokenId: 1,
+      currency: getAssetAddress('WETH'),
+      from: getWalletAddress(ACTOR),
+      to: address(_market),
+      approval: address(_market),
+      approvalTo: address(_market),
+      approvalData: '0x',
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
+        getAssetAddress('WETH'),
+        1 ether
+      ),
+      price: 1 ether,
+      value: 0
+    });
+
+    DataTypes.Asset memory asset = DataTypes.Asset({
+      collection: dataSellWETHCurrency.nftAsset,
+      tokenId: dataSellWETHCurrency.nftTokenId
+    });
+
+    (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
+      _admin,
+      LoanData({loanId: loanId, aggLoanPrice: 1.5 ether, totalAssets: 0}) // Set unhealty loan
+    );
+    hoax(_admin);
+    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+    SellNow(_sellNow).forzeSell(_reservoirAdapter, asset, data, sig);
   }
 }
