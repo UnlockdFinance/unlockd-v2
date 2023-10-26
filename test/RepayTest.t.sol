@@ -27,6 +27,14 @@ contract RepayTest is Setup {
   address internal _manager;
   uint256 internal deadlineIncrement;
 
+  struct GenerateSignParams {
+    address user;
+    bytes32 loanId;
+    uint256 price;
+    uint256 totalAssets;
+    uint256 totalArray;
+  }
+
   function setUp() public virtual override {
     super.setUp();
 
@@ -47,6 +55,10 @@ contract RepayTest is Setup {
     _nft = super.getNFT('PUNK');
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
+  // Helpers
+  /////////////////////////////////////////////////////////////////////////////////
+
   function _generate_assets(
     uint256 totalArray
   ) internal view returns (bytes32[] memory, DataTypes.Asset[] memory) {
@@ -62,14 +74,6 @@ contract RepayTest is Setup {
       }
     }
     return (assetsIds, assets);
-  }
-
-  struct GenerateSignParams {
-    address user;
-    bytes32 loanId;
-    uint256 price;
-    uint256 totalAssets;
-    uint256 totalArray;
   }
 
   function _generate_signature(
@@ -150,16 +154,11 @@ contract RepayTest is Setup {
     return loanId;
   }
 
-  function generate_borrow(
-    uint256 amountToBorrow,
-    uint256 price,
-    uint256 totalAssets,
-    uint256 totalArray
-  ) external returns (bytes32 loanId) {
-    return _generate_borrow(amountToBorrow, price, totalAssets, totalArray);
-  }
+  /////////////////////////////////////////////////////////////////////////////////
+  // Repay
+  /////////////////////////////////////////////////////////////////////////////////
 
-  function test_repay_full_borrow() public useActor(ACTOR) {
+  function test_action_repay_full_borrow() public useActor(ACTOR) {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;
     bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
@@ -176,7 +175,7 @@ contract RepayTest is Setup {
           user: super.getActorAddress(ACTOR),
           loanId: loanId,
           price: collateral,
-          totalAssets: 2,
+          totalAssets: 0,
           totalArray: 2
         })
       );
@@ -208,7 +207,7 @@ contract RepayTest is Setup {
     assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
   }
 
-  function test_repay_unlock_one_asset() public useActor(ACTOR) {
+  function test_action_repay_unlock_one_asset() public useActor(ACTOR) {
     uint256 amountToBorrow = 0.59 ether;
     uint256 collateral = 2 ether;
     bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 3, 3);
@@ -225,7 +224,7 @@ contract RepayTest is Setup {
           user: super.getActorAddress(ACTOR),
           loanId: loanId,
           price: 1 ether,
-          totalAssets: 1,
+          totalAssets: 2,
           totalArray: 1
         })
       );
@@ -256,7 +255,7 @@ contract RepayTest is Setup {
     assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
   }
 
-  function test_repay_full_borrow_but_not_unlock_all_nfts() public useActor(ACTOR) {
+  function test_action_repay_full_borrow_but_not_unlock_all_nfts() public useActor(ACTOR) {
     uint256 amountToBorrow = 0.59 ether;
     uint256 collateral = 2 ether;
     bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 3, 3);
@@ -273,7 +272,7 @@ contract RepayTest is Setup {
           user: super.getActorAddress(ACTOR),
           loanId: loanId,
           price: 1 ether,
-          totalAssets: 2,
+          totalAssets: 3,
           totalArray: 0
         })
       );
@@ -305,7 +304,7 @@ contract RepayTest is Setup {
     assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
   }
 
-  function test_repay_full_borrow_locked_loan() public {
+  function test_action_repay_full_borrow_locked_loan() public {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;
     address actor = super.getActorAddress(ACTOR);
@@ -363,7 +362,7 @@ contract RepayTest is Setup {
     assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
   }
 
-  function test_repay_full_borrow_not_owned() public {
+  function test_action_repay_full_borrow_not_owned() public {
     uint256 amount = 0.5 ether;
     uint256 collateral = 2 ether;
     address actor = super.getActorAddress(ACTOR);
