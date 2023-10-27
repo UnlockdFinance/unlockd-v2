@@ -24,6 +24,14 @@ contract BorrowTest is Setup {
   address internal _action;
   uint256 internal deadlineIncrement;
 
+  struct GenerateSignParams {
+    address user;
+    bytes32 loanId;
+    uint256 price;
+    uint256 totalAssets;
+    uint256 totalArray;
+  }
+
   function setUp() public virtual override {
     super.setUp();
 
@@ -42,6 +50,10 @@ contract BorrowTest is Setup {
     console.log('SUPPLY: ', MintableERC20(_nft).totalSupply());
   }
 
+  /////////////////////////////////////////////////////////////////////////////////
+  // GENERATE SIGNATURE
+  /////////////////////////////////////////////////////////////////////////////////
+
   function _generate_assets(
     uint256 startCounter,
     uint256 totalArray
@@ -59,14 +71,6 @@ contract BorrowTest is Setup {
       }
     }
     return (assetsIds, assets);
-  }
-
-  struct GenerateSignParams {
-    address user;
-    bytes32 loanId;
-    uint256 price;
-    uint256 totalAssets;
-    uint256 totalArray;
   }
 
   function _generate_signature(
@@ -117,6 +121,10 @@ contract BorrowTest is Setup {
     }
     return (data, sig, assetsIds, assets);
   }
+
+  /////////////////////////////////////////////////////////////////////////////////
+  // BORROW
+  /////////////////////////////////////////////////////////////////////////////////
 
   function test_borrow_one_asset() public useActor(ACTOR) {
     uint256 amountToBorrow = 0.5 ether;
@@ -504,5 +512,67 @@ contract BorrowTest is Setup {
       // We don't borrow more
       assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 1 ether);
     }
+  }
+
+  function test_borrow_error_invalid_assets_array_lenght() public useActor(ACTOR) {
+    uint256 amountToBorrow = 0.5 ether;
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    // Get data signed
+
+    DataTypes.Asset[] memory assets;
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assetsIds,
+
+    ) = _generate_signature(
+        GenerateSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: 0,
+          price: 2 ether,
+          totalAssets: 1,
+          totalArray: 1
+        })
+      );
+    uint256 initialGas = gasleft();
+
+    console.log('LIST ASSETS', assets.length);
+    // Borrow amount
+    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAssetAmount.selector));
+    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('GAS Used:', gasUsed);
+  }
+
+  function test_borrow_error_invalid_assets_array_lenght_in_loan() public useActor(ACTOR) {
+    uint256 amountToBorrow = 0.5 ether;
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    // Get data signed
+
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assetsIds,
+      DataTypes.Asset[] memory assets
+    ) = _generate_signature(
+        GenerateSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: 0,
+          price: 2 ether,
+          totalAssets: 2,
+          totalArray: 1
+        })
+      );
+    uint256 initialGas = gasleft();
+    DataTypes.Asset[] memory newAssets = new DataTypes.Asset[](1);
+    newAssets[0] = assets[0];
+    console.log('LIST ASSETS', assets.length);
+    // Borrow amount
+    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidArrayLength.selector));
+    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, newAssets, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('GAS Used:', gasUsed);
   }
 }

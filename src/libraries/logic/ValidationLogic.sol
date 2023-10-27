@@ -92,37 +92,40 @@ library ValidationLogic {
       vars.currentLiquidationThreshold
     ) = GenericLogic.calculateLoanData(loan.loanId, user, reserveOracle, reserve, loanConfig);
 
-    if (vars.currentLtv > 9999) {
-      revert Errors.InvalidCurrentLtv();
-    }
-    if (vars.currentLiquidationThreshold > 9999) {
-      revert Errors.InvalidCurrentLiquidationThreshold();
-    }
+    // This is the total assets needed
+    if (loanConfig.totalAssets > 0) {
+      if (vars.currentLtv > 9999) {
+        revert Errors.InvalidCurrentLtv();
+      }
+      if (vars.currentLiquidationThreshold > 9999) {
+        revert Errors.InvalidCurrentLiquidationThreshold();
+      }
 
-    if (vars.userCollateralBalance == 0) revert Errors.InvalidUserCollateralBalance();
+      if (vars.userCollateralBalance == 0) revert Errors.InvalidUserCollateralBalance();
 
-    if (loan.state != DataTypes.LoanState.ACTIVE) {
-      revert Errors.LoanNotActive();
-    }
-    // ........................ DEBUG MODE ....................................
-    // console.log('-----------------------------------------------');
-    // console.log('Total Collateral Balance : ', vars.userCollateralBalance);
-    // console.log('User Borrow Balance      : ', vars.userBorrowBalance);
-    // console.log('HF                       : ', vars.healthFactor);
-    // console.log('LTV                      : ', vars.currentLtv);
-    // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-    // console.log('-----------------------------------------------');
+      if (loan.state != DataTypes.LoanState.ACTIVE) {
+        revert Errors.LoanNotActive();
+      }
+      // ........................ DEBUG MODE ....................................
+      // console.log('-----------------------------------------------');
+      // console.log('Total Collateral Balance : ', vars.userCollateralBalance);
+      // console.log('User Borrow Balance      : ', vars.userBorrowBalance);
+      // console.log('HF                       : ', vars.healthFactor);
+      // console.log('LTV                      : ', vars.currentLtv);
+      // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
+      // console.log('-----------------------------------------------');
 
-    if (vars.healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      revert Errors.UnableToBorrowMore();
-    }
+      if (vars.healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+        revert Errors.UnableToBorrowMore();
+      }
 
-    //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
-    //LTV is calculated in percentage
-    vars.amountOfCollateralNeeded = (vars.userBorrowBalance + amount).percentDiv(vars.currentLtv);
+      //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
+      //LTV is calculated in percentage
+      vars.amountOfCollateralNeeded = (vars.userBorrowBalance + amount).percentDiv(vars.currentLtv);
 
-    if (vars.amountOfCollateralNeeded > vars.userCollateralBalance) {
-      revert Errors.LowCollateral();
+      if (vars.amountOfCollateralNeeded > vars.userCollateralBalance) {
+        revert Errors.LowCollateral();
+      }
     }
   }
 

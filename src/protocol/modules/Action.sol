@@ -18,6 +18,7 @@ import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {console} from 'forge-std/console.sol';
 
 contract Action is BaseCoreModule, ActionSign, IActionModule {
   using LoanLogic for DataTypes.Loan;
@@ -85,7 +86,8 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           msgSender: msgSender,
           uToken: uToken,
           underlyingAsset: reserve.underlyingAsset,
-          totalAssets: signAction.loan.totalAssets,
+          // We added only when we lock the assets
+          totalAssets: 0,
           loanId: loanId
         })
       );
@@ -95,6 +97,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       // Update Loan
       // If exist we validate if it's correct
       loan = _loans[signAction.loan.loanId];
+
       if (loan.owner != msgSender) {
         revert Errors.InvalidLoanOwner();
       }
@@ -129,6 +132,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           ++i;
         }
       }
+      _loans[loan.loanId].totalAssets = loan.totalAssets + uint88(cachedAssets);
     }
 
     // If the amount is 0 we don't need to borrow more
@@ -147,7 +151,12 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
       IUToken(reserve.uToken).borrowOnBelhalf(loan.loanId, amount, msgSender, msgSender);
     }
-    emit Borrow(msgSender, loan.loanId, amount, cachedAssets, loan.uToken);
+
+    if (signAction.loan.totalAssets != _loans[loan.loanId].totalAssets) {
+      revert Errors.TokenAssetsMismatch();
+    }
+
+    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.uToken);
   }
 
   /**
