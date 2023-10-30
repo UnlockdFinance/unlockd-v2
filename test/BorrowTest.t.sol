@@ -575,4 +575,65 @@ contract BorrowTest is Setup {
     uint256 gasUsed = initialGas - gasleft();
     console.log('GAS Used:', gasUsed);
   }
+
+  function test_borrow_token_assets_mismatch() public useActor(ACTOR) {
+    uint256 amountToBorrow = 1 ether;
+    // User doesn't have WETH
+
+    // FIRST BORROW
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    // Get data signed
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      ,
+      DataTypes.Asset[] memory assets
+    ) = _generate_signature(
+        GenerateSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: 0,
+          price: 10 ether,
+          totalAssets: 10,
+          totalArray: 10
+        })
+      );
+    uint256 initialGas = gasleft();
+    vm.recordLogs();
+    // Borrow amount
+    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('GAS Used:', gasUsed);
+
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+
+    // SECOND BORROW
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
+
+    (
+      DataTypes.SignAction memory signActionTwo,
+      DataTypes.EIP712Signature memory sigTwo,
+      ,
+      DataTypes.Asset[] memory assetsTwo
+    ) = _generate_signature(
+        GenerateSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: loanId,
+          price: 10 ether,
+          totalAssets: 11,
+          totalArray: 0
+        })
+      );
+
+    // We check the new balance
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+    // Borrow amount
+    Action(_action).borrow(
+      address(_uTokens['WETH']),
+      amountToBorrow,
+      assetsTwo,
+      signActionTwo,
+      sigTwo
+    );
+  }
 }

@@ -175,9 +175,6 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
     _validateSignature(msgSender, signAction, sig);
 
-    if (signAction.loan.loanId == 0) {
-      revert Errors.InvalidLoanId();
-    }
     DataTypes.Loan memory loan = _loans[signAction.loan.loanId];
 
     if (loan.owner != msgSender) {

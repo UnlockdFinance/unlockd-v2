@@ -61,7 +61,9 @@ contract ReservoirAdapter is IMarketAdapter {
     IERC20(params.underlyingAsset).safeTransferFrom(params.wallet, msg.sender, params.marketPrice);
   }
 
-  function preBuy(PreBuyParams memory params) public payable onlyProtocol {}
+  function preBuy(PreBuyParams memory params) public payable onlyProtocol {
+    // NOTHING TO DO
+  }
 
   function buy(BuyParams memory params) public payable onlyProtocol returns (uint256) {
     uint256 initialBalance = _getBalance(params.underlyingAsset);
