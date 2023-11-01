@@ -11,7 +11,7 @@ library Errors {
   ///   GENERIC
   ///////////////////////////////////////////
 
-  error AccessDenied(string paramName);
+  error AccessDenied();
   //error ZeroAddress(string paramName);
 
   error InvalidParam(string paramName);
@@ -78,6 +78,7 @@ library Errors {
   error EmergencyAccessDenied();
   error RoleAccessDenied();
   error MarketPriceNotCoverDebt();
+  error LoanNotUpdated();
   ///////////////////////////////////////////
   ///   ROUTER
   ///////////////////////////////////////////

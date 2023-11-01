@@ -17,9 +17,7 @@ contract ReserveOracle is IReserveOracle {
   mapping(address => AggregatorV3Interface) public _priceFeedMap;
 
   modifier onlyPriceUpdater() {
-    if (IACLManager(ACL_MANAGER).isPriceUpdater(msg.sender) != true) {
-      revert Errors.AccessDenied('PriceUpdater');
-    }
+    if (IACLManager(ACL_MANAGER).isPriceUpdater(msg.sender) == false) revert Errors.AccessDenied();
     _;
   }
 

@@ -15,6 +15,7 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title GenericLogic library
@@ -25,7 +26,6 @@ library GenericLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using FixedPointMathLib for uint256;
-
   // HEALTH FACTOR 1
   uint256 internal constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
   uint256 internal constant AUCTION_DURATION = 2 days;
@@ -112,15 +112,15 @@ library GenericLogic {
       vars.reserveUnit,
       vars.reserveUnitPrice
     );
-
+    uint256 updatedDebt = vars.totalDebtInReserve > amount ? vars.totalDebtInReserve - amount : 0;
     // Calculate the HF
     vars.healthFactor = calculateHealthFactorFromBalances(
       vars.totalCollateralInReserve,
-      vars.totalDebtInReserve - amount,
+      updatedDebt,
       loanConfig.aggLiquidationThreshold
     );
 
-    return (vars.totalCollateralInReserve, vars.totalDebtInReserve - amount, vars.healthFactor);
+    return (vars.totalCollateralInReserve, updatedDebt, vars.healthFactor);
   }
 
   struct CalculateLoanDebtDataVars {
@@ -198,9 +198,8 @@ library GenericLogic {
     uint256 totalCollateral,
     uint256 totalDebt,
     uint256 ltv
-  ) internal pure returns (uint256 amount) {
+  ) internal view returns (uint256 amount) {
     uint256 availableBorrows = totalCollateral.percentMul(ltv);
-
     unchecked {
       amount = availableBorrows < totalDebt ? totalDebt - availableBorrows : 0;
     }

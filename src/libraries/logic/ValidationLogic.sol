@@ -20,6 +20,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title ValidationLogic library
@@ -113,10 +114,11 @@ library ValidationLogic {
       // console.log('HF                       : ', vars.healthFactor);
       // console.log('LTV                      : ', vars.currentLtv);
       // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
+      // console.log('AMOUNT REPAY             ; ', amount);
       // console.log('-----------------------------------------------');
 
       if (vars.healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-        revert Errors.UnableToBorrowMore();
+        revert Errors.UnhealtyLoan();
       }
 
       //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
@@ -126,6 +128,48 @@ library ValidationLogic {
       if (vars.amountOfCollateralNeeded > vars.userCollateralBalance) {
         revert Errors.LowCollateral();
       }
+    }
+  }
+
+  function validateAuctionLoan(
+    address user,
+    uint256 amount,
+    address reserveOracle,
+    DataTypes.Loan memory loan,
+    DataTypes.ReserveData memory reserve,
+    DataTypes.SignLoanConfig memory loanConfig
+  ) internal view returns (uint256 userPendingDebt) {
+    console.log('ENTRA AQUI?');
+    (uint256 userCollateralBalance, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic
+      .calculateLoanDataRepay(loan.loanId, amount, user, reserveOracle, reserve, loanConfig);
+
+    // This is the total assets needed
+    if (loanConfig.totalAssets > 0) {
+      if (loanConfig.aggLtv > 9999) {
+        revert Errors.InvalidCurrentLtv();
+      }
+      if (loanConfig.aggLiquidationThreshold > 9999) {
+        revert Errors.InvalidCurrentLiquidationThreshold();
+      }
+
+      if (userCollateralBalance == 0) revert Errors.InvalidUserCollateralBalance();
+
+      // ........................ DEBUG MODE ....................................
+      console.log('> ----------------------------------------------- <');
+      console.log('Total Collateral Balance : ', userCollateralBalance);
+      console.log('userTotalDebt            : ', userTotalDebt);
+      console.log('HF                       : ', healthFactor);
+      console.log('LTV                      : ', loanConfig.aggLtv);
+      console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
+      console.log('AMOUNT REPAY             ; ', amount);
+      console.log('-----------------------------------------------');
+
+      if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+        revert Errors.UnhealtyLoan();
+      }
+    } else {
+      // If is the last asset we check if the amount it's equal to the current debt
+      if (userTotalDebt > 0 && userTotalDebt != amount) revert Errors.UnhealtyLoan();
     }
   }
 
@@ -175,9 +219,9 @@ library ValidationLogic {
     // Check if it is a biddable order
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
 
-    if (loanState != DataTypes.LoanState.ACTIVE) {
-      revert Errors.LoanNotActive();
-    }
+    // if (loanState != DataTypes.LoanState.ACTIVE) {
+    //   revert Errors.LoanNotActive();
+    // }
   }
 
   function validateBuyNow(
@@ -194,9 +238,9 @@ library ValidationLogic {
     }
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-    if (loanState == DataTypes.LoanState.FREEZE) {
-      revert Errors.LoanNotActive();
-    }
+    // if (loanState == DataTypes.LoanState.FREEZE) {
+    //   revert Errors.LoanNotActive();
+    // }
 
     if (order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
       // Check time only for typefixed price
@@ -223,9 +267,9 @@ library ValidationLogic {
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
 
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
-    if (loanState == DataTypes.LoanState.FREEZE) {
-      revert Errors.LoanNotActive();
-    }
+    // if (loanState == DataTypes.LoanState.FREEZE) {
+    //   revert Errors.LoanNotActive();
+    // }
   }
 
   function validateHealthyHealthFactor(uint256 hf) internal pure {
@@ -298,9 +342,9 @@ library ValidationLogic {
     }
     // Check the current status
 
-    if (loanState != DataTypes.LoanState.ACTIVE) {
-      revert Errors.LoanNotActive();
-    }
+    // if (loanState != DataTypes.LoanState.ACTIVE) {
+    //   revert Errors.LoanNotActive();
+    // }
     // Finalized auction can't be cancelled
 
     if (

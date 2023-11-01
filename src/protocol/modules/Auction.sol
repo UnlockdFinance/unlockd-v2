@@ -122,6 +122,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         })
       );
       // The loan need to be after the changes are success
+      // We use the min or default because this asset maybe can't support the full debt and
+      // we need to continue the auction with the rest of the elements in the loan.
       minBid = OrderLogic.getMinDebtOrDefault(
         loan.loanId,
         loan.owner,
@@ -400,6 +402,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     // Remove the order
     delete _orders[orderId];
 
+    // Check the messe it's correct
+    if (signAuction.loan.totalAssets != _loans[loan.loanId].totalAssets - 1) {
+      revert Errors.TokenAssetsMismatch();
+    }
     if (signAuction.loan.totalAssets > 1) {
       // Activate loan
       loan.activate();

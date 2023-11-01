@@ -21,10 +21,15 @@ contract ReservoirAdapter is IMarketAdapter {
   ///////////////////////////////////////////////
   // MODIFIERS
   ///////////////////////////////////////////////
-
+  modifier onlyAdmin() {
+    if (IACLManager(_aclManager).isProtocolAdmin(msg.sender) == false) {
+      revert Errors.ProtocolAccessDenied();
+    }
+    _;
+  }
   modifier onlyProtocol() {
     if (IACLManager(_aclManager).isProtocol(msg.sender) == false) {
-      revert Errors.AccessDenied('protocol');
+      revert Errors.AccessDenied();
     }
     _;
   }
@@ -82,6 +87,11 @@ contract ReservoirAdapter is IMarketAdapter {
   }
 
   function withdraw(address payable _to) external onlyProtocol {
+    (bool sent, ) = _to.call{value: address(this).balance}('');
+    if (sent == false) revert Errors.UnsuccessfulExecution();
+  }
+
+  function withdrawERC20(address payable _to) external onlyProtocol {
     (bool sent, ) = _to.call{value: address(this).balance}('');
     if (sent == false) revert Errors.UnsuccessfulExecution();
   }

@@ -8,6 +8,8 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
+import {console} from 'forge-std/console.sol';
+
 library OrderLogic {
   using SafeERC20 for IERC20;
   using PercentageMath for uint256;
@@ -163,6 +165,7 @@ library OrderLogic {
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256 maxDebtOrDefault) {
     uint256 totalDebt = GenericLogic.calculateLoanDebt(loanId, user, reserveOracle, reserveData);
+
     if (totalDebt == 0) return defaultAmount;
 
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
@@ -170,6 +173,7 @@ library OrderLogic {
       totalDebt,
       ltv
     );
+    console.log('Amount NEEDED', minAmountNeeded);
     maxDebtOrDefault = minAmountNeeded > defaultAmount ? minAmountNeeded : defaultAmount;
   }
 
@@ -205,9 +209,10 @@ library OrderLogic {
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
-  ) internal view returns (uint256) {
+  ) internal view returns (uint256, uint256) {
     if (order.countBids == 0) {
-      return
+      return (
+        0,
         getMaxDebtOrDefault(
           order.offer.loanId,
           order.owner,
@@ -216,10 +221,12 @@ library OrderLogic {
           totalCollateral,
           ltv,
           reserveData
-        );
+        )
+      );
     }
     uint256 lastBid = order.bid.amountOfDebt + order.bid.amountToPay;
-    return
+    return (
+      lastBid,
       getMaxDebtOrDefault(
         order.offer.loanId,
         order.owner,
@@ -228,7 +235,8 @@ library OrderLogic {
         totalCollateral,
         ltv,
         reserveData
-      );
+      )
+    );
   }
 
   function calculateMinBid(DataTypes.Order storage order) internal view returns (uint256 minBid) {
@@ -253,18 +261,18 @@ library OrderLogic {
     RepayDebtToSellParams memory params,
     DataTypes.ReserveData memory reserveData
   ) internal returns (uint256) {
-    if (order.offer.debtToSell > 0) {
-      uint256 debtToSell = getMaxDebtOrDefault(
-        order.offer.loanId,
-        order.owner,
-        params.reserveOracle,
-        // Calculate the % of the owner want to repay the debt
-        params.totalAmount.percentMul(order.offer.debtToSell),
-        params.aggLoanPrice,
-        params.aggLtv,
-        reserveData
-      );
+    uint256 debtToSell = getMaxDebtOrDefault(
+      order.offer.loanId,
+      order.owner,
+      params.reserveOracle,
+      // Calculate the % of the owner want to repay the debt
+      order.offer.debtToSell > 0 ? params.totalAmount.percentMul(order.offer.debtToSell) : 0,
+      params.aggLoanPrice,
+      params.aggLtv,
+      reserveData
+    );
 
+    if (debtToSell > 0) {
       // Repay the debt
       IERC20(params.underlyingAsset).approve(params.uToken, debtToSell);
       IUToken(params.uToken).repayOnBelhalf(

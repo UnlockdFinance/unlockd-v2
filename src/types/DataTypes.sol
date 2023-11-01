@@ -142,7 +142,7 @@ library DataTypes {
     uint256 aggLoanPrice;
     uint256 aggLtv;
     uint256 aggLiquidationThreshold;
-    uint88 totalAssets; // @audit-info review this
+    uint88 totalAssets;
     uint256 nonce;
     uint256 deadline;
   }
