@@ -151,7 +151,29 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         })
       );
     } else {
-      minBid = OrderLogic.calculateMinBid(order);
+      minBid = OrderLogic.getMinBid(
+        order,
+        _reserveOracle,
+        signAuction.loan.aggLoanPrice,
+        signAuction.loan.aggLtv,
+        reserve
+      );
+
+      // If the auction is in market, we migrate this type of auction to liquidation
+      if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+        order.orderType = DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION;
+        // Overwrite offer
+        order.offer = DataTypes.OfferItem({
+          loanId: loan.loanId,
+          assetId: signAuction.assetId,
+          startAmount: uint128(minBid),
+          endAmount: 0,
+          // debToSell is the % of the final bid or payed that is going to repay debt.
+          debtToSell: 1e4
+        });
+
+        order.timeframe = DataTypes.Timeframe({startTime: 0, endTime: signAuction.endTime});
+      }
     }
 
     ValidationLogic.validateBid(totalAmount, signAuction.loan.totalAssets, minBid, order, loan);

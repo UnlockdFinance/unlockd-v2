@@ -60,8 +60,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     address uToken,
     uint256 aggLoanPrice,
     uint256 aggLTV
-  ) external view returns (uint256 minBid, uint nextBid) {
-    (minBid, nextBid) = OrderLogic.getMinBid(
+  ) external view returns (uint256 minBid) {
+    minBid = OrderLogic.getMinBid(
       _orders[orderId],
       _reserveOracle,
       aggLoanPrice,
@@ -296,7 +296,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // We need to validate that the next bid is bigger than the last one.
     uint256 totalAmount = amountToPay + amountOfDebt;
     {
-      (, uint256 nextBid) = OrderLogic.getMinBid(
+      uint256 nextBid = OrderLogic.getMinBid(
         order,
         _reserveOracle,
         signMarket.loan.aggLoanPrice,

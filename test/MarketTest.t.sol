@@ -795,14 +795,13 @@ contract MarketTest is Setup {
       );
     // Add funds to the actor two
     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
-    (uint256 otro, uint256 minBid) = Market(_market).getMinBidPrice(
+    uint256 minBid = Market(_market).getMinBidPrice(
       orderId,
       address(_uTokens['WETH']),
       2 ether,
       6000
     );
-    console.log('OTRO', otro);
-    console.log('CALCULATED MINBID', minBid);
+
     hoax(actorTwo);
     approveAsset('WETH', address(getUnlockd()), minBid); // APPROVE AMOUNT
 
@@ -1181,6 +1180,95 @@ contract MarketTest is Setup {
     }
 
     assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTHREE));
+  }
+
+  function test_bid_type_auction_minBid_set_with_debt_two_bids() public returns (bytes32, bytes32) {
+    vm.recordLogs();
+    test_create_order_type_auction_with_debt_loan();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+
+    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
+
+    // Add funds to the actor two
+    address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    address actorThree = getActorWithFunds(ACTORTHREE, 'WETH', 2 ether);
+
+    {
+      uint256 minBid = Market(_market).getMinBidPrice(
+        orderId,
+        address(_uTokens['WETH']),
+        1 ether,
+        6000
+      );
+      // USER TWO
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = _generate_signature(
+          GenerateSignParams({
+            user: getActorAddress(ACTORTWO),
+            loanId: loanId,
+            price: 1 ether,
+            totalAssets: 1
+          }),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(actorTwo);
+      approveAsset('WETH', address(getUnlockd()), minBid); // APPROVE AMOUNT
+
+      hoax(actorTwo);
+      Market(_market).bid(orderId, uint128(minBid), 0, signMarket, sig); // BID ON THE ASSET
+
+      DataTypes.Order memory order = Market(_market).getOrder(orderId);
+
+      assertEq(order.bid.buyer, actorTwo);
+      assertEq(order.bid.amountToPay, minBid);
+    }
+    {
+      uint256 minBid = Market(_market).getMinBidPrice(
+        orderId,
+        address(_uTokens['WETH']),
+        1 ether,
+        6000
+      );
+      // USER THREE
+      (
+        DataTypes.SignMarket memory signMarketThree,
+        DataTypes.EIP712Signature memory sigThree
+      ) = _generate_signature(
+          GenerateSignParams({
+            user: getActorAddress(ACTORTHREE),
+            loanId: loanId,
+            price: 1 ether,
+            totalAssets: 1
+          }),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+
+      hoax(actorThree);
+      approveAsset('WETH', address(getUnlockd()), minBid); // APPROVE AMOUNT
+
+      hoax(actorThree);
+      Market(_market).bid(orderId, uint128(minBid), 0, signMarketThree, sigThree); // BID ON THE ASSET
+
+      DataTypes.Order memory order = Market(_market).getOrder(orderId);
+
+      assertEq(order.bid.buyer, actorThree);
+      assertEq(order.bid.amountToPay, minBid);
+    }
   }
 
   //////////////////////////////////////////////

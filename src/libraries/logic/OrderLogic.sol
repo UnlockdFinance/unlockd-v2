@@ -209,10 +209,9 @@ library OrderLogic {
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
-  ) internal view returns (uint256, uint256) {
+  ) internal view returns (uint256) {
     if (order.countBids == 0) {
-      return (
-        0,
+      return
         getMaxDebtOrDefault(
           order.offer.loanId,
           order.owner,
@@ -221,28 +220,26 @@ library OrderLogic {
           totalCollateral,
           ltv,
           reserveData
-        )
-      );
+        );
     }
     uint256 lastBid = order.bid.amountOfDebt + order.bid.amountToPay;
-    return (
-      lastBid,
+    return
       getMaxDebtOrDefault(
         order.offer.loanId,
         order.owner,
         reserveOracle,
-        lastBid + lastBid.percentMul(PercentageMath.ONE_PERCENT),
+        calculateMinBid(lastBid, order.countBids),
         totalCollateral,
         ltv,
         reserveData
-      )
-    );
+      );
   }
 
-  function calculateMinBid(DataTypes.Order storage order) internal view returns (uint256 minBid) {
-    uint256 lastBid = order.bid.amountToPay + order.bid.amountOfDebt;
-
-    minBid = order.countBids == 1
+  function calculateMinBid(
+    uint256 lastBid,
+    uint256 countBids
+  ) internal view returns (uint256 minBid) {
+    minBid = countBids == 1
       ? lastBid + lastBid.percentMul(GenericLogic.FIRST_BID_INCREMENT) // At least 2.5% more than the last bid
       : lastBid + lastBid.percentMul(GenericLogic.NEXT_BID_INCREMENT); // At least %1 more than the last bid
   }
