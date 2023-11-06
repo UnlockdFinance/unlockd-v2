@@ -74,13 +74,15 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     IUToken(loan.uToken).updateStateReserve();
     DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
 
-    uint256 totalDebt = SellNowLogic.calculateTotalDebtAndValidateUnHealthyLoan(
-      SellNowLogic.CalculateAndValidateTotalDebt({
-        loan: signSellNow.loan,
-        owner: loan.owner,
-        reserveOracle: _reserveOracle
-      }),
-      reserve
+    uint256 totalDebt = ValidationLogic.validateFutureHasUnhealtyLoanState(
+      ValidationLogic.ValidateLoanStateParams({
+        user: loan.owner,
+        amount: 0,
+        price: signSellNow.marketPrice,
+        reserveOracle: _reserveOracle,
+        reserve: reserve,
+        loanConfig: signSellNow.loan
+      })
     );
 
     {
@@ -169,13 +171,15 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       IUToken(loan.uToken).updateStateReserve();
       DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
 
-      totalDebt = SellNowLogic.calculateTotalDebtAndValidateHealthyLoan(
-        SellNowLogic.CalculateAndValidateTotalDebt({
-          loan: signSellNow.loan,
-          owner: loan.owner,
-          reserveOracle: _reserveOracle
-        }),
-        reserve
+      totalDebt = ValidationLogic.validateFutureLoanState(
+        ValidationLogic.ValidateLoanStateParams({
+          user: loan.owner,
+          amount: signSellNow.marketPrice,
+          price: signSellNow.marketPrice,
+          reserveOracle: _reserveOracle,
+          reserve: reserve,
+          loanConfig: signSellNow.loan
+        })
       );
     }
     // Sell the asset using the adapter
@@ -192,11 +196,6 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
     // Repay debs and send funds to the user wallet
     if (totalDebt > 0) {
-      // If this is the last nft need to cover the debt
-      if (signSellNow.loan.totalAssets == 0 && signSellNow.marketPrice < totalDebt) {
-        revert Errors.MarketPriceNotCoverDebt();
-      }
-
       SellNowLogic.repayDebtAndUser(
         SellNowLogic.RepayDebtAndUserParams({
           loanId: signSellNow.loan.loanId,

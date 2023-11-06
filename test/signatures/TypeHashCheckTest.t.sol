@@ -8,7 +8,7 @@ import {BuyNowSign} from '../../src/libraries/signatures/BuyNowSign.sol';
 import {MarketSign} from '../../src/libraries/signatures/MarketSign.sol';
 import {SellNowSign} from '../../src/libraries/signatures/SellNowSign.sol';
 import {LoanLogic} from '../../src/libraries/logic/LoanLogic.sol';
-import {AssetLogic} from '../../src/libraries/logic/AssetLogic.sol';
+import {AssetLogic as AssetLogicUnlockd} from '../../src/libraries/logic/AssetLogic.sol';
 
 contract ActionSignMock is ActionSign {
   function getTypeHash() public pure returns (bytes32) {
@@ -63,7 +63,7 @@ contract SellNowSignTest is Test {
 
   function test_asset_typehash() public {
     bytes32 TYPEHASH = keccak256(abi.encodePacked(ASSET));
-    assertEq(TYPEHASH, AssetLogic.TYPEHASH);
+    assertEq(TYPEHASH, AssetLogicUnlockd.TYPEHASH);
     console.logBytes32(TYPEHASH);
   }
 

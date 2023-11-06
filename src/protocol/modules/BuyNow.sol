@@ -22,7 +22,8 @@ import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
-import {console} from 'forge-std/console.sol';
+
+// import {console} from 'forge-std/console.sol';
 
 contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
   using SafeTransferLib for address;

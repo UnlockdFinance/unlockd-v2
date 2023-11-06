@@ -8,7 +8,8 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {GenericLogic, Errors, DataTypes} from './GenericLogic.sol';
-import {console} from 'forge-std/console.sol';
+
+// import {console} from 'forge-std/console.sol';
 
 library SellNowLogic {
   using SafeERC20 for IERC20;
@@ -83,49 +84,57 @@ library SellNowLogic {
     );
   }
 
-  struct CalculateAndValidateTotalDebt {
-    address owner;
-    address reserveOracle;
-    DataTypes.SignLoanConfig loan;
-  }
+  // struct CalculateAndValidateTotalDebt {
+  //   address owner;
+  //   address reserveOracle;
+  //   uint256 price;
+  //   DataTypes.SignLoanConfig loan;
+  // }
 
-  function calculateTotalDebtAndValidateHealthyLoan(
-    CalculateAndValidateTotalDebt memory params,
-    DataTypes.ReserveData memory reserve
-  ) internal view returns (uint256) {
-    (, uint256 totalDebt, uint256 hf) = GenericLogic.calculateLoanDataRepay(
-      params.loan.loanId,
-      0,
-      params.owner,
-      params.reserveOracle,
-      reserve,
-      params.loan
-    );
+  // function calculateTotalDebtAndValidateHealthyLoan(
+  //   CalculateAndValidateTotalDebt memory params,
+  //   DataTypes.ReserveData memory reserve
+  // ) internal view returns (uint256) {
+  //   (, uint256 totalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
+  //     params.loan.loanId,
+  //     params.price,
+  //     params.price,
+  //     params.owner,
+  //     params.reserveOracle,
+  //     reserve,
+  //     params.loan
+  //   );
 
-    // Validate the HF
-    if (params.loan.totalAssets > 0 && hf < GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      revert Errors.UnhealtyLoan();
-    }
-    return totalDebt;
-  }
+  //   // Validate the HF
+  //   if (healthFactor < GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+  //     revert Errors.UnhealtyLoan();
+  //   }
+  //   // We can't allow sell the asset in this case
+  //   if (params.loan.totalAssets == 0 && params.price < totalDebt) {
+  //     revert Errors.UnhealtyLoan();
+  //   }
+  //   return totalDebt;
+  // }
 
-  function calculateTotalDebtAndValidateUnHealthyLoan(
-    CalculateAndValidateTotalDebt memory params,
-    DataTypes.ReserveData memory reserve
-  ) internal view returns (uint256) {
-    (, uint256 totalDebt, uint256 hf) = GenericLogic.calculateLoanDataRepay(
-      params.loan.loanId,
-      0,
-      params.owner,
-      params.reserveOracle,
-      reserve,
-      params.loan
-    );
+  // function calculateTotalDebtAndValidateUnHealthyLoan(
+  //   CalculateAndValidateTotalDebt memory params,
+  //   DataTypes.ReserveData memory reserve
+  // ) internal view returns (uint256) {
+  //   (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
+  //     params.loan.loanId,
+  //     0,
+  //     params.price,
+  //     params.owner,
+  //     params.reserveOracle,
+  //     reserve,
+  //     params.loan
+  //   );
 
-    // Validate the HF
-    if (params.loan.totalAssets > 0 && hf >= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      revert Errors.HealtyLoan();
-    }
-    return totalDebt;
-  }
+  //   // Validate the HF
+  //   if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+  //     revert Errors.HealtyLoan();
+  //   }
+
+  //   return userTotalDebt;
+  // }
 }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-// import {console} from 'forge-std/console.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 import {FixedPointMathLib} from '@solady/utils/FixedPointMathLib.sol';
 
@@ -15,7 +14,8 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
-import {console} from 'forge-std/console.sol';
+
+// import {console} from 'forge-std/console.sol';
 
 /**
  * @title GenericLogic library
@@ -40,53 +40,10 @@ library GenericLogic {
     uint256 totalDebtInReserve;
   }
 
-  function calculateLoanData(
-    bytes32 loanId,
-    address user,
-    address reserveOracle,
-    DataTypes.ReserveData memory reserveData,
-    DataTypes.SignLoanConfig memory loanConfig
-  ) internal view returns (uint256, uint256, uint256, uint256, uint256) {
-    CalculateLoanDataVars memory vars;
-
-    // Calculate the reserve price
-    vars.reserveUnit = 10 ** reserveData.decimals;
-    vars.reserveUnitPrice = IReserveOracle(reserveOracle).getAssetPrice(
-      reserveData.underlyingAsset
-    );
-    // Calculate total debt in base currency
-    vars.totalDebtInReserve = getUserDebtInBaseCurrency(
-      loanId,
-      user,
-      reserveData,
-      vars.reserveUnitPrice,
-      vars.reserveUnit
-    );
-
-    vars.totalCollateralInReserve = loanConfig.aggLoanPrice.mulDiv(
-      vars.reserveUnit,
-      vars.reserveUnitPrice
-    );
-
-    // Calculate the HF
-    vars.healthFactor = calculateHealthFactorFromBalances(
-      vars.totalCollateralInReserve,
-      vars.totalDebtInReserve,
-      loanConfig.aggLiquidationThreshold
-    );
-
-    return (
-      vars.totalCollateralInReserve,
-      vars.totalDebtInReserve,
-      vars.healthFactor,
-      loanConfig.aggLtv,
-      loanConfig.aggLiquidationThreshold
-    );
-  }
-
-  function calculateLoanDataRepay(
+  function calculateFutureLoanData(
     bytes32 loanId,
     uint256 amount,
+    uint256 price,
     address user,
     address reserveOracle,
     DataTypes.ReserveData memory reserveData,
@@ -108,10 +65,10 @@ library GenericLogic {
       vars.reserveUnit
     );
 
-    vars.totalCollateralInReserve = loanConfig.aggLoanPrice.mulDiv(
-      vars.reserveUnit,
-      vars.reserveUnitPrice
-    );
+    // If the total assets are 0, then we need to calculate the collateral with the current value
+    uint256 collateral = loanConfig.totalAssets == 0 ? price : loanConfig.aggLoanPrice;
+    vars.totalCollateralInReserve = collateral.mulDiv(vars.reserveUnit, vars.reserveUnitPrice);
+
     uint256 updatedDebt = vars.totalDebtInReserve > amount ? vars.totalDebtInReserve - amount : 0;
     // Calculate the HF
     vars.healthFactor = calculateHealthFactorFromBalances(
@@ -120,7 +77,7 @@ library GenericLogic {
       loanConfig.aggLiquidationThreshold
     );
 
-    return (vars.totalCollateralInReserve, updatedDebt, vars.healthFactor);
+    return (vars.totalCollateralInReserve, vars.totalDebtInReserve, vars.healthFactor);
   }
 
   struct CalculateLoanDebtDataVars {

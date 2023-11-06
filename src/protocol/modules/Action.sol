@@ -137,13 +137,15 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     // If the amount is 0 we don't need to borrow more
     if (amount != 0) {
       // We validate if the user can borrow
-      ValidationLogic.validateHealtyLoan(
-        msgSender,
-        amount,
-        _reserveOracle,
-        loan,
-        reserve,
-        signAction.loan
+      ValidationLogic.validateFutureLoanState(
+        ValidationLogic.ValidateLoanStateParams({
+          user: msgSender,
+          amount: amount,
+          price: 0,
+          reserveOracle: _reserveOracle,
+          reserve: reserve,
+          loanConfig: signAction.loan
+        })
       );
       // update state MUST BEFORE get borrow amount which is depent on latest borrow index
       IUToken(uToken).updateStateReserve();
@@ -202,13 +204,15 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         We validate if the loan is healty .
         The aggLoanPrice of the Loan should be the value after removing the assets asigned to the loan
       */
-      ValidationLogic.validateHealtyLoan(
-        msgSender,
-        amount,
-        reserveOracle,
-        loan,
-        reserve,
-        signAction.loan
+      ValidationLogic.validateFutureLoanState(
+        ValidationLogic.ValidateLoanStateParams({
+          user: msgSender,
+          amount: amount,
+          price: 0,
+          reserveOracle: _reserveOracle,
+          reserve: reserve,
+          loanConfig: signAction.loan
+        })
       );
       // Get delegation owner
       address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);

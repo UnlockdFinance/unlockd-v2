@@ -3,7 +3,9 @@ pragma solidity ^0.8.19;
 
 import {console} from 'forge-std/console.sol';
 import 'forge-std/StdJson.sol';
-import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
+import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
+
+import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
@@ -44,11 +46,11 @@ import {Constants} from '../../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../../src/protocol/modules/Installer.sol';
 
 import {Manager} from '../../../src/protocol/modules/Manager.sol';
-import {Action} from '../../../src/protocol/modules/Action.sol';
-import {Auction} from '../../../src/protocol/modules/Auction.sol';
-import {BuyNow} from '../../../src/protocol/modules/BuyNow.sol';
-import {SellNow} from '../../../src/protocol/modules/SellNow.sol';
-import {Market} from '../../../src/protocol/modules/Market.sol';
+import {Action, ActionSign} from '../../../src/protocol/modules/Action.sol';
+import {Auction, AuctionSign} from '../../../src/protocol/modules/Auction.sol';
+import {BuyNow, BuyNowSign} from '../../../src/protocol/modules/BuyNow.sol';
+import {SellNow, SellNowSign} from '../../../src/protocol/modules/SellNow.sol';
+import {Market, MarketSign} from '../../../src/protocol/modules/Market.sol';
 
 import {ReserveOracle, IReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 
@@ -515,5 +517,272 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     });
 
     return testData;
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  // HELPERS
+  /////////////////////////////////////////////////////////////////////
+  struct AssetParams {
+    bytes32 assetId;
+    address collection;
+    uint32 tokenId;
+    uint128 assetPrice;
+    uint256 assetLtv;
+  }
+
+  function generate_assets(
+    address nftAddress,
+    uint256 startCounter,
+    uint256 totalArray
+  ) internal view returns (bytes32[] memory, DataTypes.Asset[] memory) {
+    // Asesets
+    uint256 counter = totalArray - startCounter;
+    bytes32[] memory assetsIds = new bytes32[](counter);
+    DataTypes.Asset[] memory assets = new DataTypes.Asset[](counter);
+    for (uint256 i = 0; i < counter; ) {
+      uint32 tokenId = uint32(startCounter + i);
+      assetsIds[i] = AssetLogic.assetId(nftAddress, tokenId);
+      assets[i] = DataTypes.Asset({collection: nftAddress, tokenId: tokenId});
+      unchecked {
+        ++i;
+      }
+    }
+    return (assetsIds, assets);
+  }
+
+  ///////////////////////////////////////////////////////////////
+  // ACTION
+  struct AuctionSignParams {
+    address user;
+    bytes32 loanId;
+    uint128 price;
+    uint256 totalAssets;
+  }
+
+  function auction_signature(
+    address action,
+    AuctionSignParams memory params,
+    AssetParams memory asset
+  ) internal view returns (DataTypes.SignAuction memory, DataTypes.EIP712Signature memory) {
+    // Get nonce from the user
+    uint256 nonce = AuctionSign(action).getNonce(params.user);
+    uint40 deadline = uint40(block.timestamp + 1000);
+
+    DataTypes.SignAuction memory data;
+    DataTypes.EIP712Signature memory sig;
+    {
+      // Create the struct
+      data = DataTypes.SignAuction({
+        loan: DataTypes.SignLoanConfig({
+          loanId: params.loanId, // Because is new need to be 0
+          aggLoanPrice: params.price,
+          aggLtv: 6000,
+          aggLiquidationThreshold: 6000,
+          totalAssets: uint88(params.totalAssets),
+          nonce: nonce,
+          deadline: deadline
+        }),
+        assetId: asset.assetId,
+        collection: asset.collection,
+        tokenId: asset.tokenId,
+        assetPrice: asset.assetPrice,
+        assetLtv: 6000,
+        endTime: uint40(block.timestamp + 2000),
+        nonce: nonce,
+        deadline: deadline
+      });
+
+      bytes32 digest = AuctionSign(action).calculateDigest(nonce, data);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
+
+      // Build signature struct
+      sig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
+    }
+    return (data, sig);
+  }
+
+  ///////////////////////////////////////////////////////////////
+  // AUCTION
+
+  struct ActionSignParams {
+    address user;
+    bytes32 loanId;
+    uint128 price;
+    uint256 totalAssets;
+    uint256 totalArray;
+  }
+
+  function action_signature(
+    address action,
+    address nftAddress,
+    ActionSignParams memory params
+  )
+    internal
+    returns (
+      DataTypes.SignAction memory,
+      DataTypes.EIP712Signature memory,
+      bytes32[] memory,
+      DataTypes.Asset[] memory
+    )
+  {
+    // Get nonce from the user
+    uint256 nonce = ActionSign(action).getNonce(params.user);
+    uint40 deadline = uint40(block.timestamp + 1000);
+
+    // Asesets
+    (bytes32[] memory assetsIds, DataTypes.Asset[] memory assets) = generate_assets(
+      nftAddress,
+      0,
+      params.totalArray
+    );
+
+    DataTypes.SignAction memory data;
+    DataTypes.EIP712Signature memory sig;
+    {
+      // Create the struct
+      data = DataTypes.SignAction({
+        loan: DataTypes.SignLoanConfig({
+          loanId: params.loanId, // Because is new need to be 0
+          aggLoanPrice: params.price,
+          aggLtv: 6000,
+          aggLiquidationThreshold: 6000,
+          totalAssets: uint88(params.totalAssets),
+          nonce: nonce,
+          deadline: deadline
+        }),
+        assets: assetsIds,
+        nonce: nonce,
+        deadline: deadline
+      });
+
+      bytes32 digest = Action(action).calculateDigest(nonce, data);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
+
+      // Build signature struct
+      sig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
+    }
+    return (data, sig, assetsIds, assets);
+  }
+
+  ///////////////////////////////////////////////////////////////
+  // MARKET
+
+  struct MarketSignParams {
+    address user;
+    bytes32 loanId;
+    uint256 price;
+    uint256 totalAssets;
+  }
+
+  function market_signature(
+    address market,
+    MarketSignParams memory params,
+    AssetParams memory asset
+  ) internal view returns (DataTypes.SignMarket memory, DataTypes.EIP712Signature memory) {
+    // Get nonce from the user
+    uint256 nonce = MarketSign(market).getNonce(params.user);
+    uint40 deadline = uint40(block.timestamp + 1000);
+
+    DataTypes.SignMarket memory data;
+    DataTypes.EIP712Signature memory sig;
+    {
+      // Create the struct
+      data = DataTypes.SignMarket({
+        loan: DataTypes.SignLoanConfig({
+          loanId: params.loanId, // Because is new need to be 0
+          aggLoanPrice: params.price,
+          aggLtv: 6000,
+          aggLiquidationThreshold: 6000,
+          totalAssets: uint88(params.totalAssets),
+          nonce: nonce,
+          deadline: deadline
+        }),
+        assetId: asset.assetId,
+        collection: asset.collection,
+        tokenId: asset.tokenId,
+        assetPrice: asset.assetPrice,
+        assetLtv: 6000,
+        nonce: nonce,
+        deadline: deadline
+      });
+
+      bytes32 digest = MarketSign(market).calculateDigest(nonce, data);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
+
+      // Build signature struct
+      sig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
+    }
+    return (data, sig);
+  }
+
+  //////////////////////////////////////////////////////////
+  // BORROW
+  function borrow_action(
+    address action,
+    address nft,
+    uint256 index,
+    uint256 amountToBorrow,
+    uint256 price,
+    uint256 totalAssets,
+    uint256 totalArray
+  ) internal returns (bytes32 loanId) {
+    vm.startPrank(getActorAddress(index));
+    // Get data signed
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      ,
+      DataTypes.Asset[] memory assets
+    ) = action_signature(
+        action,
+        nft,
+        ActionSignParams({
+          user: getActorAddress(index),
+          loanId: 0,
+          price: uint128(price),
+          totalAssets: totalAssets,
+          totalArray: totalArray
+        })
+      );
+    vm.recordLogs();
+    // Borrow amount
+    Action(action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+    loanId = bytes32(entries[entries.length - 1].topics[2]);
+    vm.stopPrank();
+  }
+
+  function borrow_more_action(
+    address action,
+    address nft,
+    bytes32 loanId,
+    uint256 index,
+    uint256 amountToBorrow,
+    uint128 price,
+    uint256 totalAssets
+  ) internal {
+    vm.startPrank(getActorAddress(index));
+    // Get data signed
+    DataTypes.Asset[] memory assets;
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      ,
+
+    ) = action_signature(
+        action,
+        nft,
+        ActionSignParams({
+          user: getActorAddress(index),
+          loanId: loanId,
+          price: price,
+          totalAssets: totalAssets,
+          totalArray: 0
+        })
+      );
+
+    // Borrow amount
+    Action(action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    vm.stopPrank();
   }
 }

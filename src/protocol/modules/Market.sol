@@ -29,7 +29,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 contract Market is BaseCoreModule, IMarketModule, MarketSign {
   using SafeERC20 for IERC20;
@@ -158,13 +158,15 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         revert Errors.LoanNotUpdated();
       }
 
-      ValidationLogic.validateAuctionLoan(
-        msgSender,
-        config.startAmount,
-        _reserveOracle,
-        loan,
-        IUToken(loan.uToken).getReserve(),
-        signMarket.loan
+      ValidationLogic.validateFutureLoanState(
+        ValidationLogic.ValidateLoanStateParams({
+          user: msgSender,
+          amount: config.startAmount,
+          price: signMarket.assetPrice,
+          reserveOracle: _reserveOracle,
+          reserve: IUToken(loan.uToken).getReserve(),
+          loanConfig: signMarket.loan
+        })
       );
     }
 
@@ -424,13 +426,17 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     // We check if the bid is in the correct range in order to ensure that the HF is correct.
     // Because the interest can be grow and the auction endend and the liquidation can happend in mind time.
-    ValidationLogic.validateAuctionLoan(
-      order.owner,
-      totalAmount,
-      _reserveOracle,
-      loan,
-      IUToken(loan.uToken).getReserve(),
-      signMarket.loan
+
+    // TODO: Change that to a especific vlidation because we need to ensure that the amount is bigger than the debt
+    ValidationLogic.validateFutureLoanState(
+      ValidationLogic.ValidateLoanStateParams({
+        user: order.owner,
+        amount: totalAmount,
+        price: signMarket.assetPrice,
+        reserveOracle: _reserveOracle,
+        reserve: IUToken(loan.uToken).getReserve(),
+        loanConfig: signMarket.loan
+      })
     );
 
     // Calculated the percentage desired by the user to repay

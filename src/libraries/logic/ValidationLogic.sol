@@ -20,7 +20,8 @@ import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
-import {console} from 'forge-std/console.sol';
+
+// import {console} from 'forge-std/console.sol';
 
 /**
  * @title ValidationLogic library
@@ -75,102 +76,106 @@ library ValidationLogic {
     address loanBorrower;
   }
 
-  function validateHealtyLoan(
-    address user,
-    uint256 amount,
-    address reserveOracle,
-    DataTypes.Loan memory loan,
-    DataTypes.ReserveData memory reserve,
-    DataTypes.SignLoanConfig memory loanConfig
-  ) internal view {
-    ValidateBorrowLocalVars memory vars;
-
-    (
-      vars.userCollateralBalance,
-      vars.userBorrowBalance,
-      vars.healthFactor,
-      vars.currentLtv,
-      vars.currentLiquidationThreshold
-    ) = GenericLogic.calculateLoanData(loan.loanId, user, reserveOracle, reserve, loanConfig);
-
-    // This is the total assets needed
-    if (loanConfig.totalAssets > 0) {
-      if (vars.currentLtv > 9999) {
-        revert Errors.InvalidCurrentLtv();
-      }
-      if (vars.currentLiquidationThreshold > 9999) {
-        revert Errors.InvalidCurrentLiquidationThreshold();
-      }
-
-      if (vars.userCollateralBalance == 0) revert Errors.InvalidUserCollateralBalance();
-
-      if (loan.state != DataTypes.LoanState.ACTIVE) {
-        revert Errors.LoanNotActive();
-      }
-      // ........................ DEBUG MODE ....................................
-      // console.log('-----------------------------------------------');
-      // console.log('Total Collateral Balance : ', vars.userCollateralBalance);
-      // console.log('User Borrow Balance      : ', vars.userBorrowBalance);
-      // console.log('HF                       : ', vars.healthFactor);
-      // console.log('LTV                      : ', vars.currentLtv);
-      // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-      // console.log('AMOUNT REPAY             ; ', amount);
-      // console.log('-----------------------------------------------');
-
-      if (vars.healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-        revert Errors.UnhealtyLoan();
-      }
-
-      //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
-      //LTV is calculated in percentage
-      vars.amountOfCollateralNeeded = (vars.userBorrowBalance + amount).percentDiv(vars.currentLtv);
-
-      if (vars.amountOfCollateralNeeded > vars.userCollateralBalance) {
-        revert Errors.LowCollateral();
-      }
-    }
+  struct ValidateLoanStateParams {
+    address user;
+    uint256 amount;
+    uint256 price;
+    address reserveOracle;
+    DataTypes.ReserveData reserve;
+    DataTypes.SignLoanConfig loanConfig;
   }
 
-  function validateAuctionLoan(
-    address user,
-    uint256 amount,
-    address reserveOracle,
-    DataTypes.Loan memory loan,
-    DataTypes.ReserveData memory reserve,
-    DataTypes.SignLoanConfig memory loanConfig
+  function validateFutureLoanState(
+    ValidateLoanStateParams memory params
   ) internal view returns (uint256 userPendingDebt) {
-    console.log('ENTRA AQUI?');
-    (uint256 userCollateralBalance, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic
-      .calculateLoanDataRepay(loan.loanId, amount, user, reserveOracle, reserve, loanConfig);
-
-    // This is the total assets needed
-    if (loanConfig.totalAssets > 0) {
-      if (loanConfig.aggLtv > 9999) {
-        revert Errors.InvalidCurrentLtv();
-      }
-      if (loanConfig.aggLiquidationThreshold > 9999) {
-        revert Errors.InvalidCurrentLiquidationThreshold();
-      }
-
-      if (userCollateralBalance == 0) revert Errors.InvalidUserCollateralBalance();
-
-      // ........................ DEBUG MODE ....................................
-      console.log('> ----------------------------------------------- <');
-      console.log('Total Collateral Balance : ', userCollateralBalance);
-      console.log('userTotalDebt            : ', userTotalDebt);
-      console.log('HF                       : ', healthFactor);
-      console.log('LTV                      : ', loanConfig.aggLtv);
-      console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-      console.log('AMOUNT REPAY             ; ', amount);
-      console.log('-----------------------------------------------');
-
-      if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-        revert Errors.UnhealtyLoan();
-      }
-    } else {
-      // If is the last asset we check if the amount it's equal to the current debt
-      if (userTotalDebt > 0 && userTotalDebt != amount) revert Errors.UnhealtyLoan();
+    // We always need to define the LTV and the Liquidation threshold
+    if (params.loanConfig.aggLtv == 0 || params.loanConfig.aggLtv > 9999) {
+      revert Errors.InvalidCurrentLtv();
     }
+    if (
+      params.loanConfig.aggLiquidationThreshold == 0 ||
+      params.loanConfig.aggLiquidationThreshold > 9999
+    ) {
+      revert Errors.InvalidCurrentLiquidationThreshold();
+    }
+
+    // We calculate the current debt and the HF
+    (uint256 userCollateralBalance, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic
+      .calculateFutureLoanData(
+        params.loanConfig.loanId,
+        params.amount,
+        params.price,
+        params.user,
+        params.reserveOracle,
+        params.reserve,
+        params.loanConfig
+      );
+
+    // ........................ DEBUG MODE ....................................
+    // console.log('> validateFutureLoanState ----------------------------------------------- <');
+    // console.log('Total Collateral Balance : ', userCollateralBalance);
+    // console.log('userTotalDebt            : ', userTotalDebt);
+    // console.log('HF                       : ', healthFactor);
+    // console.log('LTV                      : ', params.loanConfig.aggLtv);
+    // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
+    // console.log('AMOUNT REPAY             ; ', params.amount);
+    // console.log('-----------------------------------------------');
+
+    if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+      revert Errors.UnhealtyLoan();
+    }
+
+    if (params.loanConfig.totalAssets == 0 && userTotalDebt > params.amount) {
+      revert Errors.UnhealtyLoan();
+    }
+    return userTotalDebt;
+  }
+
+  function validateFutureHasUnhealtyLoanState(
+    ValidateLoanStateParams memory params
+  ) internal view returns (uint256 userPendingDebt) {
+    // We always need to define the LTV and the Liquidation threshold
+    if (params.loanConfig.aggLtv == 0 || params.loanConfig.aggLtv > 9999) {
+      revert Errors.InvalidCurrentLtv();
+    }
+    if (
+      params.loanConfig.aggLiquidationThreshold == 0 ||
+      params.loanConfig.aggLiquidationThreshold > 9999
+    ) {
+      revert Errors.InvalidCurrentLiquidationThreshold();
+    }
+
+    // We calculate the current debt and the HF
+    (uint256 userCollateralBalance, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic
+      .calculateFutureLoanData(
+        params.loanConfig.loanId,
+        params.amount,
+        params.price,
+        params.user,
+        params.reserveOracle,
+        params.reserve,
+        params.loanConfig
+      );
+
+    // ........................ DEBUG MODE ....................................
+    // console.log(
+    //   '> validateFutureUnhealtyLoanState ----------------------------------------------- <'
+    // );
+    // console.log('Total Collateral Balance : ', userCollateralBalance);
+    // console.log('userTotalDebt            : ', userTotalDebt);
+    // console.log('HF                       : ', healthFactor);
+    // console.log('LTV                      : ', params.loanConfig.aggLtv);
+    // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
+    // console.log('AMOUNT REPAY             ; ', params.amount);
+    // console.log('-----------------------------------------------');
+
+    if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+      revert Errors.HealtyLoan();
+    }
+    if (params.loanConfig.totalAssets == 0 && userTotalDebt < params.amount) {
+      revert Errors.HealtyLoan();
+    }
+    return userTotalDebt;
   }
 
   function validateRepay(
@@ -210,18 +215,12 @@ library ValidationLogic {
     ) {
       revert Errors.OrderNotAllowed();
     }
-    // Validate owner
 
     // Check if the starting time is not in the past
-
     Errors.verifyNotExpiredTimestamp(orderTimeframeEndtime, block.timestamp);
 
     // Check if it is a biddable order
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
-
-    // if (loanState != DataTypes.LoanState.ACTIVE) {
-    //   revert Errors.LoanNotActive();
-    // }
   }
 
   function validateBuyNow(
@@ -238,9 +237,6 @@ library ValidationLogic {
     }
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-    // if (loanState == DataTypes.LoanState.FREEZE) {
-    //   revert Errors.LoanNotActive();
-    // }
 
     if (order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
       // Check time only for typefixed price
@@ -267,9 +263,6 @@ library ValidationLogic {
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
 
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
-    // if (loanState == DataTypes.LoanState.FREEZE) {
-    //   revert Errors.LoanNotActive();
-    // }
   }
 
   function validateHealthyHealthFactor(uint256 hf) internal pure {
@@ -340,12 +333,6 @@ library ValidationLogic {
     if (msgSender != orderOwner) {
       revert Errors.NotEqualOrderOwner();
     }
-    // Check the current status
-
-    // if (loanState != DataTypes.LoanState.ACTIVE) {
-    //   revert Errors.LoanNotActive();
-    // }
-    // Finalized auction can't be cancelled
 
     if (
       orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION ||
@@ -374,30 +361,5 @@ library ValidationLogic {
     Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
     if (totalAmount == 0) revert Errors.InvalidTotalAmount();
     if (totalAmount < minBid) revert Errors.InvalidParams();
-  }
-
-  struct ValidateBidLiquidationOrderParams {
-    address reserveOracle;
-    uint256 endTime;
-    DataTypes.Loan loan;
-    DataTypes.ReserveData reserve;
-    DataTypes.SignLoanConfig loanConfig;
-  }
-
-  function validateBidLiquidationOrder(
-    ValidateBidLiquidationOrderParams memory params
-  ) internal view {
-    (, , uint256 hf) = GenericLogic.calculateLoanDataRepay(
-      params.loan.loanId,
-      0,
-      params.loan.owner,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
-    );
-
-    if (hf > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      revert Errors.HealtyLoan();
-    }
   }
 }

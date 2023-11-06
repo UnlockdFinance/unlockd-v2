@@ -376,9 +376,9 @@ contract SellNowTest is Setup {
         address(_nft),
         2,
         getAssetAddress('WETH'),
-        1 ether
+        0.2 ether
       ),
-      price: 1 ether,
+      price: 0.2 ether,
       value: 0
     });
 
@@ -389,7 +389,7 @@ contract SellNowTest is Setup {
 
     (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
       _actor,
-      LoanData({loanId: loanId, aggLoanPrice: 1.5 ether, totalAssets: 1})
+      LoanData({loanId: loanId, aggLoanPrice: 1 ether, totalAssets: 1})
     );
     hoax(_actor);
     vm.expectRevert(abi.encodeWithSelector(Errors.UnhealtyLoan.selector)); // Unhealty loan
@@ -434,7 +434,7 @@ contract SellNowTest is Setup {
       LoanData({loanId: loanId, aggLoanPrice: 0, totalAssets: 0})
     );
     hoax(_actor);
-    vm.expectRevert(abi.encodeWithSelector(Errors.MarketPriceNotCoverDebt.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.UnhealtyLoan.selector));
     SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
   }
 

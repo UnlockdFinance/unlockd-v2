@@ -8,7 +8,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 library OrderLogic {
   using SafeERC20 for IERC20;
@@ -61,6 +61,26 @@ library OrderLogic {
       order.timeframe = DataTypes.Timeframe({startTime: params.startTime, endTime: params.endTime});
     }
     emit OrderCreated(params.owner, params.orderId, params.loanId, params.orderType);
+  }
+
+  function updateToLiquidationOrder(
+    DataTypes.Order storage order,
+    uint256 minBid,
+    DataTypes.SignAuction calldata signAuction
+  ) internal {
+    // Check if the Loan is Unhealty
+    order.orderType = DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION;
+    // Overwrite offer
+    order.offer = DataTypes.OfferItem({
+      loanId: signAuction.loan.loanId,
+      assetId: signAuction.assetId,
+      startAmount: uint128(minBid),
+      endAmount: 0,
+      // debToSell is the % of the final bid or payed that is going to repay debt.
+      debtToSell: 1e4
+    });
+
+    order.timeframe = DataTypes.Timeframe({startTime: 0, endTime: signAuction.endTime});
   }
 
   struct BorrowByBidderParams {
@@ -173,7 +193,7 @@ library OrderLogic {
       totalDebt,
       ltv
     );
-    console.log('Amount NEEDED', minAmountNeeded);
+
     maxDebtOrDefault = minAmountNeeded > defaultAmount ? minAmountNeeded : defaultAmount;
   }
 
@@ -223,6 +243,7 @@ library OrderLogic {
         );
     }
     uint256 lastBid = order.bid.amountOfDebt + order.bid.amountToPay;
+
     return
       getMaxDebtOrDefault(
         order.offer.loanId,

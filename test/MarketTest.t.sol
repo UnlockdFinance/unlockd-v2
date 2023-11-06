@@ -6,7 +6,6 @@ import './test-utils/setups/Setup.sol';
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 
-import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 
 import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
@@ -36,14 +35,6 @@ contract MarketTest is Setup {
     bytes32 loanId;
     uint256 price;
     uint256 totalAssets;
-  }
-
-  struct AssetParams {
-    bytes32 assetId;
-    address collection;
-    uint256 tokenId;
-    uint256 assetPrice;
-    uint256 assetLtv;
   }
 
   struct GenerateActionSignParams {

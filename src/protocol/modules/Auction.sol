@@ -26,6 +26,8 @@ import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 
+// import {console} from 'forge-std/console.sol';
+
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using PercentageMath for uint256;
   using SafeTransferLib for address;
@@ -79,6 +81,36 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   }
 
   /**
+   * @dev Get min bid on auction
+   * @param orderId identifier of the order
+   * @param uToken token of the loan
+   * @param aggLoanPrice aggregated loan colaterized on the Loan
+   * @param aggLTV aggregated ltv between assets on the Loan
+   */
+  function getMinBidPriceAuction(
+    bytes32 orderId,
+    address uToken,
+    uint256 aggLoanPrice,
+    uint256 aggLTV
+  ) external view returns (uint256 minBid) {
+    minBid = OrderLogic.getMinBid(
+      _orders[orderId],
+      _reserveOracle,
+      aggLoanPrice,
+      aggLTV,
+      IUToken(uToken).getReserve()
+    );
+  }
+
+  /**
+   * @dev Get Order stored by ID
+   * @param orderId identifier of the order
+   */
+  function getOrderAuction(bytes32 orderId) external view returns (DataTypes.Order memory) {
+    return _orders[orderId];
+  }
+
+  /**
    * @dev Bid in a asset with a unhealty loan
    * @param amountToPay Transfered amount from the user
    * @param amountOfDebt Amount borrowed agains the asset
@@ -94,7 +126,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     address msgSender = unpackTrailingParamMsgSender();
 
     _validateSignature(msgSender, signAuction, sig);
-
     // Validate signature
     DataTypes.Loan memory loan = _loans[signAuction.loan.loanId];
     bytes32 orderId = OrderLogic.generateId(signAuction.assetId, signAuction.loan.loanId);
@@ -106,81 +137,86 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     uint256 totalAmount = amountToPay + amountOfDebt;
 
     uint256 minBid;
-
     // Load the storage of the order
     DataTypes.Order storage order = _orders[orderId];
 
     if (order.owner == address(0)) {
-      // Validate bid in order
-      ValidationLogic.validateBidLiquidationOrder(
-        ValidationLogic.ValidateBidLiquidationOrderParams({
-          reserveOracle: _reserveOracle,
-          endTime: signAuction.endTime,
-          loan: loan,
-          reserve: reserve,
-          loanConfig: signAuction.loan
-        })
-      );
-      // The loan need to be after the changes are success
-      // We use the min or default because this asset maybe can't support the full debt and
-      // we need to continue the auction with the rest of the elements in the loan.
-      minBid = OrderLogic.getMinDebtOrDefault(
-        loan.loanId,
-        loan.owner,
-        _reserveOracle,
-        signAuction.assetPrice,
-        signAuction.loan.aggLoanPrice,
-        signAuction.loan.aggLtv,
-        reserve
-      );
+      {
+        // The loan need to be after the changes are success
+        // We use the min or default because this asset maybe can't support the full debt and
+        // we need to continue the auction with the rest of the elements in the loan.
+        minBid = OrderLogic.getMinDebtOrDefault(
+          loan.loanId,
+          loan.owner,
+          _reserveOracle,
+          signAuction.assetPrice,
+          signAuction.loan.aggLoanPrice,
+          signAuction.loan.aggLtv,
+          reserve
+        );
 
-      // Creation of the Order
-      order.createOrder(
-        OrderLogic.ParamsCreateOrder({
-          orderType: DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION,
-          orderId: orderId,
-          owner: loan.owner,
-          loanId: signAuction.loan.loanId,
-          assetId: signAuction.assetId,
-          debtToSell: 1e4, // PercentageMath.ONE_HUNDRED_PERCENT
-          // Start amount price of the current debt or
-          startAmount: minBid.toUint128(),
-          endAmount: 0,
-          startTime: 0,
-          endTime: signAuction.endTime
-        })
-      );
+        // Validate bid in order
+        // Check if the Loan is Unhealty
+
+        ValidationLogic.validateFutureHasUnhealtyLoanState(
+          ValidationLogic.ValidateLoanStateParams({
+            user: loan.owner,
+            amount: 0,
+            price: signAuction.assetPrice,
+            reserveOracle: _reserveOracle,
+            reserve: reserve,
+            loanConfig: signAuction.loan
+          })
+        );
+
+        // Creation of the Order
+        order.createOrder(
+          OrderLogic.ParamsCreateOrder({
+            orderType: DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION,
+            orderId: orderId,
+            owner: loan.owner,
+            loanId: signAuction.loan.loanId,
+            assetId: signAuction.assetId,
+            debtToSell: 1e4, // PercentageMath.ONE_HUNDRED_PERCENT
+            // Start amount price of the current debt or
+            startAmount: minBid.toUint128(),
+            endAmount: 0,
+            startTime: 0,
+            endTime: signAuction.endTime
+          })
+        );
+      }
     } else {
-      minBid = OrderLogic.getMinBid(
-        order,
-        _reserveOracle,
-        signAuction.loan.aggLoanPrice,
-        signAuction.loan.aggLtv,
-        reserve
-      );
+      {
+        minBid = OrderLogic.getMinBid(
+          order,
+          _reserveOracle,
+          signAuction.loan.aggLoanPrice,
+          signAuction.loan.aggLtv,
+          reserve
+        );
 
-      // If the auction is in market, we migrate this type of auction to liquidation
-      if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
-        order.orderType = DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION;
-        // Overwrite offer
-        order.offer = DataTypes.OfferItem({
-          loanId: loan.loanId,
-          assetId: signAuction.assetId,
-          startAmount: uint128(minBid),
-          endAmount: 0,
-          // debToSell is the % of the final bid or payed that is going to repay debt.
-          debtToSell: 1e4
-        });
-
-        order.timeframe = DataTypes.Timeframe({startTime: 0, endTime: signAuction.endTime});
+        // If the auction is in market, we migrate this type of auction to liquidation
+        if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+          ValidationLogic.validateFutureHasUnhealtyLoanState(
+            ValidationLogic.ValidateLoanStateParams({
+              user: order.owner,
+              amount: order.bid.amountOfDebt + order.bid.amountToPay,
+              price: signAuction.assetPrice,
+              reserveOracle: _reserveOracle,
+              reserve: reserve,
+              loanConfig: signAuction.loan
+            })
+          );
+          // You only can convert the aution if the lastBid don't cover the debt
+          order.updateToLiquidationOrder(minBid, signAuction);
+        }
       }
     }
-
     ValidationLogic.validateBid(totalAmount, signAuction.loan.totalAssets, minBid, order, loan);
 
     // stake the assets on the protocol
     loan.underlyingAsset.safeTransferFrom(msgSender, address(this), amountToPay);
-
     bytes32 loanId;
     // The bidder asks for a debt
     if (amountOfDebt != 0) {
