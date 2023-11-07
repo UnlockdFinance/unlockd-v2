@@ -233,6 +233,6 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       _loans[loan.loanId].totalAssets = signAction.loan.totalAssets;
     }
 
-    emit Repay(msgSender, loan.loanId, amount, signAction.assets.length);
+    emit Repay(msgSender, loan.loanId, amount, signAction.assets);
   }
 }

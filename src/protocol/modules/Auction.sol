@@ -461,7 +461,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     delete _orders[orderId];
 
     // Check the messe it's correct
-    if (signAuction.loan.totalAssets != _loans[loan.loanId].totalAssets - 1) {
+    if (_loans[loan.loanId].totalAssets != signAuction.loan.totalAssets + 1) {
       revert Errors.TokenAssetsMismatch();
     }
     if (signAuction.loan.totalAssets > 1) {

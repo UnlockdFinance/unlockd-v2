@@ -481,7 +481,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // Cache loan ID
     bytes32 loanId = loan.loanId;
 
-    if (signMarket.loan.totalAssets != _loans[loan.loanId].totalAssets - 1) {
+    if (_loans[loan.loanId].totalAssets != signMarket.loan.totalAssets + 1) {
       revert Errors.TokenAssetsMismatch();
     }
     // We check the status
@@ -763,7 +763,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       // We remove the current order asociated to this asset
       delete _orders[orderId];
 
-      if (signMarket.loan.totalAssets != _loans[loan.loanId].totalAssets - 1) {
+      if (_loans[loan.loanId].totalAssets != signMarket.loan.totalAssets + 1) {
         revert Errors.TokenAssetsMismatch();
       }
       // We check the status

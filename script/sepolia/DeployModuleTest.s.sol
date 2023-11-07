@@ -25,7 +25,7 @@ import {SellNow} from '../../src/protocol/modules/SellNow.sol';
 import {Market} from '../../src/protocol/modules/Market.sol';
 
 contract DeployModuleTestScript is DeployerHelper {
-  bytes32 public constant VERSION = '12';
+  bytes32 public constant VERSION = '13';
   uint256 public constant MODULE_ID = 100;
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
@@ -39,12 +39,12 @@ contract DeployModuleTestScript is DeployerHelper {
 
       {
         // Test testImp = new Test(MODULE_ID, VERSION);
-
+        Action actionImp = new Action(Constants.MODULEID__ACTION, VERSION);
         // Market sellImp = new Market(Constants.MODULEID__MARKET, VERSION);
-        SellNow buyNowImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
+        // SellNow buyNowImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
         // Install Modules
         address[] memory modules = new address[](1);
-        modules[0] = address(buyNowImp);
+        modules[0] = address(actionImp);
         // modules[1] = address(buyNowImp);
 
         address installer = Unlockd(addresses.unlockd).moduleIdToProxy(
@@ -53,21 +53,21 @@ contract DeployModuleTestScript is DeployerHelper {
         Installer(installer).installModules(modules);
       }
 
-      {
-        DeployPeriphery deployer = new DeployPeriphery(DeployConfig.ADMIN, addresses.aclManager);
+      // {
+      //   DeployPeriphery deployer = new DeployPeriphery(DeployConfig.ADMIN, addresses.aclManager);
 
-        address adapter = deployer.deployReservoirMarket(
-          DeployConfig.RESERVOIR_ROUTER,
-          0x0000000000000000000000000000000000000000
-        );
-        address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
-          Constants.MODULEID__MANAGER
-        );
-        Manager manager = Manager(managerAddress);
-        manager.addMarketAdapters(adapter, true);
+      //   address adapter = deployer.deployReservoirMarket(
+      //     DeployConfig.RESERVOIR_ROUTER,
+      //     0x0000000000000000000000000000000000000000
+      //   );
+      //   address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
+      //     Constants.MODULEID__MANAGER
+      //   );
+      //   Manager manager = Manager(managerAddress);
+      //   manager.addMarketAdapters(adapter, true);
 
-        console.log('ADAPTER', adapter);
-      }
+      //   console.log('ADAPTER', adapter);
+      // }
 
       ACLManager(addresses.aclManager).removeUTokenAdmin(msg.sender);
       ACLManager(addresses.aclManager).removeGovernanceAdmin(msg.sender);

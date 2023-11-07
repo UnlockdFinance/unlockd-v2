@@ -119,7 +119,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         owner: loan.owner
       })
     );
-    if (signSellNow.loan.totalAssets != _loans[signSellNow.loan.loanId].totalAssets - 1) {
+    if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
       revert Errors.TokenAssetsMismatch();
     }
     if (signSellNow.loan.totalAssets > 1) {
@@ -209,7 +209,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         })
       );
 
-      if (signSellNow.loan.totalAssets != _loans[signSellNow.loan.loanId].totalAssets - 1) {
+      if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
         revert Errors.TokenAssetsMismatch();
       }
       // If we don't have more loans we can remoe it
