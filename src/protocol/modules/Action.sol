@@ -35,6 +35,22 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
   }
 
   /**
+   * @dev Get the amount of debt pending on this loan
+   * @param loanId identifier of the Loan
+   */
+  function getAmountToRepay(bytes32 loanId) external view returns (uint256 amount) {
+    DataTypes.Loan memory loan = _loans[loanId];
+
+    return
+      GenericLogic.calculateLoanDebt(
+        loanId,
+        loan.owner,
+        _reserveOracle,
+        IUToken(loan.uToken).getReserve()
+      );
+  }
+
+  /**
    * @dev This borrow function has diferent behavior
    *  - Create a new loan and borrow some colateral
    *  - If the amount is 0 and you pass the array of assets you can add colaterall to a especific loanId
@@ -147,6 +163,10 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           loanConfig: signAction.loan
         })
       );
+
+      if (loan.state == DataTypes.LoanState.FREEZE) {
+        revert Errors.LoanNotActive();
+      }
       // update state MUST BEFORE get borrow amount which is depent on latest borrow index
       IUToken(uToken).updateStateReserve();
 
@@ -214,6 +234,11 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           loanConfig: signAction.loan
         })
       );
+
+      if (loan.state == DataTypes.LoanState.FREEZE) {
+        revert Errors.LoanNotActive();
+      }
+
       // Get delegation owner
       address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);
 

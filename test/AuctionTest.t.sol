@@ -11,6 +11,7 @@ import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 
 import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
+import {Manager} from '../src/protocol/modules/Manager.sol';
 import {Auction, AuctionSign, IAuctionModule} from '../src/protocol/modules/Auction.sol';
 import {Market, MarketSign, IMarketModule} from '../src/protocol/modules/Market.sol';
 import {DataTypes} from '../src/types/DataTypes.sol';
@@ -27,6 +28,7 @@ contract AuctionTest is Setup {
   address internal _auction;
   address internal _action;
   address internal _market;
+  address internal _manager;
   uint256 internal deadlineIncrement;
 
   function setUp() public virtual override {
@@ -45,6 +47,7 @@ contract AuctionTest is Setup {
     _action = unlockd.moduleIdToProxy(Constants.MODULEID__ACTION);
     _auction = unlockd.moduleIdToProxy(Constants.MODULEID__AUCTION);
     _market = unlockd.moduleIdToProxy(Constants.MODULEID__MARKET);
+    _manager = unlockd.moduleIdToProxy(Constants.MODULEID__MANAGER);
     _nft = super.getNFT('PUNK');
   }
 
@@ -114,7 +117,6 @@ contract AuctionTest is Setup {
     approveAsset('WETH', address(getUnlockd()), minBid); // APPROVE AMOUNT
 
     // add small amount to bid
-    console.log('-----------------', signMarket.loan.totalAssets);
     Market(_market).bid(orderId, uint128(minBid), 0, signMarket, sig); // BID ON THE ASSET
 
     // DataTypes.Order memory order = Market(_market).getOrder(orderId);
@@ -286,8 +288,14 @@ contract AuctionTest is Setup {
     // Bid AUCTION 3
     _bid_market_auction(loanId, orderId, ACTORTHREE);
 
+    // ACTIVATE the loan
+    hoax(_admin);
+    Manager(_manager).emergencyActiveLoan(loanId);
     // We force borrow more because a price increased
     borrow_more_action(_action, _nft, loanId, ACTOR, 0.2 ether, 10 ether, 1);
+    // Freeze LOAN
+    hoax(_admin);
+    Manager(_manager).emergencyFreezeLoan(loanId);
 
     DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
 

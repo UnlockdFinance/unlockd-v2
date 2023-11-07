@@ -58,459 +58,321 @@ contract RepayTest is Setup {
   }
 
   /////////////////////////////////////////////////////////////////////////////////
-  // Helpers
+  // Repay
   /////////////////////////////////////////////////////////////////////////////////
 
-  function _generate_assets(
-    uint256 totalArray
-  ) internal view returns (bytes32[] memory, DataTypes.Asset[] memory) {
-    // Asesets
-    bytes32[] memory assetsIds = new bytes32[](totalArray);
-    DataTypes.Asset[] memory assets = new DataTypes.Asset[](totalArray);
-    for (uint256 i = 0; i < totalArray; ) {
-      uint256 tokenId = i + 1;
-      assetsIds[i] = AssetLogic.assetId(_nft, tokenId);
-      assets[i] = DataTypes.Asset({collection: _nft, tokenId: tokenId});
+  function test_action_repay_full_borrow() public {
+    uint256 amountToBorrow = 0.5 ether;
+    uint256 collateral = 2 ether;
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amountToBorrow, collateral, 2, 2);
+
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    // Price updated
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assets,
+
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: loanId,
+          price: 0,
+          totalAssets: 0,
+          totalArray: 2
+        })
+      );
+
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
       unchecked {
         ++i;
       }
     }
-    return (assetsIds, assets);
+    uint256 initialGas = gasleft();
+
+    hoax(getActorAddress(ACTOR));
+    approveAsset('WETH', address(_uTokens['WETH']), amountToBorrow);
+    hoax(getActorAddress(ACTOR));
+    Action(_action).repay(amountToBorrow, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('Repay GAS: ', gasUsed);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
+      unchecked {
+        ++i;
+      }
+    }
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
   }
 
-  function _generate_signature(
-    GenerateSignParams memory params
-  )
-    internal
-    view
-    returns (
-      DataTypes.SignAction memory,
-      DataTypes.EIP712Signature memory,
-      bytes32[] memory,
-      DataTypes.Asset[] memory
-    )
-  {
-    // Get nonce from the user
-    uint256 nonce = ActionSign(_action).getNonce(params.user);
-    uint40 deadline = uint40(block.timestamp + 1000);
-    (bytes32[] memory assetsIds, DataTypes.Asset[] memory assets) = _generate_assets(
-      params.totalArray
-    );
-    // Create the struct
-    DataTypes.SignAction memory data = DataTypes.SignAction({
-      loan: DataTypes.SignLoanConfig({
-        loanId: params.loanId, // Because is new need to be 0
-        aggLoanPrice: params.price,
-        aggLtv: 6000,
-        aggLiquidationThreshold: 6000,
-        totalAssets: uint88(params.totalAssets),
-        nonce: nonce,
-        deadline: deadline
-      }),
-      assets: assetsIds,
-      nonce: nonce,
-      deadline: deadline
-    });
+  function test_action_repay_unlock_one_asset_locked() public {
+    uint256 amountToBorrow = 0.30 ether;
 
-    bytes32 digest = Action(_action).calculateDigest(nonce, data);
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amountToBorrow, 4 ether, 2, 2);
 
-    // Build signature struct
-    DataTypes.EIP712Signature memory sig = DataTypes.EIP712Signature({
-      v: v,
-      r: r,
-      s: s,
-      deadline: deadline
-    });
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    // Price updated
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assets, // We only generate the signature with the asset that we want to unlock
 
-    return (data, sig, assetsIds, assets);
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: loanId,
+          price: 2 ether,
+          totalAssets: 1,
+          totalArray: 1
+        })
+      );
+
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    uint256 initialGas = gasleft();
+    hoax(getActorAddress(ACTOR));
+    Action(_action).repay(0, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('Repay GAS: ', gasUsed);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
+      unchecked {
+        ++i;
+      }
+    }
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
   }
 
-  function _generate_borrow(
-    uint256 amountToBorrow,
-    uint256 price,
-    uint256 totalAssets,
-    uint256 totalArray
-  ) internal returns (bytes32 loanId) {
-    // Get data signed
+  function test_action_repay_unlock_multiple_assets() public {
+    uint256 amountToBorrow = 0.59 ether;
+    uint256 collateral = 2 ether;
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amountToBorrow, collateral, 3, 3);
+
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    // Price updated
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assets, // We only generate the signature with the asset that we want to unlock
+
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: loanId,
+          price: 1 ether,
+          totalAssets: 1,
+          totalArray: 2
+        })
+      );
+
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    uint256 initialGas = gasleft();
+    hoax(getActorAddress(ACTOR));
+    Action(_action).repay(0, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('Repay GAS: ', gasUsed);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
+      unchecked {
+        ++i;
+      }
+    }
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+  }
+
+  function test_action_repay_token_assets_mismatch() public {
+    uint256 amountToBorrow = 0.59 ether;
+    uint256 collateral = 2 ether;
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amountToBorrow, collateral, 3, 3);
+
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    // Price updated
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assets, // We only generate the signature with the asset that we want to unlock
+
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: loanId,
+          price: 1 ether,
+          totalAssets: 5,
+          totalArray: 1
+        })
+      );
+
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    hoax(getActorAddress(ACTOR));
+    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+    Action(_action).repay(0, signAction, sig);
+  }
+
+  function test_action_repay_full_borrow_but_not_unlock_all_nfts() public {
+    uint256 amountToBorrow = 0.59 ether;
+    uint256 collateral = 2 ether;
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amountToBorrow, collateral, 3, 3);
+
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    // Price updated
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
       ,
-      DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: price,
-          totalAssets: totalAssets,
-          totalArray: totalArray
+          loanId: loanId,
+          price: 1 ether,
+          totalAssets: 3,
+          totalArray: 0
         })
       );
-    vm.recordLogs();
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    Vm.Log[] memory entries = vm.getRecordedLogs();
-    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
-    return loanId;
+    (bytes32[] memory assets, ) = generate_assets(_nft, 0, 3);
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    uint256 initialGas = gasleft();
+    hoax(getActorAddress(ACTOR));
+    approveAsset('WETH', address(_uTokens['WETH']), amountToBorrow);
+    hoax(getActorAddress(ACTOR));
+    Action(_action).repay(amountToBorrow, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('Repay GAS: ', gasUsed);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
   }
 
-  /////////////////////////////////////////////////////////////////////////////////
-  // Repay
-  /////////////////////////////////////////////////////////////////////////////////
+  function test_action_repay_full_borrow_locked_loan() public {
+    uint256 amountToBorrow = 0.5 ether;
+    uint256 collateral = 2 ether;
+    address actor = super.getActorAddress(ACTOR);
+    // Configure
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amountToBorrow, collateral, 2, 2);
 
-  // function test_action_repay_full_borrow() public useActor(ACTOR) {
-  //   uint256 amountToBorrow = 0.5 ether;
-  //   uint256 collateral = 2 ether;
-  //   bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
+    hoax(_admin);
+    Manager(_manager).emergencyFreezeLoan(loanId);
 
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  //   // Price updated
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assets,
+    assertEq(balanceOfAsset('WETH', actor), amountToBorrow);
 
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: loanId,
-  //         price: collateral,
-  //         totalAssets: 0,
-  //         totalArray: 2
-  //       })
-  //     );
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assets,
 
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
+          user: super.getActorAddress(ACTOR),
+          loanId: loanId,
+          price: 0,
+          totalAssets: 0,
+          totalArray: 2
+        })
+      );
 
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   uint256 initialGas = gasleft();
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(actor, 0);
 
-  //   approveAsset('WETH', address(_uTokens['WETH']), amountToBorrow);
-  //   Action(_action).repay(amountToBorrow, signAction, sig);
-  //   uint256 gasUsed = initialGas - gasleft();
-  //   console.log('Repay GAS: ', gasUsed);
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    uint256 initialGas = gasleft();
 
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-  // }
+    vm.startPrank(actor);
+    approveAsset('WETH', address(_uTokens['WETH']), amountToBorrow);
+    vm.expectRevert(Errors.LoanNotActive.selector);
+    Action(_action).repay(amountToBorrow, signAction, sig);
 
-  // function test_action_repay_unlock_one_asset_locked() public useActor(ACTOR) {
-  //   uint256 amountToBorrow = 0.59 ether;
-  //   uint256 collateral = 2 ether;
-  //   bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 1, 1);
+    vm.stopPrank();
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('Repay GAS: ', gasUsed);
 
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  //   // Price updated
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assets, // We only generate the signature with the asset that we want to unlock
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+  }
 
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: loanId,
-  //         price: 0,
-  //         totalAssets: 0,
-  //         totalArray: 1
-  //       })
-  //     );
-
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   uint256 initialGas = gasleft();
-
-  //   Action(_action).repay(0, signAction, sig);
-  //   uint256 gasUsed = initialGas - gasleft();
-  //   console.log('Repay GAS: ', gasUsed);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  // }
-
-  // function test_action_repay_unlock_multiple_assets() public useActor(ACTOR) {
-  //   uint256 amountToBorrow = 0.59 ether;
-  //   uint256 collateral = 2 ether;
-  //   bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 3, 3);
-
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  //   // Price updated
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assets, // We only generate the signature with the asset that we want to unlock
-
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: loanId,
-  //         price: 1 ether,
-  //         totalAssets: 1,
-  //         totalArray: 2
-  //       })
-  //     );
-
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   uint256 initialGas = gasleft();
-
-  //   Action(_action).repay(0, signAction, sig);
-  //   uint256 gasUsed = initialGas - gasleft();
-  //   console.log('Repay GAS: ', gasUsed);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  // }
-
-  // function test_action_repay_token_assets_mismatch() public useActor(ACTOR) {
-  //   uint256 amountToBorrow = 0.59 ether;
-  //   uint256 collateral = 2 ether;
-  //   bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 3, 3);
-
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  //   // Price updated
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assets, // We only generate the signature with the asset that we want to unlock
-
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: loanId,
-  //         price: 1 ether,
-  //         totalAssets: 5,
-  //         totalArray: 1
-  //       })
-  //     );
-
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
-  //   Action(_action).repay(0, signAction, sig);
-  // }
-
-  // function test_action_repay_full_borrow_but_not_unlock_all_nfts() public useActor(ACTOR) {
-  //   uint256 amountToBorrow = 0.59 ether;
-  //   uint256 collateral = 2 ether;
-  //   bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 3, 3);
-
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  //   // Price updated
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     ,
-
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: loanId,
-  //         price: 1 ether,
-  //         totalAssets: 3,
-  //         totalArray: 0
-  //       })
-  //     );
-
-  //   (bytes32[] memory assets, ) = _generate_assets(3);
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   uint256 initialGas = gasleft();
-  //   approveAsset('WETH', address(_uTokens['WETH']), amountToBorrow);
-  //   Action(_action).repay(amountToBorrow, signAction, sig);
-  //   uint256 gasUsed = initialGas - gasleft();
-  //   console.log('Repay GAS: ', gasUsed);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-  // }
-
-  // function test_action_repay_full_borrow_locked_loan() public {
-  //   uint256 amountToBorrow = 0.5 ether;
-  //   uint256 collateral = 2 ether;
-  //   address actor = super.getActorAddress(ACTOR);
-  //   // Configure
-  //   vm.startPrank(actor);
-  //   bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
-  //   vm.stopPrank();
-
-  //   vm.prank(_admin);
-  //   Manager(_manager).emergencyFreezeLoan(loanId);
-
-  //   assertEq(balanceOfAsset('WETH', actor), amountToBorrow);
-
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assets,
-
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: loanId,
-  //         price: collateral,
-  //         totalAssets: 2,
-  //         totalArray: 2
-  //       })
-  //     );
-
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(actor, 0);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   uint256 initialGas = gasleft();
-  //   vm.startPrank(actor);
-  //   approveAsset('WETH', address(_uTokens['WETH']), amountToBorrow);
-  //   vm.expectRevert(Errors.LoanNotActive.selector);
-  //   Action(_action).repay(amountToBorrow, signAction, sig);
-  //   vm.stopPrank();
-  //   uint256 gasUsed = initialGas - gasleft();
-  //   console.log('Repay GAS: ', gasUsed);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-  // }
-
-  // function test_action_repay_full_borrow_not_owned() public {
-  //   uint256 amount = 0.5 ether;
-  //   uint256 collateral = 2 ether;
-  //   address actor = super.getActorAddress(ACTOR);
-  //   // Configure
-  //   vm.startPrank(actor);
-  //   bytes32 loanId = _generate_borrow(amount, collateral, 2, 2);
-  //   vm.stopPrank();
-
-  //   assertEq(balanceOfAsset('WETH', actor), amount);
-
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assets,
-
-  //   ) = _generate_signature(
-  //       GenerateSignParams({
-  //         user: super.getActorAddress(ACTOR_TWO),
-  //         loanId: loanId,
-  //         price: collateral,
-  //         totalAssets: 2,
-  //         totalArray: 2
-  //       })
-  //     );
-
-  //   // Check that these nfts are locked
-  //   IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-  //     .getOwnerWalletAt(actor, 0);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   uint256 initialGas = gasleft();
-  //   vm.startPrank(super.getActorAddress(ACTOR_TWO));
-  //   approveAsset('WETH', address(_uTokens['WETH']), amount);
-  //   vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualSender.selector));
-  //   Action(_action).repay(amount, signAction, sig);
-  //   vm.stopPrank();
-  //   uint256 gasUsed = initialGas - gasleft();
-  //   console.log('Repay GAS: ', gasUsed);
-
-  //   for (uint256 i = 0; i < assets.length; ) {
-  //     assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
-  //     unchecked {
-  //       ++i;
-  //     }
-  //   }
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amount);
-  // }
-
-  function test_action_repay_owner_not_sender() public {
+  function test_action_repay_full_borrow_not_owned() public {
     uint256 amount = 0.5 ether;
     uint256 collateral = 2 ether;
     address actor = super.getActorAddress(ACTOR);
     // Configure
-    vm.startPrank(actor);
-    bytes32 loanId = _generate_borrow(amount, collateral, 2, 2);
-    vm.stopPrank();
+
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amount, collateral, 2, 2);
 
     assertEq(balanceOfAsset('WETH', actor), amount);
 
@@ -519,17 +381,76 @@ contract RepayTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assets,
 
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR_TWO),
           loanId: loanId,
-          price: collateral,
+          price: 2 ether,
+          totalAssets: 2,
+          totalArray: 2
+        })
+      );
+
+    // Check that these nfts are locked
+    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(actor, 0);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    uint256 initialGas = gasleft();
+    vm.startPrank(super.getActorAddress(ACTOR_TWO));
+    approveAsset('WETH', address(_uTokens['WETH']), amount);
+    vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualSender.selector));
+    Action(_action).repay(amount, signAction, sig);
+    vm.stopPrank();
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('Repay GAS: ', gasUsed);
+
+    for (uint256 i = 0; i < assets.length; ) {
+      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), true);
+      unchecked {
+        ++i;
+      }
+    }
+    // User doesn't have WETH
+    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amount);
+  }
+
+  function test_action_repay_owner_not_sender() public {
+    uint256 amount = 0.5 ether;
+    uint256 collateral = 2 ether;
+    address actor = super.getActorAddress(ACTOR);
+    // Configure
+
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, amount, collateral, 2, 2);
+
+    assertEq(balanceOfAsset('WETH', actor), amount);
+
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assets,
+
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
+          user: super.getActorAddress(ACTOR_TWO),
+          loanId: loanId,
+          price: 2 ether,
           totalAssets: 2,
           totalArray: 2
         })
       );
 
     uint256 initialGas = gasleft();
+    // HERE We change the address of the ACTOR different from the loan and the signature
     vm.startPrank(super.getActorAddress(ACTOR_THREE));
     approveAsset('WETH', address(_uTokens['WETH']), amount);
     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualSender.selector));
