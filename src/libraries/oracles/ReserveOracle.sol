@@ -84,7 +84,7 @@ contract ReserveOracle is IReserveOracle {
    */
   function getAssetPrice(address priceFeedKey) external view override returns (uint256) {
     if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
-    AggregatorV3Interface aggregator = getAggregator(priceFeedKey);
+    AggregatorV3Interface aggregator = _priceFeedMap[priceFeedKey];
 
     if (priceFeedKey == BASE_CURRENCY) {
       return BASE_CURRENCY_UNIT;
@@ -92,7 +92,7 @@ contract ReserveOracle is IReserveOracle {
 
     if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
 
-    int256 _price = aggregator.latestAnswer();
+    (, int256 _price, , , ) = aggregator.latestRoundData();
 
     return uint256(_price);
   }
@@ -104,7 +104,7 @@ contract ReserveOracle is IReserveOracle {
    */
   function getLatestTimestamp(address priceFeedKey) public view returns (uint256) {
     if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
-    AggregatorV3Interface aggregator = getAggregator(priceFeedKey);
+    AggregatorV3Interface aggregator = _priceFeedMap[priceFeedKey];
     if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
     (, , , uint256 timestamp, ) = aggregator.latestRoundData();
     return timestamp;

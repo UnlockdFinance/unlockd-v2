@@ -28,7 +28,7 @@ library GenericLogic {
   using FixedPointMathLib for uint256;
   // HEALTH FACTOR 1
   uint256 internal constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
-  uint256 internal constant AUCTION_DURATION = 2 days;
+
   uint256 internal constant FIRST_BID_INCREMENT = 250;
   uint256 internal constant NEXT_BID_INCREMENT = 100;
 

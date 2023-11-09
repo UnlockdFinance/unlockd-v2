@@ -18,7 +18,6 @@ import {DelegationWalletRegistry} from '@unlockd-wallet/src/DelegationWalletRegi
 import {DelegationWalletFactory} from '@unlockd-wallet/src/DelegationWalletFactory.sol';
 import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
 
-import '../config/Config.sol';
 import '../../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 import './../mock/asset/MintableERC20.sol';
 import './../mock/adapters/MockAdapter.sol';
@@ -65,19 +64,10 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
 
   receive() external payable {}
 
-  Config.ChainConfig internal config;
-
   // *************************************
   function setUp() public virtual {
     // By default Mainnet
     this.setUpByChain(1);
-  }
-
-  function setUpForkChain(uint256 chainId) public virtual {
-    config = Config.getConfig(chainId);
-    // Chain FORK
-    uint256 chainFork = vm.createFork(config.chainName, config.blockNumber);
-    vm.selectFork(chainFork);
   }
 
   // Define General Setup

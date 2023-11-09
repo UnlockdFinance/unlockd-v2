@@ -10,8 +10,11 @@ import {UToken} from '../../../src/protocol/UToken.sol';
 import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
 import {DataTypes} from '../../../src/types/DataTypes.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
+import '../config/Config.sol';
 
 contract Base is Test {
+  uint256 internal constant MAINNET = 1;
+  uint256 internal constant SEPOLIA = 11155111;
   // Static Addreses for the TESTS
   uint256 public _treasuryPK = 0x222222DEAD;
   address internal _treasury = vm.addr(_treasuryPK);
@@ -51,6 +54,20 @@ contract Base is Test {
   address internal _walletRegistry;
   address internal _walletFactory;
   address internal _allowedControllers;
+
+  Config.ChainConfig internal config;
+
+  function setUpForkChain(uint256 chainId) internal {
+    config = Config.getConfig(chainId);
+    // Chain FORK
+    uint256 chainFork = vm.createFork(config.chainName, config.blockNumber);
+    vm.selectFork(chainFork);
+  }
+
+  modifier useFork(uint256 chainId) {
+    setUpForkChain(chainId);
+    _;
+  }
 
   // ====== GET =========
   function getACLManager() internal view returns (ACLManager) {
