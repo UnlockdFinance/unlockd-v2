@@ -28,12 +28,12 @@ contract ReserveOracle is IReserveOracle {
   }
 
   /**
-   * @notice sets the aggregators and pricefeedkeys
+   * @notice add the aggregators and pricefeedkeys
    * @param priceFeedKeys the array of pricefeed keys
    * @param aggregators the array of aggregators
    *
    */
-  function setAggregators(
+  function addAggregators(
     address[] calldata priceFeedKeys,
     address[] calldata aggregators
   ) external onlyPriceUpdater {
@@ -60,6 +60,61 @@ contract ReserveOracle is IReserveOracle {
   }
 
   /**
+   * @notice removes a single aggregator from the map
+   * @param priceFeedKey the pricefeed key of the aggregator to remove
+   *
+   */
+  function removeAggregator(address priceFeedKey) external onlyPriceUpdater {
+    address aggregator = address(_priceFeedMap[priceFeedKey]);
+    if (aggregator == address(0)) revert Errors.InvalidAggregator();
+    delete _priceFeedMap[priceFeedKey];
+  }
+
+  /**
+   * @notice returns an aggregator gicen a pricefeed key
+   * @param priceFeedKey the pricefeed key of the aggregator to fetch
+   *
+   */
+  function getAggregator(address priceFeedKey) public view returns (address) {
+    return address(_priceFeedMap[priceFeedKey]);
+  }
+
+  /**
+   * @inheritdoc IReserveOracle
+   */
+  function getAssetPrice(address priceFeedKey) external view override returns (uint256) {
+    if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
+    AggregatorV3Interface aggregator = getAggregator(priceFeedKey);
+
+    if (priceFeedKey == BASE_CURRENCY) {
+      return BASE_CURRENCY_UNIT;
+    }
+
+    if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
+
+    int256 _price = aggregator.latestAnswer();
+
+    return uint256(_price);
+  }
+
+  /**
+   * @notice returns the aggregator's latest timestamp
+   * @param priceFeedKey the pricefeed key of the aggregator to fetch
+   *
+   */
+  function getLatestTimestamp(address priceFeedKey) public view returns (uint256) {
+    if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
+    AggregatorV3Interface aggregator = getAggregator(priceFeedKey);
+    if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
+    (, , , uint256 timestamp, ) = aggregator.latestRoundData();
+    return timestamp;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // PRIVATE
+  ////////////////////////////////////////////////////////////////////////////
+
+  /**
    * @notice adds a single aggregator on the map
    * @param priceFeedKey the pricefeed key
    * @param aggregator the aggregator to add
@@ -76,56 +131,5 @@ contract ReserveOracle is IReserveOracle {
       mstore(0x20, aggregator)
       log1(0x00, 0x40, _AGREGATOR_ADDED_EVENT_SIGNATURE)
     }
-  }
-
-  /**
-   * @notice removes a single aggregator from the map
-   * @param priceFeedKey the pricefeed key of the aggregator to remove
-   *
-   */
-  function removeAggregator(address priceFeedKey) external onlyPriceUpdater {
-    address aggregator = address(_priceFeedMap[priceFeedKey]);
-    if (aggregator == address(0)) revert Errors.InvalidAggregator();
-    delete _priceFeedMap[priceFeedKey];
-  }
-
-  /**
-   * @notice returns an aggregator gicen a pricefeed key
-   * @param priceFeedKey the pricefeed key of the aggregator to fetch
-   *
-   */
-  function getAggregator(address priceFeedKey) public view returns (AggregatorV3Interface) {
-    return _priceFeedMap[priceFeedKey];
-  }
-
-  /**
-   * @inheritdoc IReserveOracle
-   */
-  function getAssetPrice(address priceFeedKey) external view override returns (uint256) {
-    if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
-    AggregatorV3Interface aggregator = getAggregator(priceFeedKey);
-
-    if (priceFeedKey == BASE_CURRENCY) {
-      return BASE_CURRENCY_UNIT;
-    }
-
-    if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
-
-    (, int256 _price, , , ) = aggregator.latestRoundData();
-
-    return uint256(_price);
-  }
-
-  /**
-   * @notice returns the aggregator's latest timestamp
-   * @param priceFeedKey the pricefeed key of the aggregator to fetch
-   *
-   */
-  function getLatestTimestamp(address priceFeedKey) public view returns (uint256) {
-    if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
-    AggregatorV3Interface aggregator = getAggregator(priceFeedKey);
-    if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
-    (, , , uint256 timestamp, ) = aggregator.latestRoundData();
-    return timestamp;
   }
 }
