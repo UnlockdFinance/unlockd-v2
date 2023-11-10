@@ -36,6 +36,8 @@ interface IMarketModule {
     address user
   );
 
+  event MarketCancelAuction(bytes32 indexed loanId, bytes32 indexed orderId, address owner);
+
   struct CreateOrderInput {
     uint128 startAmount;
     uint128 endAmount;

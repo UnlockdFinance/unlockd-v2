@@ -6,7 +6,20 @@ import '../../types/DataTypes.sol';
 
 interface ISellNowModule is ILoan {
   // EVENTS
-  event FinalizeAuction(bytes32 loanId, address asset, uint256 tokenId, uint256 amount);
+  event ForceSellNow(
+    bytes32 loanId,
+    bytes32 assetId,
+    address collection,
+    uint256 tokenId,
+    uint256 amount
+  );
+  event SellNow(
+    bytes32 loanId,
+    bytes32 assetId,
+    address collection,
+    uint256 tokenId,
+    uint256 amount
+  );
 
   function forzeSell(
     address marketAdapter,

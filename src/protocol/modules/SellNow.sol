@@ -130,6 +130,14 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       // If there is only one we can remove the loan
       delete _loans[loan.loanId];
     }
+
+    emit ForceSellNow(
+      signSellNow.loan.loanId,
+      AssetLogic.assetId(asset.collection, asset.tokenId),
+      asset.collection,
+      asset.tokenId,
+      signSellNow.marketPrice
+    );
   }
 
   /**
@@ -160,12 +168,9 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
     uint256 totalDebt = 0;
     address uToken = address(0);
+    bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
     // Check if is not already locked
-    if (
-      IProtocolOwner(protocolOwner).isAssetLocked(
-        AssetLogic.assetId(asset.collection, asset.tokenId)
-      ) == true
-    ) {
+    if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
       DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
       uToken = loan.uToken;
       IUToken(loan.uToken).updateStateReserve();
@@ -223,5 +228,13 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       // If there is no debt we send the amount to the user
       IERC20(signSellNow.underlyingAsset).safeTransfer(msgSender, signSellNow.marketPrice);
     }
+
+    emit SellNow(
+      signSellNow.loan.loanId,
+      assetId,
+      asset.collection,
+      asset.tokenId,
+      signSellNow.marketPrice
+    );
   }
 }

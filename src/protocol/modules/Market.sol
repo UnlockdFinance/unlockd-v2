@@ -253,6 +253,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       _loans[order.offer.loanId].activate();
     }
     delete _orders[orderId];
+
+    emit MarketCancelAuction(loan.loanId, orderId, order.owner);
   }
 
   /**
@@ -507,9 +509,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         buyer
       );
 
-      emit MarketClaim(loanId, order.orderId, signMarket.assetId, totalAmount, msgSender);
-
       delete _orders[order.orderId];
+
+      emit MarketClaim(loanId, order.orderId, signMarket.assetId, totalAmount, msgSender);
     }
   }
 
@@ -752,14 +754,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       // We transfer the ownership to the new Owner
       IProtocolOwner(delegationOwner).changeOwner(signMarket.collection, signMarket.tokenId, buyer);
 
-      emit MarketBuyNow(
-        signMarket.loan.loanId,
-        orderId,
-        signMarket.assetId,
-        totalAmount,
-        msgSender
-      );
-
       // We remove the current order asociated to this asset
       delete _orders[orderId];
 
@@ -775,6 +769,14 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         _loans[loan.loanId].totalAssets = signMarket.loan.totalAssets;
         _loans[loan.loanId].activate();
       }
+
+      emit MarketBuyNow(
+        signMarket.loan.loanId,
+        orderId,
+        signMarket.assetId,
+        totalAmount,
+        msgSender
+      );
     }
   }
 }

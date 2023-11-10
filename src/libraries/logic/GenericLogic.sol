@@ -193,21 +193,21 @@ library GenericLogic {
     return assetPrice.mulDiv(userTotalDebt, assetUnit);
   }
 
-  function amountToBeHealthy(
-    DataTypes.Loan memory loan,
-    uint256 _loanDebt,
-    uint256 _debtToBeHealthy
-  ) internal pure returns (uint256 amount) {
-    if (loan.totalAssets == 1) {
-      return _loanDebt;
-    }
+  // function amountToBeHealthy(
+  //   DataTypes.Loan memory loan,
+  //   uint256 _loanDebt,
+  //   uint256 _debtToBeHealthy
+  // ) internal pure returns (uint256 amount) {
+  //   if (loan.totalAssets == 1) {
+  //     return _loanDebt;
+  //   }
 
-    if (_loanDebt > _debtToBeHealthy) {
-      unchecked {
-        amount = _loanDebt - _debtToBeHealthy;
-      }
-    }
-  }
+  //   if (_loanDebt > _debtToBeHealthy) {
+  //     unchecked {
+  //       amount = _loanDebt - _debtToBeHealthy;
+  //     }
+  //   }
+  // }
 
   function getMainWallet(
     address walletRegistry,

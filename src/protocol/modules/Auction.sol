@@ -391,10 +391,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       IUToken(utoken).repayOnBelhalf(order.offer.loanId, minDebt, address(this), msgSender);
     }
 
-    emit AuctionRedeem(order.offer.loanId, orderId, order.offer.assetId, totalAmount, msgSender);
-
     delete _orders[orderId];
     _loans[order.offer.loanId].activate();
+
+    emit AuctionRedeem(order.offer.loanId, orderId, order.offer.assetId, totalAmount, msgSender);
   }
 
   /**
