@@ -14,14 +14,17 @@ library Assets {
     return self.list[name];
   }
 
-  function newAsset(
+  function makeAsset(
     AssetsState storage self,
     string memory name,
     uint8 decimals
-  ) internal returns (MintableERC20) {
-    MintableERC20 asset = new MintableERC20(name, name, decimals);
-    self.list[name] = address(asset);
-    return asset;
+  ) internal returns (address) {
+    if (self.list[name] == address(0)) {
+      MintableERC20 asset = new MintableERC20(name, name, decimals);
+      self.list[name] = address(asset);
+      return self.list[name];
+    }
+    return self.list[name];
   }
 
   function mintToAddress(

@@ -182,7 +182,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     vm.startPrank(_deployer);
     // ERC20 Assets
 
-    _assets.newAsset('DAI', 18);
+    _assets.makeAsset('DAI', 18);
 
     // Deploy Oracles
     DeployPeriphery deployer = new DeployPeriphery(_adminUpdater, address(_aclManager));
@@ -401,6 +401,12 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     if (keccak256(abi.encodePacked(asset)) == keccak256(abi.encodePacked('WETH')))
       return config.weth;
     return _assets.get(asset);
+  }
+
+  function makeAsset(string memory asset) internal returns (address) {
+    if (keccak256(abi.encodePacked(asset)) == keccak256(abi.encodePacked('WETH')))
+      return config.weth;
+    return _assets.makeAsset(asset, 18);
   }
 
   function getWalletAddress(uint256 index) internal returns (address) {

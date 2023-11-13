@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
-import '../test-utils/base/Base.sol';
+import '../../test-utils/base/Base.sol';
 
 contract WadRayMathTest is Base {
   uint256 internal constant WAD = 1e18;

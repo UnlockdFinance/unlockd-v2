@@ -24,14 +24,6 @@ contract BorrowTest is Setup {
   address internal _action;
   uint256 internal deadlineIncrement;
 
-  struct GenerateSignParams {
-    address user;
-    bytes32 loanId;
-    uint256 price;
-    uint256 totalAssets;
-    uint256 totalArray;
-  }
-
   function setUp() public virtual override {
     super.setUp();
 
@@ -51,78 +43,6 @@ contract BorrowTest is Setup {
   }
 
   /////////////////////////////////////////////////////////////////////////////////
-  // GENERATE SIGNATURE
-  /////////////////////////////////////////////////////////////////////////////////
-
-  function _generate_assets(
-    uint256 startCounter,
-    uint256 totalArray
-  ) internal returns (bytes32[] memory, DataTypes.Asset[] memory) {
-    // Asesets
-    uint256 counter = totalArray - startCounter;
-    bytes32[] memory assetsIds = new bytes32[](counter);
-    DataTypes.Asset[] memory assets = new DataTypes.Asset[](counter);
-    for (uint256 i = 0; i < counter; ) {
-      uint256 tokenId = startCounter + i;
-      assetsIds[i] = AssetLogic.assetId(_nft, tokenId);
-      assets[i] = DataTypes.Asset({collection: _nft, tokenId: tokenId});
-      unchecked {
-        ++i;
-      }
-    }
-    return (assetsIds, assets);
-  }
-
-  function _generate_signature(
-    GenerateSignParams memory params
-  )
-    internal
-    returns (
-      DataTypes.SignAction memory,
-      DataTypes.EIP712Signature memory,
-      bytes32[] memory,
-      DataTypes.Asset[] memory
-    )
-  {
-    // Get nonce from the user
-    uint256 nonce = ActionSign(_action).getNonce(params.user);
-    uint40 deadline = uint40(block.timestamp + 1000);
-
-    // Asesets
-    (bytes32[] memory assetsIds, DataTypes.Asset[] memory assets) = _generate_assets(
-      0,
-      params.totalArray
-    );
-
-    DataTypes.SignAction memory data;
-    DataTypes.EIP712Signature memory sig;
-    {
-      // Create the struct
-      data = DataTypes.SignAction({
-        loan: DataTypes.SignLoanConfig({
-          loanId: params.loanId, // Because is new need to be 0
-          aggLoanPrice: params.price,
-          aggLtv: 6000,
-          aggLiquidationThreshold: 6000,
-          totalAssets: uint88(params.totalAssets),
-          nonce: nonce,
-          deadline: deadline
-        }),
-        assets: assetsIds,
-        nonce: nonce,
-        deadline: deadline
-      });
-
-      bytes32 digest = Action(_action).calculateDigest(nonce, data);
-      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
-
-      // Build signature struct
-      sig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
-    }
-    return (data, sig, assetsIds, assets);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////////
   // BORROW
   /////////////////////////////////////////////////////////////////////////////////
 
@@ -136,8 +56,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 2 ether,
@@ -176,8 +98,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -214,8 +138,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       ,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -238,8 +164,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sigTwo,
       ,
       DataTypes.Asset[] memory assetsTwo
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: loanId,
           price: 10 ether,
@@ -274,8 +202,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       ,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -304,8 +234,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       ,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -328,8 +260,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sigTwo,
       ,
       DataTypes.Asset[] memory assetsTwo
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: loanId,
           price: 10 ether,
@@ -362,8 +296,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       ,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -383,8 +319,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sigTwo,
       ,
       DataTypes.Asset[] memory assetsTwo
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -416,8 +354,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: bytes32('2'),
           price: 10 ether,
@@ -444,8 +384,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -473,7 +415,8 @@ contract BorrowTest is Setup {
       uint256 endAssets = startAssets + 2;
 
       // Asesets
-      (bytes32[] memory assetsIdsTwo, DataTypes.Asset[] memory assetsTwo) = _generate_assets(
+      (bytes32[] memory assetsIdsTwo, DataTypes.Asset[] memory assetsTwo) = generate_assets(
+        _nft,
         startAssets,
         endAssets
       );
@@ -526,8 +469,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
 
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 2 ether,
@@ -556,8 +501,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       bytes32[] memory assetsIds,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 2 ether,
@@ -588,8 +535,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sig,
       ,
       DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: 0,
           price: 10 ether,
@@ -614,8 +563,10 @@ contract BorrowTest is Setup {
       DataTypes.EIP712Signature memory sigTwo,
       ,
       DataTypes.Asset[] memory assetsTwo
-    ) = _generate_signature(
-        GenerateSignParams({
+    ) = action_signature(
+        _action,
+        _nft,
+        ActionSignParams({
           user: super.getActorAddress(ACTOR),
           loanId: loanId,
           price: 10 ether,
