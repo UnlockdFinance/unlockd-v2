@@ -43,15 +43,17 @@ contract ReservoidAdapterTest is Setup {
     _action = unlockd.moduleIdToProxy(Constants.MODULEID__ACTION);
     _auction = unlockd.moduleIdToProxy(Constants.MODULEID__AUCTION);
     _nft = super.getNFT('PUNK');
-
-    // console.log('NFT address: ', _nft);
-    // console.log('SUPPLY: ', MintableERC20(_nft).totalSupply());
-
-    console.log('ACTOR 01', getActorAddress(ACTOR));
-    console.log('ACTOR 02', getActorAddress(ACTORTWO));
   }
 
   /////////////////////////////////////////////////////////////////////////////////
   // BID
   /////////////////////////////////////////////////////////////////////////////////
+
+  function test_reservoirAdapter_preSell() internal {}
+
+  function test_reservoirAdapter_sell() internal {}
+
+  function test_reservoirAdapter_preBuy() internal {}
+
+  function test_reservoirAdapter_buy() internal {}
 }

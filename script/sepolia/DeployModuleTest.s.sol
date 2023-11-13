@@ -39,12 +39,12 @@ contract DeployModuleTestScript is DeployerHelper {
 
       {
         // Test testImp = new Test(MODULE_ID, VERSION);
-        Action actionImp = new Action(Constants.MODULEID__ACTION, VERSION);
+        SellNow moduleImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
         // Market sellImp = new Market(Constants.MODULEID__MARKET, VERSION);
         // SellNow buyNowImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
         // Install Modules
         address[] memory modules = new address[](1);
-        modules[0] = address(actionImp);
+        modules[0] = address(moduleImp);
         // modules[1] = address(buyNowImp);
 
         address installer = Unlockd(addresses.unlockd).moduleIdToProxy(
