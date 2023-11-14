@@ -11,7 +11,7 @@ contract ActionSign is BaseSignature {
   string internal constant VERSION = '1';
 
   bytes32 internal constant TYPEHASH =
-    0xaea5ef078039001523d9d26ac859c8b25b58fd95973363be47520b7cf95915b8;
+    0xb1f140f91ab6affef1936223880cf9f846fc46cb3669fc6813adc08a24ddb4a7;
 
   constructor() BaseSignature(NAME, VERSION) {
     // DO NOTHING

@@ -46,7 +46,7 @@ contract SellNowSignTest is Test {
   uint256 internal ACTOR = 1;
 
   string internal constant LOAN_CONFIG =
-    'SignLoanConfig(bytes32 loanId,uint256 aggLoanPrice,uint256 aggLtv,uint256 aggLiquidationThreshold,uint256 totalAssets,uint256 nonce,uint256 deadline)';
+    'SignLoanConfig(bytes32 loanId,uint256 aggLoanPrice,uint256 aggLtv,uint256 aggLiquidationThreshold,uint88 totalAssets,uint256 nonce,uint256 deadline)';
 
   string internal constant ASSET =
     'SignAsset(bytes32 assetId,address collection,uint256 tokenId,uint256 price,uint256 nonce,uint256 deadline)';

@@ -13,7 +13,7 @@ contract SellNowSign is BaseSignature {
   string internal constant VERSION = '1';
 
   bytes32 internal constant TYPEHASH =
-    0xa9779d799c56e4e307730287b05166f92bb4aaa890f2c0688a019bdc96a7d81c;
+    0xb71ba05a3ff283a3c38d89a7da467e39f8d9ea231799d2657f9e1202fe345fe3;
 
   constructor() BaseSignature(NAME, VERSION) {
     // NOTHINIG TO DO

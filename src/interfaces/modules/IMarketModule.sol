@@ -4,6 +4,13 @@ pragma solidity 0.8.19;
 import '../../types/DataTypes.sol';
 
 interface IMarketModule {
+  event MarketCreated(
+    bytes32 indexed loanId,
+    bytes32 indexed orderId,
+    bytes32 indexed assetId,
+    address collection,
+    uint256 tokenId
+  );
   event MarketBid(
     bytes32 indexed loanId,
     bytes32 indexed orderId,

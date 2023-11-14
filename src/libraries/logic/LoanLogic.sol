@@ -8,7 +8,7 @@ library LoanLogic {
   event LoanCreated(address indexed user, bytes32 indexed loanId, uint256 totalAssets);
 
   bytes32 internal constant TYPEHASH =
-    0x70b588bc2f80ec61e8c608fd04d81549f1e74ef1158984b6a78e9f827ff7ce1a;
+    0x4b24ba5d0861514e3889c8dcf89590916d297469584a6cf27d0e9d3750a33970;
 
   struct ParamsCreateLoan {
     address msgSender;

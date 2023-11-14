@@ -199,6 +199,14 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         endTime: config.endTime // Optional only mandatory for for AUCTION type
       })
     );
+
+    emit MarketCreated(
+      signMarket.loan.loanId,
+      orderId,
+      signMarket.assetId,
+      signMarket.collection,
+      signMarket.tokenId
+    );
   }
 
   /**

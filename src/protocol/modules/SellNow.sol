@@ -131,7 +131,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       delete _loans[loan.loanId];
     }
 
-    emit ForceSellNow(
+    emit ForceSold(
       signSellNow.loan.loanId,
       AssetLogic.assetId(asset.collection, asset.tokenId),
       asset.collection,
@@ -229,7 +229,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       IERC20(signSellNow.underlyingAsset).safeTransfer(msgSender, signSellNow.marketPrice);
     }
 
-    emit SellNow(
+    emit Sold(
       signSellNow.loan.loanId,
       assetId,
       asset.collection,

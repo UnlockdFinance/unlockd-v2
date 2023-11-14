@@ -12,7 +12,7 @@ contract MarketSign is BaseSignature {
   string internal constant VERSION = '1';
 
   bytes32 internal constant TYPEHASH =
-    0xe2c65ba1936d7b01e83e66ebd6dc2381ac954780414c6e43d41dd69c8653327c;
+    0xdc70dfa3b60934a21196519907dd69224a223770edbd8b7e235af7a9f4bfb72b;
 
   constructor() BaseSignature(NAME, VERSION) {
     // NOTHINIG TO DO

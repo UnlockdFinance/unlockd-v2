@@ -622,7 +622,7 @@ contract MarketTest is Setup {
     Vm.Log[] memory entries = vm.getRecordedLogs();
 
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-    bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[1]);
     // We borrow more to change the debt
     vm.startPrank(getActorAddress(ACTOR));
     _generate_borrow_more(loanId, ACTOR, 0.5 ether, 3 ether, 2);
