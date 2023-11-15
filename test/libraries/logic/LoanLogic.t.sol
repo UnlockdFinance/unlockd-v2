@@ -5,13 +5,24 @@ import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import '../../test-utils/base/Base.sol';
 import {LoanLogic} from '../../../src/libraries/logic/LoanLogic.sol';
 
+contract TestLib {
+  function getHash(DataTypes.SignLoanConfig calldata loanConfig) public returns (bytes32) {
+    return LoanLogic.getLoanStructHash(1, loanConfig);
+  }
+}
+
 contract LoanLogicTest is Base {
+  DataTypes.Loan private loan;
+
+  TestLib test;
+
   // *************************************
   function setUp() public useFork(MAINNET) {
     // By default Mainnet
+    test = new TestLib();
   }
 
-  function test_loanLogic_generateId() public {
+  function test_loanLogic_generateId() external {
     assertEq(
       LoanLogic.generateId(makeAddr('filipe'), 10, block.number),
       0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a
@@ -30,13 +41,51 @@ contract LoanLogicTest is Base {
     );
   }
 
-  function test_loanLogic_createLoan_already_exist() internal {}
+  function test_loanLogic_createLoan_new() public {
+    LoanLogic.createLoan(
+      loan,
+      LoanLogic.ParamsCreateLoan({
+        loanId: LoanLogic.generateId(makeAddr('filipe'), 11, block.number),
+        uToken: makeAddr('utoken'),
+        msgSender: makeAddr('filipe'),
+        underlyingAsset: makeAddr('asset'),
+        totalAssets: 10
+      })
+    );
 
-  function test_loanLogic_createLoan_new() internal {}
+    assertEq(loan.loanId, LoanLogic.generateId(makeAddr('filipe'), 11, block.number));
+    assertEq(loan.uToken, makeAddr('utoken'));
+    assertEq(loan.owner, makeAddr('filipe'));
+    assertEq(loan.underlyingAsset, makeAddr('asset'));
+    assertEq(loan.totalAssets, 10);
+    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+  }
 
-  function test_loanLogic_freeze() internal {}
+  function test_loanLogic_freeze() public {
+    test_loanLogic_createLoan_new();
+    LoanLogic.freeze(loan);
 
-  function test_loanLogic_activate() internal {}
+    assertEq(uint(loan.state), uint(DataTypes.LoanState.FREEZE));
+  }
 
-  function test_loanLogic_getLoanStructHash() internal {}
+  function test_loanLogic_activate() public {
+    test_loanLogic_createLoan_new();
+    LoanLogic.activate(loan);
+    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+  }
+
+  function test_loanLogic_getLoanStructHash() public {
+    bytes32 hash = test.getHash(
+      DataTypes.SignLoanConfig({
+        loanId: 0x8a72e222b30f0e57c11ec223b05d97af19a8e9576591b24c4e7ef523be567f39,
+        aggLoanPrice: 1 ether,
+        aggLtv: 6000,
+        aggLiquidationThreshold: 6000,
+        totalAssets: 10,
+        nonce: 1,
+        deadline: block.timestamp + 1000
+      })
+    );
+    assertEq(0x60135c070e87cf6242f7d4f7cb3aa65faa96b439fbef2b98cca8401564599f0a, hash);
+  }
 }
