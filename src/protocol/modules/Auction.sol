@@ -265,13 +265,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       // We repay the debt at the beginning
       // The ASSET only support a % of the current debt in case of the next bids
       // we are not repaying more debt until the auction is ended.
-      OrderLogic.repayOwnerDebt(
-        OrderLogic.RepayOwnerDebtParams({
+      OrderLogic.repayDebt(
+        OrderLogic.RepayDebtParams({
           loanId: loan.loanId,
           owner: order.owner,
+          from: address(this),
           uToken: address(utoken),
           underlyingAsset: loan.underlyingAsset,
-          minBid: minBid
+          amount: minBid
         })
       );
       // The protocol freeze the loan repayed until end of the auction

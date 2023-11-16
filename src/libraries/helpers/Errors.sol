@@ -56,6 +56,7 @@ library Errors {
   error InvalidAggregator();
 
   error NotEnoughLiquidity();
+  error DebtExceedsAmount();
   error AmountExceedsDebt();
   error AmountExceedsBalance();
   error AmountToLow();

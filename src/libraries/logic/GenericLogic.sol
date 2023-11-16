@@ -15,7 +15,7 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title GenericLogic library
@@ -180,15 +180,16 @@ library GenericLogic {
     uint256 assetPrice,
     uint256 assetUnit
   ) internal view returns (uint256) {
+    console.logBytes32(loanId);
     if (loanId == 0) return 0;
     // fetching variable debt
     uint256 userTotalDebt = IDebtToken(reserve.debtTokenAddress).scaledBalanceOf(loanId, user);
+    console.log('USER TOTAL DEBT', userTotalDebt);
+    if (userTotalDebt == 0) return 0;
 
-    if (userTotalDebt != 0) {
-      userTotalDebt = userTotalDebt.rayMul(
-        IUToken(reserve.uToken).getReserveNormalizedVariableDebt()
-      );
-    }
+    userTotalDebt = userTotalDebt.rayMul(
+      IUToken(reserve.uToken).getReserveNormalizedVariableDebt()
+    );
 
     return assetPrice.mulDiv(userTotalDebt, assetUnit);
   }

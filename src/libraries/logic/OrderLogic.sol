@@ -117,6 +117,23 @@ library OrderLogic {
     );
   }
 
+  struct RepayDebtParams {
+    address owner;
+    address uToken;
+    address from;
+    address underlyingAsset;
+    bytes32 loanId;
+    uint256 amount;
+  }
+
+  function repayDebt(RepayDebtParams memory params) internal {
+    // Check if there is a loan asociated
+    // We repay the total debt
+    IERC20(params.underlyingAsset).approve(params.uToken, params.amount);
+    // Repay the debt
+    IUToken(params.uToken).repayOnBelhalf(params.loanId, params.amount, params.from, params.owner);
+  }
+
   struct RefundBidderParams {
     bytes32 loanId;
     address owner;
@@ -147,19 +164,21 @@ library OrderLogic {
           However, in the rare instance where the utilization rate is exceptionally high and borrowing 
           is significantly increased, the debt could surpass the full amount.
 
-          That's why we calculate the total amount of debt that the user is capable of repaying.
+          That's why we calculate the total amount of debt that the user is capable of repaying. 
         **/
         uint256 supportedDebt = currentDebt > totalAmount ? totalAmount : currentDebt;
         // We remove the current debt
         totalAmount = totalAmount - supportedDebt;
 
-        IERC20(params.underlyingAsset).approve(params.uToken, supportedDebt);
-        // Repay the debt
-        IUToken(params.uToken).repayOnBelhalf(
-          params.loanId,
-          supportedDebt,
-          params.from,
-          params.owner
+        repayDebt(
+          RepayDebtParams({
+            loanId: params.loanId,
+            owner: params.owner,
+            uToken: params.uToken,
+            from: params.from,
+            underlyingAsset: params.underlyingAsset,
+            amount: supportedDebt
+          })
         );
       }
     }
@@ -168,27 +187,6 @@ library OrderLogic {
       params.owner,
       // We return the amount payed minus the interest of the debt
       totalAmount
-    );
-  }
-
-  struct RepayOwnerDebtParams {
-    address owner;
-    address uToken;
-    address underlyingAsset;
-    bytes32 loanId;
-    uint256 minBid;
-  }
-
-  function repayOwnerDebt(RepayOwnerDebtParams memory params) internal {
-    // Check if there is a loan asociated
-    // We repay the total debt
-    IERC20(params.underlyingAsset).approve(params.uToken, params.minBid);
-    // Repay the debt
-    IUToken(params.uToken).repayOnBelhalf(
-      params.loanId,
-      params.minBid,
-      address(this),
-      params.owner
     );
   }
 
@@ -202,7 +200,7 @@ library OrderLogic {
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256 maxDebtOrDefault) {
     uint256 totalDebt = GenericLogic.calculateLoanDebt(loanId, user, reserveOracle, reserveData);
-
+    console.log('TOTAL DEBT', totalDebt);
     if (totalDebt == 0) return defaultAmount;
 
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
@@ -286,6 +284,7 @@ library OrderLogic {
     address reserveOracle;
     address underlyingAsset;
     address uToken;
+    address from;
     uint256 totalAmount;
     uint256 aggLoanPrice;
     uint256 aggLtv;
@@ -295,8 +294,9 @@ library OrderLogic {
     DataTypes.Order memory order,
     RepayDebtToSellParams memory params,
     DataTypes.ReserveData memory reserveData
-  ) internal returns (uint256) {
-    uint256 debtToSell = getMaxDebtOrDefault(
+  ) internal returns (uint256 totalAmount) {
+    console.log('HOLA');
+    uint256 debtAmount = getMaxDebtOrDefault(
       order.offer.loanId,
       order.owner,
       params.reserveOracle,
@@ -306,19 +306,33 @@ library OrderLogic {
       params.aggLtv,
       reserveData
     );
-
-    if (debtToSell > 0) {
+    console.log('hola?', debtAmount);
+    totalAmount = params.totalAmount;
+    if (debtAmount > 0) {
+      if (debtAmount > totalAmount) revert Errors.DebtExceedsAmount();
       // Repay the debt
-      IERC20(params.underlyingAsset).approve(params.uToken, debtToSell);
-      IUToken(params.uToken).repayOnBelhalf(
-        order.offer.loanId,
-        debtToSell,
-        address(this),
-        order.owner
+      repayDebt(
+        RepayDebtParams({
+          loanId: order.offer.loanId,
+          owner: order.owner,
+          uToken: params.uToken,
+          from: params.from,
+          underlyingAsset: params.underlyingAsset,
+          amount: debtAmount
+        })
       );
+      // IERC20(params.underlyingAsset).approve(params.uToken, debtToSell);
+      // IUToken(params.uToken).repayOnBelhalf(
+      //   order.offer.loanId,
+      //   debtToSell,
+      //   address(this),
+      //   order.owner
+      // );
       // We remove from the total amount the debt repayed
-      return params.totalAmount - debtToSell;
+
+      console.log('DEBT', debtAmount);
+      console.log('TOTAL', totalAmount);
+      totalAmount = totalAmount - debtAmount;
     }
-    return params.totalAmount;
   }
 }

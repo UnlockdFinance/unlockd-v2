@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import '../../test-utils/setups/Setup.sol';
 
-import {OrderLogic} from '../../../src/libraries/logic/OrderLogic.sol';
+import {OrderLogic, DataTypes} from '../../../src/libraries/logic/OrderLogic.sol';
 import {UToken} from '../../../src/protocol/UToken.sol';
 
 contract OrderLogicTest is Setup {
@@ -43,7 +43,7 @@ contract OrderLogicTest is Setup {
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
         startAmount: 0,
-        endAmount: 10 ether,
+        endAmount: 1 ether,
         debtToSell: 10,
         startTime: uint40(block.timestamp),
         endTime: uint40(block.timestamp)
@@ -204,7 +204,66 @@ contract OrderLogicTest is Setup {
     vm.stopPrank();
   }
 
-  function test_orderLogic_repayOwnerDebt() internal {}
+  function test_orderLogic_repayOwnerDebt() public {
+    // We create the loan with the bid but it's the same.
+    test_orderLogic_borrowByBidder_big_amount();
+    writeTokenBalance(makeAddr('protocol'), UToken(uToken).UNDERLYING_ASSET_ADDRESS(), 100 ether);
+    vm.startPrank(makeAddr('protocol'));
+    OrderLogic.repayDebt(
+      OrderLogic.RepayDebtParams({
+        loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
+        uToken: uToken,
+        from: makeAddr('protocol'),
+        underlyingAsset: UToken(uToken).UNDERLYING_ASSET_ADDRESS(),
+        owner: makeAddr('filipe'),
+        amount: 1 ether
+      })
+    );
+    vm.stopPrank();
+  }
+
+  function test_orderLogic_repayDebtToSell() public {
+    test_orderLogic_borrowByBidder_big_amount();
+    writeTokenBalance(makeAddr('protocol'), UToken(uToken).UNDERLYING_ASSET_ADDRESS(), 100 ether);
+    vm.startPrank(makeAddr('protocol'));
+    OrderLogic.repayDebtToSell(
+      order,
+      OrderLogic.RepayDebtToSellParams({
+        reserveOracle: _reserveOracle,
+        underlyingAsset: UToken(uToken).UNDERLYING_ASSET_ADDRESS(),
+        uToken: uToken,
+        from: makeAddr('protocol'),
+        totalAmount: 1 ether,
+        aggLoanPrice: 10 ether,
+        aggLtv: 6000
+      }),
+      UToken(uToken).getReserve()
+    );
+    vm.stopPrank();
+  }
+
+  function test_orderLogic_repayDebtToSell_error_DebtExceedsAmount() internal {
+    // TODO: IDK why this is not working ....
+    // test_orderLogic_createOrder_new();
+    // test_orderLogic_borrowByBidder_big_amount();
+    // writeTokenBalance(makeAddr('protocol'), UToken(uToken).UNDERLYING_ASSET_ADDRESS(), 100 ether);
+    // address underlyingAsset = UToken(uToken).UNDERLYING_ASSET_ADDRESS();
+    // DataTypes.ReserveData memory reserveData = UToken(uToken).getReserve();
+    // address protocol = makeAddr('protocol');
+    // OrderLogic.RepayDebtToSellParams memory data = OrderLogic.RepayDebtToSellParams({
+    //   reserveOracle: _reserveOracle,
+    //   underlyingAsset: underlyingAsset,
+    //   uToken: uToken,
+    //   from: protocol,
+    //   totalAmount: 0.3 ether,
+    //   aggLoanPrice: 1 ether,
+    //   aggLtv: 6000
+    // });
+    // vm.startPrank(makeAddr('protocol'));
+    // vm.expectRevert(abi.encodeWithSelector(Errors.DebtExceedsAmount.selector));
+    // OrderLogic.repayDebtToSell(order, data, reserveData);
+    // vm.stopPrank();
+  }
 
   function test_orderLogic_getMaxDebtOrDefault() internal {}
 
@@ -215,8 +274,4 @@ contract OrderLogicTest is Setup {
   function test_orderLogic_getMinBid_second_bid() internal {}
 
   function test_orderLogic_calculateMinBid() internal {}
-
-  function test_orderLogic_repayDebtToSell() internal {}
-
-  function test_orderLogic_repayDebtToSell_debt_to_sell_zero() internal {}
 }

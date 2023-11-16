@@ -458,6 +458,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
         uToken: uToken,
+        from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,
         aggLtv: signMarket.loan.aggLtv
@@ -465,9 +466,10 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       reserve
     );
 
-    // Return the amount to the owner
-    IERC20(underlyingAsset).safeTransfer(order.owner, totalAmount);
-
+    if (totalAmount > 0) {
+      // Return the amount to the owner
+      IERC20(underlyingAsset).safeTransfer(order.owner, totalAmount);
+    }
     // By default we get the EOA from the buyer
     address buyer = order.bid.buyer;
     address buyerDelegationOwner;
@@ -749,6 +751,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
         uToken: uToken,
+        from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,
         aggLtv: signMarket.loan.aggLtv
@@ -756,39 +759,33 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       reserve
     );
 
-    {
+    if (totalAmount > 0) {
       // Return the amount to the owner
       IERC20(underlyingAsset).safeTransfer(order.owner, totalAmount);
-
-      (, address delegationOwner) = GenericLogic.getMainWallet(_walletRegistry, order.owner);
-      // Get the wallet of the owner
-
-      // We transfer the ownership to the new Owner
-      IProtocolOwner(delegationOwner).changeOwner(signMarket.collection, signMarket.tokenId, buyer);
-
-      // We remove the current order asociated to this asset
-      delete _orders[orderId];
-
-      if (_loans[loan.loanId].totalAssets != signMarket.loan.totalAssets + 1) {
-        revert Errors.TokenAssetsMismatch();
-      }
-      // We check the status
-      if (signMarket.loan.totalAssets == 0) {
-        // Remove the loan because doesn't have more assets
-        delete _loans[loan.loanId];
-      } else {
-        // We update the counter
-        _loans[loan.loanId].totalAssets = signMarket.loan.totalAssets;
-        _loans[loan.loanId].activate();
-      }
-
-      emit MarketBuyNow(
-        signMarket.loan.loanId,
-        orderId,
-        signMarket.assetId,
-        totalAmount,
-        msgSender
-      );
     }
+
+    address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, order.owner);
+    // Get the wallet of the owner
+
+    // We transfer the ownership to the new Owner
+    IProtocolOwner(protocolOwner).changeOwner(signMarket.collection, signMarket.tokenId, buyer);
+
+    // We remove the current order asociated to this asset
+    delete _orders[orderId];
+
+    if (_loans[loan.loanId].totalAssets != signMarket.loan.totalAssets + 1) {
+      revert Errors.TokenAssetsMismatch();
+    }
+    // We check the status
+    if (signMarket.loan.totalAssets == 0) {
+      // Remove the loan because doesn't have more assets
+      delete _loans[loan.loanId];
+    } else {
+      // We update the counter
+      _loans[loan.loanId].totalAssets = signMarket.loan.totalAssets;
+      _loans[loan.loanId].activate();
+    }
+
+    emit MarketBuyNow(signMarket.loan.loanId, orderId, signMarket.assetId, totalAmount, msgSender);
   }
 }
