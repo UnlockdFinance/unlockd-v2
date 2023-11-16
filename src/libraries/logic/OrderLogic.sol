@@ -8,7 +8,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 library OrderLogic {
   using SafeERC20 for IERC20;
@@ -63,24 +63,30 @@ library OrderLogic {
     emit OrderCreated(params.owner, params.orderId, params.loanId, params.orderType);
   }
 
+  struct ParamsUpdateOrder {
+    bytes32 loanId;
+    bytes32 assetId;
+    uint128 minBid;
+    uint40 endTime;
+  }
+
   function updateToLiquidationOrder(
     DataTypes.Order storage order,
-    uint256 minBid,
-    DataTypes.SignAuction calldata signAuction
+    ParamsUpdateOrder memory params
   ) internal {
     // Check if the Loan is Unhealty
     order.orderType = DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION;
     // Overwrite offer
     order.offer = DataTypes.OfferItem({
-      loanId: signAuction.loan.loanId,
-      assetId: signAuction.assetId,
-      startAmount: uint128(minBid),
+      loanId: params.loanId,
+      assetId: params.assetId,
+      startAmount: params.minBid,
       endAmount: 0,
       // debToSell is the % of the final bid or payed that is going to repay debt.
       debtToSell: 1e4
     });
 
-    order.timeframe = DataTypes.Timeframe({startTime: 0, endTime: signAuction.endTime});
+    order.timeframe = DataTypes.Timeframe({startTime: 0, endTime: params.endTime});
   }
 
   struct BorrowByBidderParams {
@@ -93,6 +99,7 @@ library OrderLogic {
   }
 
   function borrowByBidder(BorrowByBidderParams memory params) internal {
+    if (params.loanId == 0) revert Errors.InvalidLoanId();
     uint256 maxAmountToBorrow = GenericLogic.calculateAvailableBorrows(
       params.assetPrice,
       0,
@@ -114,6 +121,7 @@ library OrderLogic {
     bytes32 loanId;
     address owner;
     address uToken;
+    address from;
     address underlyingAsset;
     address reserveOracle;
     uint256 amountToPay;
@@ -134,14 +142,23 @@ library OrderLogic {
       );
       // Check if this loan has currentDebt
       if (currentDebt > 0) {
+        /**
+          WARNING : If the debt exceeds the total bid amount, we attempt to repay as much as possible. 
+          However, in the rare instance where the utilization rate is exceptionally high and borrowing 
+          is significantly increased, the debt could surpass the full amount.
+
+          That's why we calculate the total amount of debt that the user is capable of repaying.
+        **/
+        uint256 supportedDebt = currentDebt > totalAmount ? totalAmount : currentDebt;
         // We remove the current debt
-        totalAmount = totalAmount - currentDebt;
-        IERC20(params.underlyingAsset).approve(params.uToken, currentDebt);
+        totalAmount = totalAmount - supportedDebt;
+
+        IERC20(params.underlyingAsset).approve(params.uToken, supportedDebt);
         // Repay the debt
         IUToken(params.uToken).repayOnBelhalf(
           params.loanId,
-          currentDebt,
-          address(this),
+          supportedDebt,
+          params.from,
           params.owner
         );
       }

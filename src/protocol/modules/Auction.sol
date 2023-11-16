@@ -209,7 +209,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
             })
           );
           // You only can convert the aution if the lastBid don't cover the debt
-          order.updateToLiquidationOrder(minBid, signAuction);
+          order.updateToLiquidationOrder(
+            OrderLogic.ParamsUpdateOrder({
+              loanId: signAuction.loan.loanId,
+              assetId: signAuction.assetId,
+              endTime: signAuction.endTime,
+              minBid: uint128(minBid)
+            })
+          );
         }
       }
     }
@@ -287,6 +294,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           owner: order.bid.buyer,
           reserveOracle: _reserveOracle,
           uToken: address(utoken),
+          from: address(this),
           underlyingAsset: loan.underlyingAsset,
           amountOfDebt: order.bid.amountOfDebt,
           amountToPay: amountToPayBuyer,
@@ -374,6 +382,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         owner: order.bid.buyer,
         reserveOracle: _reserveOracle,
         uToken: utoken,
+        from: address(this),
         underlyingAsset: underlyingAsset,
         amountOfDebt: order.bid.amountOfDebt,
         amountToPay: order.offer.startAmount + bidderBonus,
