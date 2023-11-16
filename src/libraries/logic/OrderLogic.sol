@@ -8,7 +8,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 library OrderLogic {
   using SafeERC20 for IERC20;
@@ -200,7 +200,6 @@ library OrderLogic {
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256 maxDebtOrDefault) {
     uint256 totalDebt = GenericLogic.calculateLoanDebt(loanId, user, reserveOracle, reserveData);
-    console.log('TOTAL DEBT', totalDebt);
     if (totalDebt == 0) return defaultAmount;
 
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
@@ -295,7 +294,6 @@ library OrderLogic {
     RepayDebtToSellParams memory params,
     DataTypes.ReserveData memory reserveData
   ) internal returns (uint256 totalAmount) {
-    console.log('HOLA');
     uint256 debtAmount = getMaxDebtOrDefault(
       order.offer.loanId,
       order.owner,
@@ -306,7 +304,6 @@ library OrderLogic {
       params.aggLtv,
       reserveData
     );
-    console.log('hola?', debtAmount);
     totalAmount = params.totalAmount;
     if (debtAmount > 0) {
       if (debtAmount > totalAmount) revert Errors.DebtExceedsAmount();
@@ -321,17 +318,8 @@ library OrderLogic {
           amount: debtAmount
         })
       );
-      // IERC20(params.underlyingAsset).approve(params.uToken, debtToSell);
-      // IUToken(params.uToken).repayOnBelhalf(
-      //   order.offer.loanId,
-      //   debtToSell,
-      //   address(this),
-      //   order.owner
-      // );
       // We remove from the total amount the debt repayed
 
-      console.log('DEBT', debtAmount);
-      console.log('TOTAL', totalAmount);
       totalAmount = totalAmount - debtAmount;
     }
   }
