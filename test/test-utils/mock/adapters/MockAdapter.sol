@@ -13,6 +13,7 @@ import {DataTypes} from '../../../../src/types/DataTypes.sol';
 import {console} from 'forge-std/console.sol';
 
 contract MockAdapter is IMarketAdapter {
+  using SafeERC20 for IERC20;
   address private _aclManager;
   address private RESERVOIR;
   address private ETH_RESERVOIR;
@@ -53,5 +54,14 @@ contract MockAdapter is IMarketAdapter {
     // ERC721(params.collection).transferFrom(address(this), params.to, params.tokenId);
 
     return address(this).balance;
+  }
+
+  function withdraw(address payable _to) external {
+    (bool sent, ) = _to.call{value: address(this).balance}('');
+    require(sent, 'CALL_FAILED');
+  }
+
+  function withdrawERC20(address _asset, address _to) external {
+    IERC20(_asset).safeTransfer(_to, IERC20(_asset).balanceOf(address(this)));
   }
 }

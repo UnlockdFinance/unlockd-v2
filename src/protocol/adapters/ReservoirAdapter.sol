@@ -86,19 +86,17 @@ contract ReservoirAdapter is IMarketAdapter {
     return realCost;
   }
 
-  function withdraw(address payable _to) external onlyProtocol {
+  function withdraw(address payable _to) external onlyAdmin {
     (bool sent, ) = _to.call{value: address(this).balance}('');
     if (sent == false) revert Errors.UnsuccessfulExecution();
   }
 
-  function withdrawERC20(address payable _to) external onlyProtocol {
-    (bool sent, ) = _to.call{value: address(this).balance}('');
-    if (sent == false) revert Errors.UnsuccessfulExecution();
+  function withdrawERC20(address _asset, address _to) external onlyAdmin {
+    IERC20(_asset).safeTransfer(_to, IERC20(_asset).balanceOf(address(this)));
   }
 
   function _rawExec(address to, uint256 value, bytes memory data) private {
     // Ensure the target is a contract
-
     (bool sent, ) = payable(to).call{value: value}(data);
     if (sent == false) revert Errors.UnsuccessfulExecution();
   }

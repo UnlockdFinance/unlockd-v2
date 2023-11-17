@@ -22,6 +22,8 @@ contract ReserveOracle is IReserveOracle {
   }
 
   constructor(address aclManager, address baseCurrency, uint256 baseCurrencyUnit) {
+    if (baseCurrencyUnit == 0) revert Errors.InvalidAggregator();
+
     ACL_MANAGER = aclManager;
     BASE_CURRENCY = baseCurrency;
     BASE_CURRENCY_UNIT = baseCurrencyUnit;
@@ -83,7 +85,6 @@ contract ReserveOracle is IReserveOracle {
    * @inheritdoc IReserveOracle
    */
   function getAssetPrice(address priceFeedKey) external view override returns (uint256) {
-    if (priceFeedKey == address(0)) revert Errors.InvalidPriceFeedKey();
     AggregatorV3Interface aggregator = _priceFeedMap[priceFeedKey];
 
     if (priceFeedKey == BASE_CURRENCY) {

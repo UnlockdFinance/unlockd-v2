@@ -268,7 +268,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
-
+    // vm.recordLogs();
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_AUCTION,

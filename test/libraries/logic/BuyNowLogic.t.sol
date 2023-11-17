@@ -87,4 +87,64 @@ contract BuyNowLogicTest is Setup {
     assertEq(minAmount, 400000000000000000);
     assertEq(maxAmount, 600000000000000000);
   }
+
+  function test_buyNow_calculations_price_bigger() internal {
+    (uint256 minAmount, uint256 maxAmount) = test.calculations(
+      uToken,
+      DataTypes.SignBuyNow({
+        asset: DataTypes.SignAsset({
+          assetId: 0x952d72a21d7cc0fcc1bc09ed86fbffc8c63ecf57742377a17e9461f7a2d704fd,
+          collection: makeAddr('fake_collection'),
+          tokenId: 1,
+          price: 2 ether,
+          nonce: 1,
+          deadline: block.number + 1000
+        }),
+        assetLtv: 6000,
+        assetLiquidationThreshold: 6000,
+        from: makeAddr('pilipe'),
+        to: makeAddr('kike'),
+        data: 'NO_DATA',
+        value: 0,
+        marketApproval: makeAddr('market_1'),
+        marketPrice: 1 ether,
+        underlyingAsset: getAssetAddress('WETH'),
+        nonce: 1,
+        deadline: block.number + 1000
+      })
+    );
+
+    assertEq(minAmount, 400000000000000000);
+    assertEq(maxAmount, 600000000000000000);
+  }
+
+  function test_buyNow_calculations_marketprice_bigger() internal {
+    (uint256 minAmount, uint256 maxAmount) = test.calculations(
+      uToken,
+      DataTypes.SignBuyNow({
+        asset: DataTypes.SignAsset({
+          assetId: 0x952d72a21d7cc0fcc1bc09ed86fbffc8c63ecf57742377a17e9461f7a2d704fd,
+          collection: makeAddr('fake_collection'),
+          tokenId: 1,
+          price: 1 ether,
+          nonce: 1,
+          deadline: block.number + 1000
+        }),
+        assetLtv: 6000,
+        assetLiquidationThreshold: 6000,
+        from: makeAddr('pilipe'),
+        to: makeAddr('kike'),
+        data: 'NO_DATA',
+        value: 0,
+        marketApproval: makeAddr('market_1'),
+        marketPrice: 2 ether,
+        underlyingAsset: getAssetAddress('WETH'),
+        nonce: 1,
+        deadline: block.number + 1000
+      })
+    );
+
+    assertEq(minAmount, 400000000000000000);
+    assertEq(maxAmount, 600000000000000000);
+  }
 }

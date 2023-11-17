@@ -55,4 +55,8 @@ interface IMarketAdapter {
   function preSell(PreSellParams memory params) external payable;
 
   function sell(SellParams memory params) external payable;
+
+  function withdraw(address payable _to) external;
+
+  function withdrawERC20(address _asset, address _to) external;
 }
