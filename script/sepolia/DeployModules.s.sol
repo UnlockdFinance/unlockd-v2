@@ -24,7 +24,7 @@ import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {SellNow} from '../../src/protocol/modules/SellNow.sol';
 import {Market} from '../../src/protocol/modules/Market.sol';
 
-contract DeployModuleTestScript is DeployerHelper {
+contract DeployModulesScript is DeployerHelper {
   bytes32 public constant VERSION = '14';
   uint256 public constant MODULE_ID = 100;
 

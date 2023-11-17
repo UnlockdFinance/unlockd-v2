@@ -116,19 +116,19 @@ contract DeployProtocolScript is DeployerHelper {
 
       {
         Manager managerImp = new Manager(Constants.MODULEID__MANAGER, VERSION);
-        Action actionImp = new Action(Constants.MODULEID__ACTION, VERSION);
-        Auction auctionImp = new Auction(Constants.MODULEID__AUCTION, VERSION);
-        Market marketImp = new Market(Constants.MODULEID__MARKET, VERSION);
-        BuyNow buyNowImp = new BuyNow(Constants.MODULEID__BUYNOW, VERSION);
-        SellNow sellNowImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
-        // Install Modules
-        address[] memory modules = new address[](6);
+        //   Action actionImp = new Action(Constants.MODULEID__ACTION, VERSION);
+        //   Auction auctionImp = new Auction(Constants.MODULEID__AUCTION, VERSION);
+        //   Market marketImp = new Market(Constants.MODULEID__MARKET, VERSION);
+        //   BuyNow buyNowImp = new BuyNow(Constants.MODULEID__BUYNOW, VERSION);
+        //   SellNow sellNowImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
+        //   // Install Modules
+        address[] memory modules = new address[](1);
         modules[0] = address(managerImp);
-        modules[1] = address(actionImp);
-        modules[2] = address(auctionImp);
-        modules[3] = address(marketImp);
-        modules[4] = address(buyNowImp);
-        modules[5] = address(sellNowImp);
+        //   modules[1] = address(actionImp);
+        //   modules[2] = address(auctionImp);
+        //   modules[3] = address(marketImp);
+        //   modules[4] = address(buyNowImp);
+        //   modules[5] = address(sellNowImp);
 
         address installer = Unlockd(addresses.unlockd).moduleIdToProxy(
           Constants.MODULEID__INSTALLER
