@@ -415,6 +415,12 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     return wallet.wallet;
   }
 
+  function getProtocolOwnerAddress(uint256 index) internal returns (address) {
+    DelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+      .getOwnerWalletAt(_actors.get(index), 0);
+    return wallet.protocolOwner;
+  }
+
   modifier useActor(uint256 index) {
     vm.startPrank(getActorAddress(index));
     _;
