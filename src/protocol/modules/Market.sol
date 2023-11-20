@@ -439,7 +439,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // We check if the bid is in the correct range in order to ensure that the HF is correct.
     // Because the interest can be grow and the auction endend and the liquidation can happend in mind time.
 
-    // TODO: Change that to a especific vlidation because we need to ensure that the amount is bigger than the debt
     ValidationLogic.validateFutureLoanState(
       ValidationLogic.ValidateLoanStateParams({
         user: order.owner,

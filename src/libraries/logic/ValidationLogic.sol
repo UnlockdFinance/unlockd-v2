@@ -58,24 +58,6 @@ library ValidationLogic {
     }
   }
 
-  struct ValidateBorrowLocalVars {
-    uint256 currentLtv;
-    uint256 currentLiquidationThreshold;
-    uint256 amountOfCollateralNeeded;
-    uint256 userCollateralBalance;
-    uint256 userBorrowBalance;
-    uint256 availableLiquidity;
-    uint256 healthFactor;
-    bool isActive;
-    bool isFrozen;
-    bool borrowingEnabled;
-    bool stableRateBorrowingEnabled;
-    bool nftIsActive;
-    bool nftIsFrozen;
-    address loanReserveAsset;
-    address loanBorrower;
-  }
-
   struct ValidateLoanStateParams {
     address user;
     uint256 amount;
@@ -263,12 +245,6 @@ library ValidationLogic {
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
 
     if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
-  }
-
-  function validateHealthyHealthFactor(uint256 hf) internal pure {
-    if (hf <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      revert Errors.UnhealtyLoan();
-    }
   }
 
   struct ValidateCreateOrderMarketParams {
