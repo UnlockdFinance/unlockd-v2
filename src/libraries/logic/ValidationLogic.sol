@@ -113,7 +113,7 @@ library ValidationLogic {
     return userTotalDebt;
   }
 
-  function validateFutureHasUnhealtyLoanState(
+  function validateFutureUnhealtyLoanState(
     ValidateLoanStateParams memory params
   ) internal view returns (uint256 userPendingDebt) {
     // We always need to define the LTV and the Liquidation threshold

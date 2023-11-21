@@ -158,7 +158,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // Validate bid in order
         // Check if the Loan is Unhealty
 
-        ValidationLogic.validateFutureHasUnhealtyLoanState(
+        ValidationLogic.validateFutureUnhealtyLoanState(
           ValidationLogic.ValidateLoanStateParams({
             user: loan.owner,
             amount: 0,
@@ -198,7 +198,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
         // If the auction is in market, we migrate this type of auction to liquidation
         if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
-          ValidationLogic.validateFutureHasUnhealtyLoanState(
+          ValidationLogic.validateFutureUnhealtyLoanState(
             ValidationLogic.ValidateLoanStateParams({
               user: order.owner,
               amount: order.bid.amountOfDebt + order.bid.amountToPay,

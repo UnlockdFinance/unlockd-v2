@@ -74,7 +74,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     IUToken(loan.uToken).updateStateReserve();
     DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
 
-    uint256 totalDebt = ValidationLogic.validateFutureHasUnhealtyLoanState(
+    uint256 totalDebt = ValidationLogic.validateFutureUnhealtyLoanState(
       ValidationLogic.ValidateLoanStateParams({
         user: loan.owner,
         amount: 0,
