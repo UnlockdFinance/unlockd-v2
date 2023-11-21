@@ -26,7 +26,7 @@ import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using PercentageMath for uint256;
@@ -422,6 +422,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     _validateSignature(msgSender, signAuction, sig);
 
     DataTypes.Order memory order = _orders[orderId];
+    console.log('order', order.owner);
+
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
     if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
@@ -474,13 +476,13 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     if (_loans[loan.loanId].totalAssets != signAuction.loan.totalAssets + 1) {
       revert Errors.TokenAssetsMismatch();
     }
-    if (signAuction.loan.totalAssets > 1) {
+    if (signAuction.loan.totalAssets == 0) {
+      // If there is only one we can remove the loan
+      delete _loans[offerLoanId];
+    } else {
       // Activate loan
       loan.activate();
       loan.totalAssets = signAuction.loan.totalAssets;
-    } else {
-      // If there is only one we can remove the loan
-      delete _loans[offerLoanId];
     }
 
     emit AuctionFinalize(

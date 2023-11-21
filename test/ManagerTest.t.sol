@@ -272,14 +272,14 @@ contract AuctionTest is Setup {
     vm.stopPrank();
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint256(loan.state), 0);
+    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint256(loanUpdated.state), 1);
+    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
   }
 
   function test_emergencyFreezeLoan_error() external {
@@ -301,7 +301,7 @@ contract AuctionTest is Setup {
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint256(loanUpdated.state), 1);
+    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyActiveLoan(loanId);
@@ -309,7 +309,7 @@ contract AuctionTest is Setup {
 
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint256(loan.state), 0);
+    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
   }
 
   function test_emergencyActiveLoan_error() external {

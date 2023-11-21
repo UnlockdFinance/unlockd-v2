@@ -189,7 +189,7 @@ contract AuctionTest is Setup {
     return loanId;
   }
 
-  function test_auction_bid_on_expired_liquidation_auction() public {
+  function test_auction_bid_on_expired_liquidation_auction() public returns (bytes32) {
     bytes32 loanId = borrow_action(_action, _nft, ACTOR, 1.2 ether, 2 ether, 2, 2);
     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     address actorThree = getActorWithFunds(ACTORTHREE, 'WETH', 2 ether);
@@ -244,6 +244,7 @@ contract AuctionTest is Setup {
       vm.expectRevert(Errors.TimestampExpired.selector);
       Auction(_auction).bid(1.2 ether, 0.5 ether, signAuction, sig); // BID ON THE ASSET
     }
+    return loanId;
   }
 
   function test_auction_bid_healty_liquidation_auction() public {
@@ -495,7 +496,109 @@ contract AuctionTest is Setup {
     }
   }
 
+  function test_auction_finalize_liquidation_auction_error_TokenAssetsMismatch() public {
+    vm.recordLogs();
+    bytes32 loanId = test_auction_bid_liquidation_auction();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+
+    // END AUCTION
+    vm.warp(block.timestamp + 3000);
+
+    {
+      address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
+      (
+        DataTypes.SignAuction memory signAuction,
+        DataTypes.EIP712Signature memory sig
+      ) = auction_signature(
+          _auction,
+          AuctionSignParams({user: actor, loanId: loanId, price: 0.8 ether, totalAssets: 2}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      // Add funds to the actor two
+
+      hoax(actor);
+      vm.expectRevert(Errors.TokenAssetsMismatch.selector);
+      Auction(_auction).finalize(orderId, signAuction, sig);
+    }
+  }
+
+  function test_auction_finalize_liquidation_auction_reactivate_loan() public {
+    address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    vm.recordLogs();
+    bytes32 loanId = test_auction_bid_liquidation_auction();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+
+    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+
+    // END AUCTION
+    vm.warp(block.timestamp + 3000);
+
+    {
+      address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
+      (
+        DataTypes.SignAuction memory signAuction,
+        DataTypes.EIP712Signature memory sig
+      ) = auction_signature(
+          _auction,
+          AuctionSignParams({user: actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      // Add funds to the actor two
+
+      hoax(actor);
+      Auction(_auction).finalize(orderId, signAuction, sig);
+
+      DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
+      assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    }
+  }
+
+  function test_auction_finalize_error_OrderNotAllowed() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0.2 ether, 1 ether, 1, 1);
+    bytes32 orderId = _create_market_auction(loanId, 0.2 ether);
+
+    // END AUCTION
+    vm.warp(block.timestamp + 3000);
+
+    {
+      address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
+      (
+        DataTypes.SignAuction memory signAuction,
+        DataTypes.EIP712Signature memory sig
+      ) = auction_signature(
+          _auction,
+          AuctionSignParams({user: actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      // Add funds to the actor two
+
+      hoax(actor);
+      vm.expectRevert(Errors.OrderNotAllowed.selector);
+      Auction(_auction).finalize(orderId, signAuction, sig);
+    }
+  }
+
   function test_auction_finalize_not_ended_liquidation_auction() public {
+    vm.recordLogs();
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
