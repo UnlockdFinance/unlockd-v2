@@ -11,9 +11,19 @@ contract MathUtilsTest is Base {
     // By default Mainnet
   }
 
-  function test_mathUtils_calculateLinearInterest() internal {}
+  function test_mathUtils_calculateLinearInterest() public {
+    uint256 interest = MathUtils.calculateLinearInterest(10, uint40(block.timestamp - 1000));
+    assertEq(1000000000000000000000000000, interest);
+  }
 
-  function test_mathUtils_calculateCompoundedInterest() internal {}
+  function test_mathUtils_calculateCompoundedInterest() public {
+    uint256 interest = MathUtils.calculateCompoundedInterest(
+      10,
+      uint40(block.timestamp - 1000),
+      block.timestamp
+    );
+    assertEq(1000000000000000000000000000, interest);
+  }
 
   function test_mathUtils_maxOf() public {
     uint256 expected = MathUtils.maxOf(2, 5);

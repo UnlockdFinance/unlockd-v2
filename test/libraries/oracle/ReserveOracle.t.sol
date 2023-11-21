@@ -44,6 +44,19 @@ contract ReserveOracleTest is Setup {
     oracle.addAggregators(priceFeedKeys, aggregators);
   }
 
+  function test_reserveOracle_addAggregators_InvalidArrayLength() public {
+    address[] memory priceFeedKeys = new address[](2);
+    priceFeedKeys[0] = WETH;
+    priceFeedKeys[1] = USDC;
+
+    address[] memory aggregators = new address[](1);
+    aggregators[0] = aggETHUSD;
+
+    hoax(_admin);
+    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidArrayLength.selector));
+    oracle.addAggregators(priceFeedKeys, aggregators);
+  }
+
   function test_reserveOracle_addAggregator() public {
     hoax(_admin);
     oracle.addAggregator(WETH, aggETHUSD);

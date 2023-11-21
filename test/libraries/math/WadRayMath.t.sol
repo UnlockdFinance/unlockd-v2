@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import '../../test-utils/base/Base.sol';
 
+import {WadRayMath} from '../../../src/libraries/math/WadRayMath.sol';
+
 contract WadRayMathTest is Base {
   uint256 internal constant WAD = 1e18;
   uint256 internal constant HALF_WAD = 0.5e18;
@@ -16,23 +18,40 @@ contract WadRayMathTest is Base {
     // By default Mainnet
   }
 
-  function test_wadRayMath_ray() internal {}
+  function test_wadRayMath() internal {
+    assertEq(WadRayMath.ray(), RAY);
+    assertEq(WadRayMath.wad(), WAD);
+    assertEq(WadRayMath.halfRay(), HALF_RAY);
+    assertEq(WadRayMath.halfWad(), HALF_WAD);
+  }
 
-  function test_wadRayMath_wad() internal {}
+  function test_wadRayMath_wadMul() internal {
+    uint256 mul = WadRayMath.wadMul(1 ** 27, 2);
+    assertEq(mul, 2 ** 27);
+  }
 
-  function test_wadRayMath_halfRay() internal {}
+  function test_wadRayMath_wadDiv() internal {
+    uint256 div = WadRayMath.wadDiv(10 ** 27, 2);
+    assertEq(div, 5 ** 27);
+  }
 
-  function test_wadRayMath_halfWad() internal {}
+  function test_wadRayMath_rayMul() internal {
+    uint256 mul = WadRayMath.rayMul(1 ** 18, 2);
+    assertEq(mul, 2 ** 18);
+  }
 
-  function test_wadRayMath_wadMul() internal {}
+  function test_wadRayMath_rayDiv() internal {
+    uint256 div = WadRayMath.rayDiv(10 ** 18, 2);
+    assertEq(div, 5 ** 18);
+  }
 
-  function test_wadRayMath_wadDiv() internal {}
+  function test_wadRayMath_rayToWad() internal {
+    uint256 result = WadRayMath.rayToWad(2 ** 27);
+    assertEq(result, 2 ** 18);
+  }
 
-  function test_wadRayMath_rayMul() internal {}
-
-  function test_wadRayMath_rayDiv() internal {}
-
-  function test_wadRayMath_rayToWad() internal {}
-
-  function test_wadRayMath_wadToRay() internal {}
+  function test_wadRayMath_wadToRay() internal {
+    uint256 result = WadRayMath.rayToWad(2 ** 18);
+    assertEq(result, 2 ** 27);
+  }
 }
