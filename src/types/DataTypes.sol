@@ -113,7 +113,7 @@ library DataTypes {
   }
 
   enum LoanState {
-    NOSTATE,
+    NONSTATE,
     ACTIVE,
     FREEZE
   }
