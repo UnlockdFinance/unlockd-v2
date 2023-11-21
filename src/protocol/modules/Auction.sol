@@ -422,7 +422,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     _validateSignature(msgSender, signAuction, sig);
 
     DataTypes.Order memory order = _orders[orderId];
-    console.log('order', order.owner);
 
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
     if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {

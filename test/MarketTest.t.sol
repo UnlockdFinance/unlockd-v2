@@ -1173,6 +1173,76 @@ contract MarketTest is Setup {
     assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTHREE));
   }
 
+  function test_bid_and_buynow_type_fixed_price_and_auction_tokenMismatch()
+    public
+    returns (bytes32, bytes32)
+  {
+    vm.recordLogs();
+    test_create_order_without_order_type_fixed_price_auction();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+
+    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
+
+    // address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    address actorThree = getActorWithFunds(ACTORTHREE, 'WETH', 2 ether);
+    assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTOR));
+    // {
+    //   (
+    //     DataTypes.SignMarket memory signMarket,
+    //     DataTypes.EIP712Signature memory sig
+    //   ) = _generate_signature(
+    //       GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+    //       AssetParams({
+    //         assetId: AssetLogic.assetId(_nft, 1),
+    //         collection: _nft,
+    //         tokenId: 1,
+    //         assetPrice: 1 ether,
+    //         assetLtv: 6000
+    //       })
+    //     );
+    //   // Add funds to the actor two
+
+    //   uint128 bidAmount = 0.6 ether;
+    //   hoax(actorTwo);
+    //   approveAsset('WETH', address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+
+    //   // BID Can't be ZERO
+    //   hoax(actorTwo);
+    //   vm.expectRevert(Errors.AmountToLow.selector);
+    //   Market(_market).bid(orderId, 0, 0, signMarket, sig); // BID ON THE ASSET
+
+    //   // add small amount to bid
+    //   hoax(actorTwo);
+    //   Market(_market).bid(orderId, bidAmount, 0, signMarket, sig); // BID ON THE ASSET
+    // }
+
+    {
+      uint256 buyAmount = 1 ether;
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = _generate_signature(
+          GenerateSignParams({user: actorThree, loanId: loanId, price: 1 ether, totalAssets: 3}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+
+      hoax(actorThree);
+      approveAsset('WETH', address(getUnlockd()), buyAmount); // APPROVE AMOUNT
+
+      // add small amount to bid
+      hoax(actorThree);
+      vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+      Market(_market).buyNow(true, orderId, buyAmount, 0, signMarket, sig); // BID ON THE ASSET
+    }
+  }
+
   function test_bid_type_auction_minBid_set_with_debt_two_bids() public returns (bytes32, bytes32) {
     vm.recordLogs();
     test_create_order_type_auction_with_debt_loan();

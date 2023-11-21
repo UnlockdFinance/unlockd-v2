@@ -202,7 +202,7 @@ library ValidationLogic {
     Errors.verifyNotExpiredTimestamp(orderTimeframeEndtime, block.timestamp);
 
     // Check if it is a biddable order
-    if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
   }
 
   function validateBuyNow(
@@ -217,7 +217,7 @@ library ValidationLogic {
     ) {
       revert Errors.OrderNotAllowed();
     }
-    if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
 
     if (order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
@@ -244,7 +244,7 @@ library ValidationLogic {
     // Check if is auction over
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
 
-    if (loanTotalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
   }
 
   struct ValidateCreateOrderMarketParams {
@@ -330,7 +330,7 @@ library ValidationLogic {
     DataTypes.Order memory order,
     DataTypes.Loan memory loan
   ) internal view {
-    if (loan.totalAssets != totalAssets + 1) revert Errors.NotEqualTotalAssets();
+    if (loan.totalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
     if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION)
       revert Errors.OrderNotAllowed();
 
