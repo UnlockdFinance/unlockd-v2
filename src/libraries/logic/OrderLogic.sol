@@ -273,7 +273,7 @@ library OrderLogic {
   function calculateMinBid(
     uint256 lastBid,
     uint256 countBids
-  ) internal view returns (uint256 minBid) {
+  ) internal pure returns (uint256 minBid) {
     minBid = countBids == 1
       ? lastBid + lastBid.percentMul(GenericLogic.FIRST_BID_INCREMENT) // At least 2.5% more than the last bid
       : lastBid + lastBid.percentMul(GenericLogic.NEXT_BID_INCREMENT); // At least %1 more than the last bid

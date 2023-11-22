@@ -295,8 +295,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       signMarket.loan.totalAssets,
       order.orderType,
       order.timeframe.endTime,
-      loan.totalAssets,
-      loan.state
+      loan.totalAssets
     );
 
     // Cache UToken address

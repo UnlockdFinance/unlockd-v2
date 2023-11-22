@@ -155,7 +155,7 @@ library GenericLogic {
     uint256 totalCollateral,
     uint256 totalDebt,
     uint256 ltv
-  ) internal view returns (uint256 amount) {
+  ) internal pure returns (uint256 amount) {
     uint256 availableBorrows = totalCollateral.percentMul(ltv);
     unchecked {
       amount = availableBorrows < totalDebt ? totalDebt - availableBorrows : 0;
@@ -191,22 +191,6 @@ library GenericLogic {
 
     return assetPrice.mulDiv(userTotalDebt, assetUnit);
   }
-
-  // function amountToBeHealthy(
-  //   DataTypes.Loan memory loan,
-  //   uint256 _loanDebt,
-  //   uint256 _debtToBeHealthy
-  // ) internal pure returns (uint256 amount) {
-  //   if (loan.totalAssets == 1) {
-  //     return _loanDebt;
-  //   }
-
-  //   if (_loanDebt > _debtToBeHealthy) {
-  //     unchecked {
-  //       amount = _loanDebt - _debtToBeHealthy;
-  //     }
-  //   }
-  // }
 
   function getMainWallet(
     address walletRegistry,

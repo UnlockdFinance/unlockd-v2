@@ -6,7 +6,7 @@ import '../../test-utils/base/Base.sol';
 import {AssetLogic, DataTypes} from '../../../src/libraries/logic/AssetLogic.sol';
 
 contract TestLib {
-  function getHash(DataTypes.SignAsset calldata signAsset) public returns (bytes32) {
+  function getHash(DataTypes.SignAsset calldata signAsset) public pure returns (bytes32) {
     return AssetLogic.getAssetStructHash(1, signAsset);
   }
 }

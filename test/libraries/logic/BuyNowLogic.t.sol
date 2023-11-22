@@ -10,7 +10,7 @@ contract TestLib {
   function calculations(
     address uToken,
     DataTypes.SignBuyNow calldata buyData
-  ) public returns (uint256, uint256) {
+  ) public view returns (uint256, uint256) {
     return BuyNowLogic.calculations(uToken, buyData);
   }
 }

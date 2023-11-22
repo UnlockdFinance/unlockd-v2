@@ -1173,10 +1173,7 @@ contract MarketTest is Setup {
     assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTHREE));
   }
 
-  function test_bid_and_buynow_type_fixed_price_and_auction_tokenMismatch()
-    public
-    returns (bytes32, bytes32)
-  {
+  function test_bid_and_buynow_type_fixed_price_and_auction_tokenMismatch() public {
     vm.recordLogs();
     test_create_order_without_order_type_fixed_price_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();

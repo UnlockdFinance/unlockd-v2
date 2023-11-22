@@ -82,16 +82,15 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (uint256 userCollateralBalance, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic
-      .calculateFutureLoanData(
-        params.loanConfig.loanId,
-        params.amount,
-        params.price,
-        params.user,
-        params.reserveOracle,
-        params.reserve,
-        params.loanConfig
-      );
+    (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
+      params.loanConfig.loanId,
+      params.amount,
+      params.price,
+      params.user,
+      params.reserveOracle,
+      params.reserve,
+      params.loanConfig
+    );
 
     // ........................ DEBUG MODE ....................................
     // console.log('> validateFutureLoanState ----------------------------------------------- <');
@@ -128,16 +127,15 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (uint256 userCollateralBalance, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic
-      .calculateFutureLoanData(
-        params.loanConfig.loanId,
-        params.amount,
-        params.price,
-        params.user,
-        params.reserveOracle,
-        params.reserve,
-        params.loanConfig
-      );
+    (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
+      params.loanConfig.loanId,
+      params.amount,
+      params.price,
+      params.user,
+      params.reserveOracle,
+      params.reserve,
+      params.loanConfig
+    );
 
     // ........................ DEBUG MODE ....................................
     // console.log(
@@ -188,8 +186,7 @@ library ValidationLogic {
     uint256 totalAssets,
     DataTypes.OrderType orderType,
     uint40 orderTimeframeEndtime,
-    uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    uint88 loanTotalAssets
   ) internal view {
     if (
       orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||

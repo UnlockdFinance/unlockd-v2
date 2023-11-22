@@ -6,7 +6,7 @@ import '../../test-utils/base/Base.sol';
 import {LoanLogic} from '../../../src/libraries/logic/LoanLogic.sol';
 
 contract TestLib {
-  function getHash(DataTypes.SignLoanConfig calldata loanConfig) public returns (bytes32) {
+  function getHash(DataTypes.SignLoanConfig calldata loanConfig) public pure returns (bytes32) {
     return LoanLogic.getLoanStructHash(1, loanConfig);
   }
 }
