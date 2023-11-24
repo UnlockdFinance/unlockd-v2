@@ -54,6 +54,7 @@ library Errors {
 
   error InvalidPriceFeedKey();
   error InvalidAggregator();
+  error InvalidLastRoundData();
 
   error NotEnoughLiquidity();
   error DebtExceedsAmount();

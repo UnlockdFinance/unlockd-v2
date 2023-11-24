@@ -13,9 +13,14 @@ contract ReserveOracle is IReserveOracle {
   address public immutable BASE_CURRENCY;
   uint256 public immutable BASE_CURRENCY_UNIT;
   address internal immutable ACL_MANAGER;
-
   mapping(address => AggregatorV3Interface) public _priceFeedMap;
 
+  struct ChainlinkResponse {
+    uint80 roundId;
+    int256 answer;
+    uint256 updatedAt;
+    bool success;
+  }
   modifier onlyPriceUpdater() {
     if (IACLManager(ACL_MANAGER).isPriceUpdater(msg.sender) == false) revert Errors.AccessDenied();
     _;
@@ -93,9 +98,19 @@ contract ReserveOracle is IReserveOracle {
 
     if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
 
-    (, int256 _price, , , ) = aggregator.latestRoundData();
+    ChainlinkResponse memory cl = aggregator.latestRoundData();
 
-    return uint256(_price);
+    if (
+      cl.success == true &&
+      cl.roundId != 0 &&
+      cl.answer >= 0 &&
+      cl.updatedAt != 0 &&
+      cl.updatedAt <= block.timestamp
+    ) {
+      return uint256(_price);
+    } else {
+      revert Errors.InvalidLastRoundData();
+    }
   }
 
   /**
