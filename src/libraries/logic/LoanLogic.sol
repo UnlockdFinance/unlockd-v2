@@ -63,6 +63,13 @@ library LoanLogic {
   }
 
   /**
+   * @dev Block loan
+   */
+  function blocked(DataTypes.Loan storage loan) internal {
+    loan.state = DataTypes.LoanState.BLOCKED;
+  }
+
+  /**
    * @dev return the loan struct hashed
    */
   function getLoanStructHash(

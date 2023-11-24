@@ -1,4 +1,8 @@
 node_modules
+
+node_modules
+lib
+
 lib/openzeppelin-contracts
 lib/openzeppelin-contracts-upgradeable
 lib/unlockdv2-wallet

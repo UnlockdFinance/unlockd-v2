@@ -15,7 +15,7 @@ interface ISellNowModule is ILoan {
   );
   event Sold(bytes32 loanId, bytes32 assetId, address collection, uint256 tokenId, uint256 amount);
 
-  function forzeSell(
+  function forceSell(
     address marketAdapter,
     DataTypes.Asset calldata asset,
     DataTypes.SignSellNow calldata signSellNow,

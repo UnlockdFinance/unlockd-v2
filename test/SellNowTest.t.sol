@@ -559,7 +559,7 @@ contract SellNowTest is Setup {
       LoanData({loanId: loanId, aggLoanPrice: 0, totalAssets: 0}) // Set unhealty loan
     );
     hoax(_admin);
-    SellNow(_sellNow).forzeSell(_reservoirAdapter, asset, data, sig);
+    SellNow(_sellNow).forceSell(_reservoirAdapter, asset, data, sig);
     // Check that the nft is on the market
     assertEq(IERC721(address(_nft)).ownerOf(1), address(_market));
   }
@@ -601,7 +601,7 @@ contract SellNowTest is Setup {
       LoanData({loanId: loanId, aggLoanPrice: 1.5 ether, totalAssets: totalAssets - 1}) // Set unhealty loan
     );
     hoax(_admin);
-    SellNow(_sellNow).forzeSell(_reservoirAdapter, asset, data, sig);
+    SellNow(_sellNow).forceSell(_reservoirAdapter, asset, data, sig);
     // Check that the nft is on the market
     assertEq(IERC721(address(_nft)).ownerOf(1), address(_market));
   }
@@ -644,6 +644,6 @@ contract SellNowTest is Setup {
     );
     hoax(_admin);
     vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
-    SellNow(_sellNow).forzeSell(_reservoirAdapter, asset, data, sig);
+    SellNow(_sellNow).forceSell(_reservoirAdapter, asset, data, sig);
   }
 }

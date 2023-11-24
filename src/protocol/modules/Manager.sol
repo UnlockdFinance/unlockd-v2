@@ -130,6 +130,15 @@ contract Manager is BaseCoreModule, IManagerModule {
   }
 
   /**
+   * @dev Allow to activate a loan
+   * @param loanId Loand Id
+   */
+  function emergencyBlockedLoan(bytes32 loanId) external onlyEmergency {
+    if (loanId == bytes32(0)) revert Errors.InvalidLoanId();
+    _loans[loanId].blocked();
+  }
+
+  /**
    * @dev Allow to increase the timestamp of a current auction
    * @param orderId order Id
    * @param newEndTime timestamp to finalize the auction

@@ -59,7 +59,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
    * @param signSellNow struct the information to sell the asset
    * @param sig validation of
    */
-  function forzeSell(
+  function forceSell(
     address marketAdapter,
     DataTypes.Asset calldata asset,
     DataTypes.SignSellNow calldata signSellNow,
@@ -173,6 +173,10 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
       DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
       uToken = loan.uToken;
+      // The loan need to be active
+      if (loan.state != DataTypes.LoanState.ACTIVE) {
+        revert Errors.LoanNotActive();
+      }
       IUToken(loan.uToken).updateStateReserve();
       DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
 

@@ -180,7 +180,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         endAmount: config.endAmount,
         startTime: config.startTime,
         endTime: config.endTime,
-        currentTimestamp: block.timestamp
+        currentTimestamp: block.timestamp,
+        loanState: loan.state
       })
     );
 
@@ -291,11 +292,13 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     if (signMarket.loan.totalAssets == loan.totalAssets) {
       revert Errors.LoanNotUpdated();
     }
+    DataTypes.LoanState loanState = loan.state;
     ValidationLogic.validateOrderBid(
-      signMarket.loan.totalAssets,
       order.orderType,
       order.timeframe.endTime,
-      loan.totalAssets
+      signMarket.loan.totalAssets,
+      loan.totalAssets,
+      loanState
     );
 
     // Cache UToken address

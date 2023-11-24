@@ -18,6 +18,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 library ReserveLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using ReserveLogic for DataTypes.ReserveData;
 
   /**
    * @dev Emitted when the state of a reserve is updated
@@ -35,8 +36,6 @@ library ReserveLogic {
     uint256 liquidityIndex,
     uint256 variableBorrowIndex
   );
-
-  using ReserveLogic for DataTypes.ReserveData;
 
   /**
    * @dev Returns the ongoing normalized income for the reserve
@@ -201,7 +200,7 @@ library ReserveLogic {
     uint256 previousVariableDebt;
     uint256 totalDebtAccrued;
     uint256 amountToMint;
-    uint256 reserveFactor;
+    // uint256 reserveFactor;
   }
 
   /**
@@ -220,12 +219,9 @@ library ReserveLogic {
     uint256 newVariableBorrowIndex,
     uint40 timestamp
   ) internal view returns (uint256) {
-    timestamp;
     MintToTreasuryLocalVars memory vars;
 
-    vars.reserveFactor = reserve.reserveFactor;
-
-    if (vars.reserveFactor == 0) {
+    if (reserve.reserveFactor == 0) {
       return 0;
     }
 
@@ -238,7 +234,7 @@ library ReserveLogic {
     //debt accrued is the sum of the current debt minus the sum of the debt at the last update
     vars.totalDebtAccrued = vars.currentVariableDebt - (vars.previousVariableDebt);
 
-    return vars.totalDebtAccrued.percentMul(vars.reserveFactor);
+    return vars.totalDebtAccrued.percentMul(reserve.reserveFactor);
   }
 
   /**
@@ -261,8 +257,10 @@ library ReserveLogic {
     uint256 newLiquidityIndex = liquidityIndex;
     uint256 newVariableBorrowIndex = variableBorrowIndex;
 
-    //only cumulating if there is any income being produced
-    if (currentLiquidityRate > 0) {
+    // Only cumulating on the supply side if there is any income being produced
+    // The case of Reserve Factor 100% is not a problem (currentLiquidityRate == 0),
+    // as liquidity index should not be updated
+    if (currentLiquidityRate != 0) {
       uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(
         currentLiquidityRate,
         timestamp

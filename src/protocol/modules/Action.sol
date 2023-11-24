@@ -164,7 +164,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         })
       );
 
-      if (loan.state == DataTypes.LoanState.FREEZE) {
+      if (loan.state != DataTypes.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
       // update state MUST BEFORE get borrow amount which is depent on latest borrow index
@@ -235,7 +235,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         })
       );
 
-      if (loan.state == DataTypes.LoanState.FREEZE) {
+      if (loan.state != DataTypes.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
 

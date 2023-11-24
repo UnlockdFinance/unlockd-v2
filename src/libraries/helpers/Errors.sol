@@ -80,6 +80,7 @@ library Errors {
   error RoleAccessDenied();
   error MarketPriceNotCoverDebt();
   error LoanNotUpdated();
+  error LoanBlocked();
   ///////////////////////////////////////////
   ///   ROUTER
   ///////////////////////////////////////////

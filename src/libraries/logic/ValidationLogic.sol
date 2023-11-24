@@ -183,10 +183,11 @@ library ValidationLogic {
   ///////////////////////////////////////////////////////
 
   function validateOrderBid(
-    uint256 totalAssets,
     DataTypes.OrderType orderType,
     uint40 orderTimeframeEndtime,
-    uint88 loanTotalAssets
+    uint256 totalAssets,
+    uint88 loanTotalAssets,
+    DataTypes.LoanState loanState
   ) internal view {
     if (
       orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
@@ -194,7 +195,9 @@ library ValidationLogic {
     ) {
       revert Errors.OrderNotAllowed();
     }
-
+    if (loanState == DataTypes.LoanState.BLOCKED) {
+      revert Errors.LoanBlocked();
+    }
     // Check if the starting time is not in the past
     Errors.verifyNotExpiredTimestamp(orderTimeframeEndtime, block.timestamp);
 
@@ -216,7 +219,9 @@ library ValidationLogic {
     }
     if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-
+    if (loanState == DataTypes.LoanState.BLOCKED) {
+      revert Errors.LoanBlocked();
+    }
     if (order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
       // Check time only for typefixed price
       Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
@@ -240,7 +245,9 @@ library ValidationLogic {
 
     // Check if is auction over
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
-
+    if (loanState == DataTypes.LoanState.BLOCKED) {
+      revert Errors.LoanBlocked();
+    }
     if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
   }
 
@@ -252,9 +259,13 @@ library ValidationLogic {
     uint256 startTime;
     uint256 debtToSell;
     uint256 currentTimestamp;
+    DataTypes.LoanState loanState;
   }
 
   function validateCreateOrderMarket(ValidateCreateOrderMarketParams memory params) internal pure {
+    if (params.loanState != DataTypes.LoanState.ACTIVE) {
+      revert Errors.LoanNotActive();
+    }
     // Check order not liquidation
     if (params.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
@@ -305,6 +316,10 @@ library ValidationLogic {
     // Only ORDER OWNER
     if (msgSender != orderOwner) {
       revert Errors.NotEqualOrderOwner();
+    }
+
+    if (loanState == DataTypes.LoanState.BLOCKED) {
+      revert Errors.LoanBlocked();
     }
 
     if (

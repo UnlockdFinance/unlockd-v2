@@ -1,11 +1,9 @@
 {
   "extends": "solhint:recommended",
   "rules": {
-    "compiler-version": ["error", "^0.8.19"],
+    "compiler-version": ["error", "^0.8.0"],
     "func-visibility": ["warn", { "ignoreConstructors": true }],
     "compiler-fixed": false,
-    "no-console": false,
-    "func-name-mixedcase": false,
     "quotes": ["error", "single"],
     "indent": [2]
   }
