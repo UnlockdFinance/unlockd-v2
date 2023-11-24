@@ -56,12 +56,12 @@ contract MockAdapter is IMarketAdapter {
     return address(this).balance;
   }
 
-  function withdraw(address payable _to) external {
+  function emergencyWithdraw(address payable _to) external {
     (bool sent, ) = _to.call{value: address(this).balance}('');
     require(sent, 'CALL_FAILED');
   }
 
-  function withdrawERC20(address _asset, address _to) external {
+  function emergencyWithdrawERC20(address _asset, address _to) external {
     IERC20(_asset).safeTransfer(_to, IERC20(_asset).balanceOf(address(this)));
   }
 }

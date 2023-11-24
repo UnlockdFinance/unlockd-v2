@@ -21,6 +21,7 @@ contract ReserveOracle is IReserveOracle {
     uint256 updatedAt;
     bool success;
   }
+
   modifier onlyPriceUpdater() {
     if (IACLManager(ACL_MANAGER).isPriceUpdater(msg.sender) == false) revert Errors.AccessDenied();
     _;
@@ -98,7 +99,22 @@ contract ReserveOracle is IReserveOracle {
 
     if (address(aggregator) == address(0)) revert Errors.InvalidAggregator();
 
-    ChainlinkResponse memory cl = aggregator.latestRoundData();
+    ChainlinkResponse memory cl;
+
+    try aggregator.latestRoundData() returns (
+      uint80 roundId,
+      int256 answer,
+      uint256 /* startedAt */,
+      uint256 updatedAt,
+      uint80 /* answeredInRound */
+    ) {
+      cl.success = true;
+      cl.roundId = roundId;
+      cl.answer = answer;
+      cl.updatedAt = updatedAt;
+    } catch {
+      revert Errors.InvalidLastRoundData();
+    }
 
     if (
       cl.success == true &&
@@ -107,7 +123,7 @@ contract ReserveOracle is IReserveOracle {
       cl.updatedAt != 0 &&
       cl.updatedAt <= block.timestamp
     ) {
-      return uint256(_price);
+      return uint256(cl.answer);
     } else {
       revert Errors.InvalidLastRoundData();
     }

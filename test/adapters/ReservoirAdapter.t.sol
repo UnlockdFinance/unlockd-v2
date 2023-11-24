@@ -155,14 +155,14 @@ contract ReservoidAdapterTest is Setup {
     payable(_reservoirAdapter).call{value: 1 ether}('');
     hoax(_actor);
     IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
-
+    assertEq(makeAddr('filipe').balance, 0);
     hoax(_admin);
-    IMarketAdapter(_reservoirAdapter).withdraw(payable(makeAddr('filipe')));
+    IMarketAdapter(_reservoirAdapter).emergencyWithdraw(payable(makeAddr('filipe')));
 
     assertEq(makeAddr('filipe').balance, 1 ether);
-
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 0);
     hoax(_admin);
-    IMarketAdapter(_reservoirAdapter).withdrawERC20(makeAsset('WETH'), makeAddr('filipe'));
+    IMarketAdapter(_reservoirAdapter).emergencyWithdrawERC20(makeAsset('WETH'), makeAddr('filipe'));
 
     assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 1 ether);
   }
