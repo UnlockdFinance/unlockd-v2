@@ -291,7 +291,7 @@ contract AuctionTest is Setup {
 
     // ACTIVATE the loan
     hoax(_admin);
-    Manager(_manager).emergencyActiveLoan(loanId);
+    Manager(_manager).emergencyActivateLoan(loanId);
     // We force borrow more because a price increased
     borrow_more_action(_action, _nft, loanId, ACTOR, 0.2 ether, 10 ether, 1);
     // Freeze LOAN

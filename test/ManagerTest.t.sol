@@ -289,7 +289,7 @@ contract AuctionTest is Setup {
     vm.stopPrank();
   }
 
-  function test_emergencyActiveLoan() external {
+  function test_emergencyActivateLoan() external {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;
     vm.startPrank(getActorAddress(ACTOR));
@@ -304,7 +304,7 @@ contract AuctionTest is Setup {
     assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
 
     vm.startPrank(_admin);
-    Manager(_manager).emergencyActiveLoan(loanId);
+    Manager(_manager).emergencyActivateLoan(loanId);
     vm.stopPrank();
 
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
@@ -312,12 +312,33 @@ contract AuctionTest is Setup {
     assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
   }
 
-  function test_emergencyActiveLoan_error() external {
+  function test_emergencyActivateLoan_error() external {
     vm.startPrank(_admin);
     vm.expectRevert(abi.encodeWithSelector(Errors.InvalidLoanId.selector));
-    Manager(_manager).emergencyActiveLoan(0);
+    Manager(_manager).emergencyActivateLoan(0);
     vm.stopPrank();
   }
 
-  function test_emergencyUpdateEndTimeAuction() external {}
+  function test_emergencyBlockLoan() external {
+    uint256 amountToBorrow = 0.5 ether;
+    uint256 collateral = 2 ether;
+    vm.startPrank(getActorAddress(ACTOR));
+    bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
+    vm.stopPrank();
+
+    vm.startPrank(_admin);
+    Manager(_manager).emergencyFreezeLoan(loanId);
+    vm.stopPrank();
+
+    DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
+    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+
+    vm.startPrank(_admin);
+    Manager(_manager).emergencyBlockLoan(loanId);
+    vm.stopPrank();
+
+    DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
+
+    assertEq(uint(loan.state), uint(DataTypes.LoanState.BLOCKED));
+  }
 }

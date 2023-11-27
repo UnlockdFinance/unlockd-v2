@@ -14,6 +14,7 @@ interface IUToken {
   event Initialized(
     address indexed underlyingAsset,
     address indexed interestRate,
+    address indexed strategy,
     address treasury
   );
 
@@ -34,6 +35,7 @@ interface IUToken {
     address treasury,
     address underlyingAsset,
     address interestRateAddress,
+    address strategyAddress,
     address debtTokenAddress,
     uint8 decimals,
     uint16 reserveFactor,
@@ -268,6 +270,8 @@ interface IUToken {
   function scaledTotalSupply() external view returns (uint256);
 
   function totalSupply() external view returns (uint256);
+
+  function totalSupplyNotInvested() external view returns (uint256);
 
   function getDebtToken() external view returns (address);
 }

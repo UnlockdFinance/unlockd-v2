@@ -16,6 +16,7 @@ contract DeployUToken {
   struct DeployUtokenParams {
     address treasury;
     address underlyingAsset;
+    address strategyAddress;
     uint256 decimals;
     string tokenName;
     string tokenSymbol;
@@ -41,6 +42,7 @@ contract DeployUToken {
       params.treasury,
       params.underlyingAsset,
       params.interestRate,
+      params.strategyAddress,
       params.debtToken,
       params.decimals,
       params.reserveFactor,

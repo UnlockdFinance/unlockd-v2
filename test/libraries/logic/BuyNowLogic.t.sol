@@ -24,8 +24,8 @@ contract BuyNowLogicTest is Setup {
   function setUp() public override useFork(MAINNET) {
     deploy_acl_manager();
 
-    uToken = deploy_utoken(makeAsset('WETH'));
-    uTokenWrong = deploy_utoken(makeAsset('DAI'));
+    uToken = deploy_utoken(makeAsset('WETH'), 'WETH');
+    uTokenWrong = deploy_utoken(makeAsset('DAI'), 'DAI');
     // By default Mainnet
     test = new TestLib();
   }

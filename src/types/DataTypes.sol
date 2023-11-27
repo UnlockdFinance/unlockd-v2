@@ -35,6 +35,8 @@ library DataTypes {
     // Slot 5
     //address of the interest rate strategy 
     address interestRateAddress;
+    // address of the strategy
+    address strategyAddress;
     
   }
 

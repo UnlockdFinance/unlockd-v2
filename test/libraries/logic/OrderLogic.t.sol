@@ -14,7 +14,7 @@ contract OrderLogicTest is Setup {
   // *************************************
   function setUp() public override useFork(MAINNET) {
     deploy_acl_manager();
-    uToken = deploy_utoken(makeAsset('WETH'));
+    uToken = deploy_utoken(makeAsset('WETH'), 'WETH');
 
     deploy_periphery();
     addFundToUToken(uToken, 'WETH', 100 ether);

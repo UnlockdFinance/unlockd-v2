@@ -6,10 +6,12 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 
 import {IUToken} from '../interfaces/tokens/IUToken.sol';
+import {IStrategy} from '../interfaces/IStrategy.sol';
+
 import {IDebtToken} from '../interfaces/tokens/IDebtToken.sol';
 import {BaseERC20, Errors, DataTypes, ERC20Upgradeable} from '../libraries/base/BaseERC20.sol';
 import {ReentrancyGuard} from '../libraries/utils/ReentrancyGuard.sol';
-
+import {DelegateCall} from '../libraries/utils/DelegateCall.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
@@ -27,8 +29,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
   using SafeERC20 for IERC20;
   using ReserveLogic for DataTypes.ReserveData;
   using PercentageMath for uint256;
-
-  uint8 internal _decimals;
+  using DelegateCall for address;
 
   /**
    * @dev Initializes the uToken
@@ -36,6 +37,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
    * @param treasury The address of the Unlockd treasury, receiving the fees on this uToken
    * @param underlyingAsset The address of the underlying asset of this uToken
    * @param interestRateAddress address interes rate calculator
+   * @param strategyAddress address of the strategy
    * @param debtTokenAddress address interes rate calculator
    * @param tokenDecimals decimals of the token
    * @param reserveFactor percentage reserve factor
@@ -48,6 +50,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     address treasury,
     address underlyingAsset,
     address interestRateAddress,
+    address strategyAddress,
     address debtTokenAddress,
     uint8 tokenDecimals,
     uint16 reserveFactor,
@@ -60,12 +63,13 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     _reserve.init(
       underlyingAsset,
       interestRateAddress,
+      strategyAddress,
       debtTokenAddress,
       tokenDecimals,
       reserveFactor
     );
 
-    emit Initialized(underlyingAsset, interestRateAddress, treasury);
+    emit Initialized(underlyingAsset, interestRateAddress, strategyAddress, treasury);
   }
 
   /**
@@ -94,6 +98,18 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     _reserve.updateInterestRates(amount, 0);
 
     _mint(onBehalfOf, amount, _reserve.liquidityIndex);
+
+    if (_reserve.strategyAddress != address(0)) {
+      _reserve.strategyAddress.functionDelegateCall(
+        abi.encodeWithSelector(
+          IStrategy.supply.selector,
+          IStrategy(_reserve.strategyAddress).pool(),
+          _reserve.underlyingAsset,
+          address(this),
+          amount
+        )
+      );
+    }
 
     emit Deposit(_msgSender(), _reserve.underlyingAsset, amount, onBehalfOf, referralCode);
   }
@@ -130,6 +146,18 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     _mintToTreasury(amountToMint, newLiquidityIndex);
     _reserve.updateInterestRates(0, amountToWithdraw);
 
+    if (_reserve.strategyAddress != address(0)) {
+      _reserve.strategyAddress.functionDelegateCall(
+        abi.encodeWithSelector(
+          IStrategy.withdraw.selector,
+          IStrategy(_reserve.strategyAddress).pool(),
+          _reserve.underlyingAsset,
+          address(this),
+          amountToWithdraw
+        )
+      );
+    }
+
     _burn(_msgSender(), to, amountToWithdraw, _reserve.liquidityIndex);
 
     emit Withdraw(_msgSender(), _reserve.underlyingAsset, amountToWithdraw, to);
@@ -161,6 +189,17 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       revert Errors.NotEnoughLiquidity();
     }
 
+    if (_reserve.strategyAddress != address(0)) {
+      _reserve.strategyAddress.functionDelegateCall(
+        abi.encodeWithSelector(
+          IStrategy.withdraw.selector,
+          IStrategy(_reserve.strategyAddress).pool(),
+          _reserve.underlyingAsset,
+          address(this),
+          amount
+        )
+      );
+    }
     // Mint token to the user
     IDebtToken(_reserve.debtTokenAddress).mint(
       loanId,
@@ -194,7 +233,18 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
 
     // Move the amount from the user to deposit
     IERC20(_reserve.underlyingAsset).safeTransferFrom(from, address(this), amount);
-
+    // Deposit again on the strategy if is needed
+    if (_reserve.strategyAddress != address(0)) {
+      _reserve.strategyAddress.functionDelegateCall(
+        abi.encodeWithSelector(
+          IStrategy.supply.selector,
+          IStrategy(_reserve.strategyAddress).pool(),
+          _reserve.underlyingAsset,
+          address(this),
+          amount
+        )
+      );
+    }
     // Update the interest rate
     _reserve.updateInterestRates(amount, 0);
     // Burn debpt token from the user
@@ -270,6 +320,23 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
    *
    */
   function totalSupply() public view override(ERC20Upgradeable, IUToken) returns (uint256) {
+    return
+      super.totalSupply().rayMul(_reserve.getNormalizedIncome()) +
+      (
+        _reserve.strategyAddress == address(0)
+          ? 0
+          : IStrategy(_reserve.strategyAddress).balanceOf(address(this))
+      );
+  }
+
+  /**
+   * @dev calculates the total supply of the specific uToken
+   * since the balance of every single user increases over time, the total supply
+   * does that too.
+   * @return total supply generated by the
+   *
+   */
+  function totalSupplyNotInvested() public view override returns (uint256) {
     return super.totalSupply().rayMul(_reserve.getNormalizedIncome());
   }
 
@@ -317,6 +384,10 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     return _reserve;
   }
 
+  function decimals() public view virtual override returns (uint8) {
+    return _reserve.decimals;
+  }
+
   /**
    * @dev Set the treasury address
    * @param treasury address of the new treasury
@@ -324,10 +395,6 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
   function setTreasuryAddress(address treasury) external onlyAdmin {
     Errors.verifyNotZero(treasury);
     _treasury = treasury;
-  }
-
-  function decimals() public view virtual override returns (uint8) {
-    return _decimals;
   }
 
   ///////////////////////////////////////////////////////

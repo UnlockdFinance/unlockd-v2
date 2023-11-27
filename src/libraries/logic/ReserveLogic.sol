@@ -128,6 +128,7 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     address underlyingAsset,
     address interestRateAddress,
+    address strategyAddress,
     address debtTokenAddress,
     uint8 decimals,
     uint16 reserveFactor
@@ -138,6 +139,7 @@ library ReserveLogic {
     reserve.liquidityIndex = uint128(WadRayMath.ray());
     reserve.variableBorrowIndex = uint128(WadRayMath.ray());
     reserve.interestRateAddress = interestRateAddress;
+    reserve.strategyAddress = strategyAddress;
     reserve.decimals = decimals;
     reserve.reserveFactor = reserveFactor;
   }

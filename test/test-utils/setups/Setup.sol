@@ -90,8 +90,8 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
 
     // Default state
 
-    _uTokens['WETH'] = UToken(deploy_utoken(getAssetAddress('WETH')));
-    _uTokens['DAI'] = UToken(deploy_utoken(getAssetAddress('DAI')));
+    _uTokens['WETH'] = UToken(deploy_utoken(getAssetAddress('WETH'), 'WETH'));
+    _uTokens['DAI'] = UToken(deploy_utoken(getAssetAddress('DAI'), 'DAI'));
 
     deploy_protocol();
   }
@@ -214,7 +214,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     vm.stopPrank();
   }
 
-  function deploy_utoken(address underlyingAsset) public returns (address) {
+  function deploy_utoken(address underlyingAsset, string memory symbol) public returns (address) {
     // Deploy Oracles
     DeployUTokenConfig deployerConfig = new DeployUTokenConfig(
       _admin,
@@ -224,7 +224,11 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
 
     // DebtToken
     DeployUTokenConfig.DeployDebtTokenParams memory debtParams = DeployUTokenConfig
-      .DeployDebtTokenParams({decimals: 18, tokenName: 'Debt ETH', tokenSymbol: 'DETH'});
+      .DeployDebtTokenParams({
+        decimals: 18,
+        tokenName: string(abi.encodePacked('Debt ', symbol)),
+        tokenSymbol: string(abi.encodePacked('D', symbol))
+      });
 
     address debtToken = deployerConfig.deployDebtToken(debtParams);
 
@@ -242,11 +246,12 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
       treasury: _treasury,
       underlyingAsset: underlyingAsset,
       decimals: 18,
-      tokenName: 'UToken WETH',
-      tokenSymbol: 'UWETH',
+      tokenName: string(abi.encodePacked('UToken ', symbol)),
+      tokenSymbol: string(abi.encodePacked('U', symbol)),
       debtToken: debtToken,
       reserveFactor: 0,
-      interestRate: interestRate
+      interestRate: interestRate,
+      strategyAddress: address(0)
     });
 
     DeployUToken deployerUToken = new DeployUToken(_admin, address(_aclManager));

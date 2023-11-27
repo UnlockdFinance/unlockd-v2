@@ -63,6 +63,7 @@ contract DeployFakeUTokenScript is DeployerHelper {
       treasury: DeployConfig.TREASURY,
       underlyingAsset: address(token),
       decimals: 18,
+      strategyAddress: address(0),
       tokenName: 'UToken FIL',
       tokenSymbol: 'UFIL',
       debtToken: debtToken,
