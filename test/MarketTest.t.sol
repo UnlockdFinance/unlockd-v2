@@ -1184,35 +1184,6 @@ contract MarketTest is Setup {
     // address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     address actorThree = getActorWithFunds(ACTORTHREE, 'WETH', 2 ether);
     assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTOR));
-    // {
-    //   (
-    //     DataTypes.SignMarket memory signMarket,
-    //     DataTypes.EIP712Signature memory sig
-    //   ) = _generate_signature(
-    //       GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-    //       AssetParams({
-    //         assetId: AssetLogic.assetId(_nft, 1),
-    //         collection: _nft,
-    //         tokenId: 1,
-    //         assetPrice: 1 ether,
-    //         assetLtv: 6000
-    //       })
-    //     );
-    //   // Add funds to the actor two
-
-    //   uint128 bidAmount = 0.6 ether;
-    //   hoax(actorTwo);
-    //   approveAsset('WETH', address(getUnlockd()), bidAmount); // APPROVE AMOUNT
-
-    //   // BID Can't be ZERO
-    //   hoax(actorTwo);
-    //   vm.expectRevert(Errors.AmountToLow.selector);
-    //   Market(_market).bid(orderId, 0, 0, signMarket, sig); // BID ON THE ASSET
-
-    //   // add small amount to bid
-    //   hoax(actorTwo);
-    //   Market(_market).bid(orderId, bidAmount, 0, signMarket, sig); // BID ON THE ASSET
-    // }
 
     {
       uint256 buyAmount = 1 ether;

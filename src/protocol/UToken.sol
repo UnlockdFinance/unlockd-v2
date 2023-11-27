@@ -19,6 +19,8 @@ import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 
+import {console} from 'forge-std/console.sol';
+
 /**
  * @title ERC20 UToken
  * @dev Implementation of the interest bearing token for the Unlockd protocol
@@ -103,10 +105,9 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.supply.selector,
-          IStrategy(_reserve.strategyAddress).vault(),
-          _reserve.underlyingAsset,
+          amount,
           address(this),
-          amount
+          IStrategy(_reserve.strategyAddress).getConfig()
         )
       );
     }
@@ -150,10 +151,10 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.withdraw.selector,
-          IStrategy(_reserve.strategyAddress).vault(),
-          _reserve.underlyingAsset,
+          amountToWithdraw,
           address(this),
-          amountToWithdraw
+          address(this),
+          IStrategy(_reserve.strategyAddress).getConfig()
         )
       );
     }
@@ -193,10 +194,10 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.withdraw.selector,
-          IStrategy(_reserve.strategyAddress).vault(),
-          _reserve.underlyingAsset,
+          amount,
           address(this),
-          amount
+          address(this),
+          IStrategy(_reserve.strategyAddress).getConfig()
         )
       );
     }
@@ -238,10 +239,9 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.supply.selector,
-          IStrategy(_reserve.strategyAddress).vault(),
-          _reserve.underlyingAsset,
+          amount,
           address(this),
-          amount
+          IStrategy(_reserve.strategyAddress).getConfig()
         )
       );
     }

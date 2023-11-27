@@ -7,16 +7,18 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 
+import {console} from 'forge-std/console.sol';
+
 contract MaxApyStrategy is IStrategy {
   using PercentageMath for uint256;
 
   uint256 internal constant MAX_LOSS = 100; // 1%
   uint256 internal constant MIN_AMOUNT_TO_INVEST = 0.5 ether;
 
-  address internal immutable _asset;
-  address internal immutable _vault;
-  uint256 internal immutable _minCap;
-  uint256 internal immutable _percentageToInvest;
+  address internal _asset;
+  address internal _vault;
+  uint256 internal _minCap;
+  uint256 internal _percentageToInvest;
 
   constructor(address asset_, address vault_, uint256 minCap_, uint256 percentageToInvest_) {
     _asset = asset_;
@@ -34,17 +36,25 @@ contract MaxApyStrategy is IStrategy {
     return 'MaxAPY strategy';
   }
 
-  function asset() external view returns (address _asset) {
+  function asset() external view returns (address) {
     return _asset;
   }
 
-  function vault() external view returns (address) {
-    return _vault;
+  function getConfig() external view returns (StrategyConfig memory) {
+    return
+      StrategyConfig({
+        asset: _asset,
+        vault: _vault,
+        minCap: _minCap,
+        percentageToInvest: _percentageToInvest
+      });
   }
 
   // Returns the total value the strategy holds (principle + gain) expressed in asset token amount.
-  function balanceOf(address owner) external view returns (uint256 amount) {
-    return IMaxApyVault(_vault).shareValue(IMaxApyVault(_vault).balanceOf(owner));
+  function balanceOf(address owner) external view returns (uint256) {
+    uint256 shares = IMaxApyVault(_vault).balanceOf(owner);
+    if (shares == 0) return 0;
+    return IMaxApyVault(_vault).shareValue(shares);
   }
 
   // Returns the maximum amount that can be withdrawn
@@ -56,22 +66,27 @@ contract MaxApyStrategy is IStrategy {
   // DELEGATED CALLS
 
   // Function that invest on the this strategy
-  function supply(address vault_, address asset_, address from_, uint256 amount_) external {
-    uint256 amountNotInvested = IUToken(address(this)).totalSupplyNotInvested();
-    if (amountNotInvested > _minCap) {
-      uint256 investAmount = (amountNotInvested - _minCap).percentMul(_percentageToInvest);
+  function supply(uint256 amount_, address from_, StrategyConfig memory config) external {
+    uint256 amountNotInvested = IUToken(from_).totalSupplyNotInvested();
+    if (amountNotInvested > config.minCap) {
+      uint256 investAmount = (amountNotInvested - config.minCap).percentMul(
+        config.percentageToInvest
+      );
       if (investAmount > MIN_AMOUNT_TO_INVEST) {
-        IERC20(asset_).approve(vault_, amount_);
-        IMaxApyVault(vault_).deposit(amount_, from_);
+        IERC20(config.asset).approve(config.vault, investAmount);
+        IMaxApyVault(config.vault).deposit(investAmount, from_);
       }
     }
   }
 
   // Function to withdraw specific amount
-  function withdraw(address vault_, address asset_, address to, uint256 amount_) external {
-    uint256 amountToWithdraw = IUToken(address(this)).totalSupplyNotInvested() / 3 < amount_
-      ? amount_
-      : 0;
-    if (amountToWithdraw > 0) IMaxApyVault(vault_).withdraw(amount_, to, MAX_LOSS);
+  function withdraw(
+    uint256 amount_,
+    address from_,
+    address to_,
+    StrategyConfig memory config
+  ) external {
+    uint256 amountToWithdraw = IUToken(from_).totalSupplyNotInvested() / 3 < amount_ ? amount_ : 0;
+    if (amountToWithdraw > 0) IMaxApyVault(config.vault).withdraw(amount_, to_, MAX_LOSS);
   }
 }

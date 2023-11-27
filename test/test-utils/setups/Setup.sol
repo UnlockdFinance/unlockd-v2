@@ -68,15 +68,18 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
   // *************************************
   function setUp() public virtual {
     // By default Mainnet
-    this.setUpByChain(1);
+    this.setUpByChain(1, 0);
   }
 
   // Define General Setup
-  function setUpByChain(uint256 chainId) public virtual {
+  function setUpByChain(uint256 chainId, uint256 blockNumber) public virtual {
     config = Config.getConfig(chainId);
 
     // Chain FORK
-    uint256 chainFork = vm.createFork(config.chainName, config.blockNumber);
+    uint256 chainFork = vm.createFork(
+      config.chainName,
+      blockNumber == 0 ? config.blockNumber : blockNumber
+    );
     vm.selectFork(chainFork);
     // Set timestamp to March 31, 2023 at 00:00 GMT
     vm.warp(1_680_220_800);
@@ -221,7 +224,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
   function deploy_strategy(address underlyingAsset) internal {
     if (config.maxapy != address(0)) {
       // ONLY FOR SEPOLIA
-      uint256 percentageToInves = 1000;
+      uint256 percentageToInves = 5000; // 50%
       _maxApyStrategy = address(
         new MaxApyStrategy(underlyingAsset, config.maxapy, 1 ether, percentageToInves)
       );
