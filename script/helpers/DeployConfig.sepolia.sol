@@ -8,6 +8,7 @@ library DeployConfig {
   // https://testnets.opensea.io/  to wrap
   address public constant WETH = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
 
+  address public constant MAXAPY = 0x8607F61246753Ff3189243Cc1768E8Cf453A4534;
   // ************************ RESERVOIR ************************
   // @dev location addresses https://github.com/reservoirprotocol/indexer/blob/main/packages/sdk/src/router/v6/addresses.ts
   address public constant RESERVOIR_ROUTER = 0x1aeD60A97192157fDA7fb26267A439d523d09c5e;

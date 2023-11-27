@@ -49,7 +49,7 @@ contract Base is Test {
   // Adapter
   address internal _reservoirAdapter;
   address internal _mockAdapter;
-
+  address internal _maxApyStrategy;
   // Wallet Factory
   address internal _walletRegistry;
   address internal _walletFactory;

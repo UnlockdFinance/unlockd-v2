@@ -51,6 +51,7 @@ import {BuyNow, BuyNowSign} from '../../../src/protocol/modules/BuyNow.sol';
 import {SellNow, SellNowSign} from '../../../src/protocol/modules/SellNow.sol';
 import {Market, MarketSign} from '../../../src/protocol/modules/Market.sol';
 
+import {MaxApyStrategy} from '../../../src/protocol/strategies/MaxApy.sol';
 import {ReserveOracle, IReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
@@ -88,11 +89,14 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
 
     deploy_periphery();
 
-    // Default state
+    // Deploy strategies
+    deploy_strategy(getAssetAddress('WETH'));
 
+    // Deploy UTokens
     _uTokens['WETH'] = UToken(deploy_utoken(getAssetAddress('WETH'), 'WETH'));
     _uTokens['DAI'] = UToken(deploy_utoken(getAssetAddress('DAI'), 'DAI'));
 
+    // Deploy protocol
     deploy_protocol();
   }
 
@@ -214,6 +218,16 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     vm.stopPrank();
   }
 
+  function deploy_strategy(address underlyingAsset) internal {
+    if (config.maxapy != address(0)) {
+      // ONLY FOR SEPOLIA
+      uint256 percentageToInves = 1000;
+      _maxApyStrategy = address(
+        new MaxApyStrategy(underlyingAsset, config.maxapy, 1 ether, percentageToInves)
+      );
+    }
+  }
+
   function deploy_utoken(address underlyingAsset, string memory symbol) public returns (address) {
     // Deploy Oracles
     DeployUTokenConfig deployerConfig = new DeployUTokenConfig(
@@ -251,7 +265,10 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
       debtToken: debtToken,
       reserveFactor: 0,
       interestRate: interestRate,
-      strategyAddress: address(0)
+      strategyAddress: _maxApyStrategy != address(0) &&
+        MaxApyStrategy(_maxApyStrategy).asset() == underlyingAsset
+        ? _maxApyStrategy
+        : address(0)
     });
 
     DeployUToken deployerUToken = new DeployUToken(_admin, address(_aclManager));

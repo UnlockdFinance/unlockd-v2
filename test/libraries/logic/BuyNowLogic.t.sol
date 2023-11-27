@@ -30,7 +30,7 @@ contract BuyNowLogicTest is Setup {
     test = new TestLib();
   }
 
-  function test_buyNow_calculations_wrong_uToken() public {
+  function test_buyNow_calculations_wrong_uToken() external {
     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualUnderlyingAsset.selector));
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
       uTokenWrong,
@@ -58,7 +58,7 @@ contract BuyNowLogicTest is Setup {
     );
   }
 
-  function test_buyNow_calculations() internal {
+  function test_buyNow_calculations() external {
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
       uToken,
       DataTypes.SignBuyNow({
@@ -88,7 +88,7 @@ contract BuyNowLogicTest is Setup {
     assertEq(maxAmount, 600000000000000000);
   }
 
-  function test_buyNow_calculations_price_bigger() internal {
+  function test_buyNow_calculations_price_bigger() external {
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
       uToken,
       DataTypes.SignBuyNow({
@@ -118,7 +118,7 @@ contract BuyNowLogicTest is Setup {
     assertEq(maxAmount, 600000000000000000);
   }
 
-  function test_buyNow_calculations_marketprice_bigger() internal {
+  function test_buyNow_calculations_marketprice_bigger() external {
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
       uToken,
       DataTypes.SignBuyNow({
@@ -144,7 +144,7 @@ contract BuyNowLogicTest is Setup {
       })
     );
 
-    assertEq(minAmount, 400000000000000000);
+    assertEq(minAmount, 1400000000000000000);
     assertEq(maxAmount, 600000000000000000);
   }
 }

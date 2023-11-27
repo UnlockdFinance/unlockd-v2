@@ -16,13 +16,13 @@ contract MaxApyStrategy is IStrategy {
   address internal immutable _asset;
   address internal immutable _vault;
   uint256 internal immutable _minCap;
-  uint256 internal immutable _percentage;
+  uint256 internal immutable _percentageToInvest;
 
-  constructor(address asset_, address vault_, uint256 minCap_, uint256 percentage_) {
+  constructor(address asset_, address vault_, uint256 minCap_, uint256 percentageToInvest_) {
     _asset = asset_;
     _vault = vault_;
     _minCap = minCap_;
-    _percentage = percentage_;
+    _percentageToInvest = percentageToInvest_;
   }
 
   function name() external view returns (string memory name) {
@@ -59,7 +59,7 @@ contract MaxApyStrategy is IStrategy {
   function supply(address vault_, address asset_, address from_, uint256 amount_) external {
     uint256 amountNotInvested = IUToken(address(this)).totalSupplyNotInvested();
     if (amountNotInvested > _minCap) {
-      uint256 investAmount = (amountNotInvested - _minCap).percentMul(_percentage);
+      uint256 investAmount = (amountNotInvested - _minCap).percentMul(_percentageToInvest);
       if (investAmount > MIN_AMOUNT_TO_INVEST) {
         IERC20(asset_).approve(vault_, amount_);
         IMaxApyVault(vault_).deposit(amount_, from_);
