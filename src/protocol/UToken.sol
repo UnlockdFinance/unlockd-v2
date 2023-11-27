@@ -103,7 +103,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.supply.selector,
-          IStrategy(_reserve.strategyAddress).pool(),
+          IStrategy(_reserve.strategyAddress).vault(),
           _reserve.underlyingAsset,
           address(this),
           amount
@@ -150,7 +150,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.withdraw.selector,
-          IStrategy(_reserve.strategyAddress).pool(),
+          IStrategy(_reserve.strategyAddress).vault(),
           _reserve.underlyingAsset,
           address(this),
           amountToWithdraw
@@ -193,7 +193,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.withdraw.selector,
-          IStrategy(_reserve.strategyAddress).pool(),
+          IStrategy(_reserve.strategyAddress).vault(),
           _reserve.underlyingAsset,
           address(this),
           amount
@@ -238,7 +238,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
       _reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.supply.selector,
-          IStrategy(_reserve.strategyAddress).pool(),
+          IStrategy(_reserve.strategyAddress).vault(),
           _reserve.underlyingAsset,
           address(this),
           amount

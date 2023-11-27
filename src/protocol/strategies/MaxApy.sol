@@ -14,13 +14,13 @@ contract MaxApyStrategy is IStrategy {
   uint256 internal constant MIN_AMOUNT_TO_INVEST = 0.5 ether;
 
   address internal immutable _asset;
-  address internal immutable _pool;
+  address internal immutable _vault;
   uint256 internal immutable _minCap;
   uint256 internal immutable _percentage;
 
-  constructor(address asset_, address pool_, uint256 minCap_, uint256 percentage_) {
+  constructor(address asset_, address vault_, uint256 minCap_, uint256 percentage_) {
     _asset = asset_;
-    _pool = pool_;
+    _vault = vault_;
     _minCap = minCap_;
     _percentage = percentage_;
   }
@@ -38,13 +38,13 @@ contract MaxApyStrategy is IStrategy {
     return _asset;
   }
 
-  function pool() external view returns (address) {
-    return _pool;
+  function vault() external view returns (address) {
+    return _vault;
   }
 
   // Returns the total value the strategy holds (principle + gain) expressed in asset token amount.
   function balanceOf(address owner) external view returns (uint256 amount) {
-    IMaxApyVault(_pool).balanceOf(owner);
+    return IMaxApyVault(_vault).shareValue(IMaxApyVault(_vault).balanceOf(owner));
   }
 
   // Returns the maximum amount that can be withdrawn
@@ -56,22 +56,22 @@ contract MaxApyStrategy is IStrategy {
   // DELEGATED CALLS
 
   // Function that invest on the this strategy
-  function supply(address pool_, address asset_, address from_, uint256 amount_) external {
+  function supply(address vault_, address asset_, address from_, uint256 amount_) external {
     uint256 amountNotInvested = IUToken(address(this)).totalSupplyNotInvested();
     if (amountNotInvested > _minCap) {
       uint256 investAmount = (amountNotInvested - _minCap).percentMul(_percentage);
       if (investAmount > MIN_AMOUNT_TO_INVEST) {
-        IERC20(asset_).approve(pool_, amount_);
-        IMaxApyVault(pool_).deposit(amount_, from_);
+        IERC20(asset_).approve(vault_, amount_);
+        IMaxApyVault(vault_).deposit(amount_, from_);
       }
     }
   }
 
   // Function to withdraw specific amount
-  function withdraw(address pool_, address asset_, address to, uint256 amount_) external {
+  function withdraw(address vault_, address asset_, address to, uint256 amount_) external {
     uint256 amountToWithdraw = IUToken(address(this)).totalSupplyNotInvested() / 3 < amount_
       ? amount_
       : 0;
-    if (amountToWithdraw > 0) IMaxApyVault(pool_).withdraw(amount_, to, MAX_LOSS);
+    if (amountToWithdraw > 0) IMaxApyVault(vault_).withdraw(amount_, to, MAX_LOSS);
   }
 }

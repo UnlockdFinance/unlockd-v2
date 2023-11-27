@@ -10,7 +10,7 @@ interface IStrategy {
 
   function asset() external view returns (address _asset);
 
-  function pool() external view returns (address);
+  function vault() external view returns (address);
 
   // Returns the total value the strategy holds (principle + gain) expressed in asset token amount.
   function balanceOf(address sharesPool) external view returns (uint256 amount);
