@@ -23,6 +23,8 @@ deploy-sep-modules :; forge script script/sepolia/DeployModules.s.sol:DeployModu
 deploy-sep-allow :; forge script script/sepolia/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 
 # Helpers
+deploy-sep-maxapy :; forge script script/sepolia/DeployMaxApy.s.sol:DeployMaxApyScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv
+
 deploy-sep-nft :; forge script script/sepolia/DeployFakeNFT.s.sol:DeployFakeNftsScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv
 deploy-sep-fake-utoken :; forge script script/sepolia/DeployFakeUToken.s.sol:DeployFakeUTokenScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv
 deploy-sep-fake-sign :; forge script script/sepolia/DeployFakeSigner.s.sol:DeployFakeSignerScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv

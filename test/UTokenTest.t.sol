@@ -6,6 +6,8 @@ import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 
 import './test-utils/setups/Setup.sol';
+import './test-utils/mock/MaxApyMirror.sol';
+
 import '../src/protocol/UToken.sol';
 import '../src/interfaces/tokens/IUToken.sol';
 import '../src/interfaces/strategies/IMaxApyVault.sol';
@@ -16,7 +18,7 @@ contract UTokenSetup is Setup {
   address internal _manager;
 
   function setUp() public virtual override {
-    super.setUpByChain(11155111, 4782613);
+    super.setUpByChain(11155111, 4783334);
     Unlockd unlockd = super.getUnlockd();
     vm.startPrank(_admin);
     _aclManager.setProtocol(makeAddr('protocol'));
@@ -82,25 +84,19 @@ contract UTokenSetup is Setup {
   //   assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 1 ether);
   // }
 
-  // function test_borrow_more_than_minCap() public {
-  //   // address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
+  function test_borrow_more_than_minCap() public {
+    // address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
 
-  //   console.log('TOTAL SUPPLY', IMaxApyVault(config.maxapy).totalSupply());
-  //   console.log('SYMBOL', IMaxApyVault(config.maxapy).symbol());
+    console.log('SHARES', IMaxApyVault(config.maxapy).shareValue(1 ether));
+    // vm.assume(IMaxApyVault(config.maxapy).shareValue(1 ether) == 1 ether);
 
-  //   console.log(
-  //     'SHARES',
-  //     IMaxApyVault(config.maxapy).sharesForAmount(IMaxApyVault(config.maxapy).totalSupply())
-  //   );
-  //   // vm.assume(IMaxApyVault(config.maxapy).shareValue(1 ether) == 1 ether);
+    // vm.startPrank(actor);
+    // IERC20(makeAsset('WETH')).approve(config.maxapy, 1 ether);
+    // IMaxApyVault(config.maxapy).deposit(1 ether, actor);
+    // uint256 value = IMaxApyVault(config.maxapy).shareValue(10000);
 
-  //   // vm.startPrank(actor);
-  //   // IERC20(makeAsset('WETH')).approve(config.maxapy, 1 ether);
-  //   // IMaxApyVault(config.maxapy).deposit(1 ether, actor);
-  //   // uint256 value = IMaxApyVault(config.maxapy).shareValue(10000);
+    // vm.stopPrank();
 
-  //   // vm.stopPrank();
-
-  //   // console.log('VALUE', value);
-  // }
+    // console.log('VALUE', value);
+  }
 }
