@@ -158,6 +158,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         revert Errors.LoanNotUpdated();
       }
 
+      IUToken(loan.uToken).updateStateReserve();
+
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
           user: msgSender,
@@ -515,6 +517,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         _walletRegistry,
         order.owner
       );
+
+      delete _orders[order.orderId];
+
       // We transfer the ownership to the new Owner
       IProtocolOwner(delegationOwnerOwner).changeOwner(
         signMarket.collection,
@@ -522,14 +527,18 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         buyer
       );
 
-      delete _orders[order.orderId];
-
       emit MarketClaim(loanId, order.orderId, signMarket.assetId, totalAmount, msgSender);
     }
   }
 
+  /**
+   * @dev Function to cancel a claim. It can only be executed if, due to the variation in the price of the asset,
+   * the minBid is larger than the bid made in the auction, and you want to recover the money deposited.
+   * @param orderId identifier of the order
+   * @param signMarket struct with information of the loan and prices
+   * @param sig validation of this struct
+   */
   function cancelClaim(
-    bool claimOnUWallet,
     bytes32 orderId,
     DataTypes.SignMarket calldata signMarket,
     DataTypes.EIP712Signature calldata sig
@@ -563,8 +572,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     uint256 totalAmount = order.bid.amountToPay + order.bid.amountOfDebt;
 
-    // We check if the bid is in the correct range in order to ensure that the HF is correct.
-    // Because the interest can be grow and the auction endend and the liquidation can happend in mind time.
     {
       uint256 minBid = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
@@ -575,12 +582,14 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         signMarket.loan.aggLtv,
         reserve
       );
-
+      // WARNING
+      // We check if the minBid is bigger than the amount added, in this case,
+      // anyone can cancel the current bid and refund the amount deposited.
       if (totalAmount >= minBid) {
         revert Errors.AmountExceedsDebt();
       }
     }
-    // We assuming that the ltv is enought to cover the growing interest of this bid
+    // We assume that the LTV is enough to cover the growing interest in this bid
     OrderLogic.refundBidder(
       OrderLogic.RefundBidderParams({
         loanId: order.bid.loanId,
@@ -768,9 +777,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, order.owner);
     // Get the wallet of the owner
 
-    // We transfer the ownership to the new Owner
-    IProtocolOwner(protocolOwner).changeOwner(signMarket.collection, signMarket.tokenId, buyer);
-
     // We remove the current order asociated to this asset
     delete _orders[orderId];
 
@@ -786,6 +792,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       _loans[loan.loanId].totalAssets = signMarket.loan.totalAssets;
       _loans[loan.loanId].activate();
     }
+
+    // We transfer the ownership to the new Owner
+    IProtocolOwner(protocolOwner).changeOwner(signMarket.collection, signMarket.tokenId, buyer);
 
     emit MarketBuyNow(signMarket.loan.loanId, orderId, signMarket.assetId, totalAmount, msgSender);
   }

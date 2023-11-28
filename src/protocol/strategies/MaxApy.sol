@@ -54,6 +54,9 @@ contract MaxApyStrategy is IStrategy {
   function balanceOf(address owner) external view returns (uint256) {
     uint256 shares = IMaxApyVault(_vault).balanceOf(owner);
     if (shares == 0) return 0;
+    console.log('SHARES', shares);
+    console.log('VAULT', _vault);
+    console.log('>>', IMaxApyVault(_vault).shareValue(shares));
     return IMaxApyVault(_vault).shareValue(shares);
   }
 

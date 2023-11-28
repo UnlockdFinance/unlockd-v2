@@ -167,7 +167,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       if (loan.state != DataTypes.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
-      // update state MUST BEFORE get borrow amount which is depent on latest borrow index
+      // We have to update the index BEFORE obtaining the borrowed amount.
       IUToken(uToken).updateStateReserve();
 
       IUToken(reserve.uToken).borrowOnBelhalf(loan.loanId, amount, msgSender, msgSender);
@@ -181,10 +181,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
   }
 
   /**
-   * @dev Repay the dev for a Loan but also perform different actions
+   * @dev Repay the specific debt for a Loan but also perform different actions
    *  - Repay current debt defining the amount to repay
-   *  - Unlock x amount of assets if the HF is correct defined on the assets list
-   *    NOTE: No need to be all the assets
+   *  - Unlock x amount of assets if the HF > 1 on the assets list
    * */
   function repay(
     uint256 amount,
@@ -221,8 +220,8 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
     if (signAction.assets.length != 0) {
       /**
-        We validate if the loan is healty .
-        The aggLoanPrice of the Loan should be the value after removing the assets asigned to the loan
+        We validate if the loan is healthy.
+        The aggLoanPrice of the Loan should be the value after removing the assets assigned to the loan.
       */
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
@@ -239,7 +238,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         revert Errors.LoanNotActive();
       }
 
-      // Get delegation owner
+      // Get protocol owner
       address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);
 
       // Unlock specific assets
@@ -249,7 +248,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     if (signAction.loan.totalAssets != _loans[loan.loanId].totalAssets - signAction.assets.length) {
       revert Errors.TokenAssetsMismatch();
     }
-    // If the loan is full empty we remove the loan
+    // If the loan is empty we remove the loan
     if (signAction.loan.totalAssets == 0) {
       // We remove the loan
       delete _loans[loan.loanId];

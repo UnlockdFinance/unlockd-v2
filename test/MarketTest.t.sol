@@ -1569,7 +1569,7 @@ contract MarketTest is Setup {
       Market(_market).claim(false, orderId, signMarket, sig);
 
       hoax(actorTwo);
-      Market(_market).cancelClaim(false, orderId, signMarket, sig);
+      Market(_market).cancelClaim(orderId, signMarket, sig);
     }
   }
 
@@ -1596,7 +1596,7 @@ contract MarketTest is Setup {
         );
       hoax(actorTwo);
       vm.expectRevert(Errors.AmountExceedsDebt.selector);
-      Market(_market).cancelClaim(false, orderId, signMarket, sig);
+      Market(_market).cancelClaim(orderId, signMarket, sig);
 
       hoax(actorTwo);
       Market(_market).claim(false, orderId, signMarket, sig);

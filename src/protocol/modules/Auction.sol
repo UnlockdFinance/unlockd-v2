@@ -457,14 +457,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     // Get protocol owner
     address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);
 
-    // We transfer the ownership to the new Owner
-    IProtocolOwner(protocolOwner).changeOwner(
-      signAuction.collection,
-      signAuction.tokenId,
-      // We send the asset to
-      buyer
-    );
-
     // The start amount it was payed as a debt
     uint256 amount = order.bid.amountOfDebt + order.bid.amountToPay - order.offer.startAmount;
     loan.underlyingAsset.safeTransfer(order.owner, amount);
@@ -483,6 +475,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       loan.activate();
       loan.totalAssets = signAuction.loan.totalAssets;
     }
+
+    // We transfer the ownership to the new Owner
+    IProtocolOwner(protocolOwner).changeOwner(
+      signAuction.collection,
+      signAuction.tokenId,
+      // We send the asset to
+      buyer
+    );
 
     emit AuctionFinalize(
       offerLoanId,

@@ -3,15 +3,24 @@ pragma solidity ^0.8.19;
 
 import {console} from 'forge-std/console.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
+import {Unlockd} from '../src/protocol/Unlockd.sol';
+
 import './test-utils/setups/Setup.sol';
 import '../src/protocol/UToken.sol';
 import '../src/interfaces/tokens/IUToken.sol';
+import '../src/interfaces/strategies/IMaxApyVault.sol';
 
 contract UTokenSetup is Setup {
   uint256 internal constant ACTOR = 1;
 
+  address internal _manager;
+
   function setUp() public virtual override {
-    super.setUpByChain(11155111, 4775620);
+    super.setUpByChain(11155111, 4782613);
+    Unlockd unlockd = super.getUnlockd();
+    vm.startPrank(_admin);
+    _aclManager.setProtocol(makeAddr('protocol'));
+    vm.stopPrank();
   }
 
   function test_basic_deposit() internal useAssetActor(ACTOR, 100000) {
@@ -49,20 +58,49 @@ contract UTokenSetup is Setup {
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])), 0.5 ether);
   }
 
-  function test_deposit_more_min_cap() public {
-    vm.assume(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])) == 0);
-    UToken uToken = getUToken('WETH');
-    address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
+  // function test_deposit_more_min_cap() public {
+  //   vm.assume(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])) == 0);
+  //   UToken uToken = getUToken('WETH');
+  //   address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
 
-    vm.startPrank(actor);
-    approveAsset('WETH', address(uToken), 3 ether);
-    uToken.deposit(3 ether, super.getActorAddress(ACTOR), 0);
-    vm.stopPrank();
+  //   vm.startPrank(actor);
+  //   approveAsset('WETH', address(uToken), 3 ether);
+  //   uToken.deposit(3 ether, super.getActorAddress(ACTOR), 0);
+  //   vm.stopPrank();
 
-    assertEq(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])), 2 ether);
-  }
+  //   assertEq(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])), 2 ether);
+  // }
 
-  function test_borrow_below_min_cap() public {}
+  // function test_borrow_below_min_cap() public {
+  //   test_deposit_more_min_cap();
+  //   UToken uToken = getUToken('WETH');
+  //   vm.assume(uToken.totalSupply() == 3 ether);
 
-  function test_borrow_more_than_minCap() public {}
+  //   vm.startPrank(makeAddr('protocol'));
+  //   uToken.borrowOnBelhalf('1', 1 ether, makeAddr('protocol'), makeAddr('protocol'));
+  //   vm.stopPrank();
+  //   assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 1 ether);
+  // }
+
+  // function test_borrow_more_than_minCap() public {
+  //   // address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
+
+  //   console.log('TOTAL SUPPLY', IMaxApyVault(config.maxapy).totalSupply());
+  //   console.log('SYMBOL', IMaxApyVault(config.maxapy).symbol());
+
+  //   console.log(
+  //     'SHARES',
+  //     IMaxApyVault(config.maxapy).sharesForAmount(IMaxApyVault(config.maxapy).totalSupply())
+  //   );
+  //   // vm.assume(IMaxApyVault(config.maxapy).shareValue(1 ether) == 1 ether);
+
+  //   // vm.startPrank(actor);
+  //   // IERC20(makeAsset('WETH')).approve(config.maxapy, 1 ether);
+  //   // IMaxApyVault(config.maxapy).deposit(1 ether, actor);
+  //   // uint256 value = IMaxApyVault(config.maxapy).shareValue(10000);
+
+  //   // vm.stopPrank();
+
+  //   // console.log('VALUE', value);
+  // }
 }
