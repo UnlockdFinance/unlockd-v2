@@ -5,3 +5,4 @@ forge-std/=lib/forge-std/src/
 @chainlink/=lib/chainlink/
 @unlockd-wallet/=lib/unlockdv2-wallet
 @solady=lib/solady/src/
+@maxapy=lib/maxapy/src/
