@@ -320,13 +320,7 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
    *
    */
   function totalSupply() public view override(ERC20Upgradeable, IUToken) returns (uint256) {
-    return
-      super.totalSupply().rayMul(_reserve.getNormalizedIncome()) +
-      (
-        _reserve.strategyAddress == address(0)
-          ? 0
-          : IStrategy(_reserve.strategyAddress).balanceOf(address(this))
-      );
+    return super.totalSupply().rayMul(_reserve.getNormalizedIncome());
   }
 
   /**
@@ -337,7 +331,13 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
    *
    */
   function totalSupplyNotInvested() public view override returns (uint256) {
-    return super.totalSupply().rayMul(_reserve.getNormalizedIncome());
+    return
+      super.totalSupply().rayMul(_reserve.getNormalizedIncome()) -
+      (
+        _reserve.strategyAddress == address(0)
+          ? 0
+          : IStrategy(_reserve.strategyAddress).balanceOf(address(this))
+      );
   }
 
   /**

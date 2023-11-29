@@ -17,7 +17,7 @@ import {GuardOwner} from '@unlockd-wallet/src/libs/owners/GuardOwner.sol';
 import {DelegationWalletRegistry} from '@unlockd-wallet/src/DelegationWalletRegistry.sol';
 import {DelegationWalletFactory} from '@unlockd-wallet/src/DelegationWalletFactory.sol';
 import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
-
+import {MaxApyVault} from '@maxapy/MaxApyVault.sol';
 import '../../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 import './../mock/asset/MintableERC20.sol';
 import './../mock/adapters/MockAdapter.sol';
@@ -222,13 +222,15 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
   }
 
   function deploy_strategy(address underlyingAsset) internal {
-    if (config.maxapy != address(0)) {
-      // ONLY FOR SEPOLIA
-      uint256 percentageToInves = 5000; // 50%
-      _maxApyStrategy = address(
-        new MaxApyStrategy(underlyingAsset, config.maxapy, 1 ether, percentageToInves)
-      );
-    }
+    // ONLY FOR SEPOLIA
+    uint256 percentageToInvest = 10000; // 50%
+
+    _maxApy = address(
+      new MaxApyVault(IERC20(underlyingAsset), 'maxETH', 'MAXETH', makeAddr('treasury'))
+    );
+    _maxApyStrategy = address(
+      new MaxApyStrategy(underlyingAsset, _maxApy, 1 ether, percentageToInvest)
+    );
   }
 
   function deploy_utoken(address underlyingAsset, string memory symbol) public returns (address) {

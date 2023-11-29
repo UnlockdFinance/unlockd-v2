@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
-
+import {IMaxApyVault} from '@maxapy/interfaces/IMaxApyVault.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
-import {IMaxApyVault} from '../../interfaces/strategies/IMaxApyVault.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
@@ -27,12 +26,12 @@ contract MaxApyStrategy is IStrategy {
     _percentageToInvest = percentageToInvest_;
   }
 
-  function name() external view returns (string memory name) {
+  function name() external view returns (string memory) {
     return 'MaxAPY';
   }
 
   // Returns a description for this strategy
-  function description() external view returns (string memory description) {
+  function description() external view returns (string memory) {
     return 'MaxAPY strategy';
   }
 
@@ -54,9 +53,6 @@ contract MaxApyStrategy is IStrategy {
   function balanceOf(address owner) external view returns (uint256) {
     uint256 shares = IMaxApyVault(_vault).balanceOf(owner);
     if (shares == 0) return 0;
-    console.log('SHARES', shares);
-    console.log('VAULT', _vault);
-    console.log('>>', IMaxApyVault(_vault).shareValue(shares));
     return IMaxApyVault(_vault).shareValue(shares);
   }
 
@@ -89,7 +85,30 @@ contract MaxApyStrategy is IStrategy {
     address to_,
     StrategyConfig memory config
   ) external {
-    uint256 amountToWithdraw = IUToken(from_).totalSupplyNotInvested() / 3 < amount_ ? amount_ : 0;
-    if (amountToWithdraw > 0) IMaxApyVault(config.vault).withdraw(amount_, to_, MAX_LOSS);
+    uint256 currentSupply = IUToken(from_).totalSupplyNotInvested();
+    uint256 amountToWithdraw = _getAmountToWithdraw(currentSupply, amount_);
+    if (amountToWithdraw != 0) {
+      // This logic is for recover the minCap
+      if (currentSupply < config.minCap) {
+        uint256 amountToMinCap = config.minCap - currentSupply;
+        uint256 updatedAmount = amountToWithdraw + amountToMinCap;
+        // We check if we have liquidity on this strategy
+        if (this.balanceOf(from_) > updatedAmount) {
+          amountToWithdraw = updatedAmount;
+        }
+      }
+      IMaxApyVault(config.vault).withdraw(amountToWithdraw, to_, MAX_LOSS);
+    }
+  }
+
+  function _getAmountToWithdraw(
+    uint256 currentSupply,
+    uint256 amount
+  ) internal view returns (uint256) {
+    if (currentSupply == 0) return 0;
+    if (currentSupply / 3 < amount) {
+      return amount;
+    }
+    return 0;
   }
 }
