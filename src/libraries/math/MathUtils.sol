@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {WadRayMath} from './WadRayMath.sol';
 import {FixedPointMathLib} from '@solady/utils/FixedPointMathLib.sol';
+import {WadRayMath} from './WadRayMath.sol';
 
 library MathUtils {
   using WadRayMath for uint256;

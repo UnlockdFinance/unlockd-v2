@@ -13,7 +13,7 @@ contract MaxApyStrategy is IStrategy {
 
   uint256 internal constant MAX_LOSS = 100; // 1%
   uint256 internal constant MIN_AMOUNT_TO_INVEST = 0.5 ether;
-
+  uint256 internal constant RATIO = 3;
   address internal _asset;
   address internal _vault;
   uint256 internal _minCap;
@@ -56,57 +56,62 @@ contract MaxApyStrategy is IStrategy {
     return IMaxApyVault(_vault).shareValue(shares);
   }
 
-  // Returns the maximum amount that can be withdrawn
-  function withdrawable(address sharesPool) external view returns (uint256 amount) {
-    // NOTHING TO DO
-  }
-
   //////////////////////////////////////////////////////////////////
   // DELEGATED CALLS
 
-  // Function that invest on the this strategy
-  function supply(uint256 amount_, address from_, StrategyConfig memory config) external {
-    uint256 amountNotInvested = IUToken(from_).totalSupplyNotInvested();
-    if (amountNotInvested > config.minCap) {
-      uint256 investAmount = (amountNotInvested - config.minCap).percentMul(
-        config.percentageToInvest
-      );
+  function calculateAmountToSupply(address from_, uint256 amount_) external returns (uint256) {
+    uint256 amountNotInvested = IUToken(from_).totalUnderlyingBalanceNotInvested();
+    if (amountNotInvested > _minCap) {
+      uint256 investAmount = (amountNotInvested - _minCap).percentMul(_percentageToInvest);
       if (investAmount > MIN_AMOUNT_TO_INVEST) {
-        IERC20(config.asset).approve(config.vault, investAmount);
-        IMaxApyVault(config.vault).deposit(investAmount, from_);
+        return investAmount;
       }
     }
+    return 0;
   }
 
-  // Function to withdraw specific amount
-  function withdraw(
-    uint256 amount_,
+  // Function that invest on the this strategy
+  function supply(address vault_, address asset_, address from_, uint256 amount_) external {
+    IERC20(asset_).approve(vault_, amount_);
+    IMaxApyVault(vault_).deposit(amount_, from_);
+  }
+
+  function calculateAmountToWithdraw(
     address from_,
-    address to_,
-    StrategyConfig memory config
-  ) external {
-    uint256 currentSupply = IUToken(from_).totalSupplyNotInvested();
+    uint256 amount_
+  ) external view returns (uint256) {
+    uint256 currentSupply = IUToken(from_).totalUnderlyingBalanceNotInvested();
     uint256 amountToWithdraw = _getAmountToWithdraw(currentSupply, amount_);
     if (amountToWithdraw != 0) {
       // This logic is for recover the minCap
-      if (currentSupply < config.minCap) {
-        uint256 amountToMinCap = config.minCap - currentSupply;
+      if (currentSupply < _minCap) {
+        uint256 amountToMinCap = _minCap - currentSupply;
         uint256 updatedAmount = amountToWithdraw + amountToMinCap;
+
+        uint256 currentBalance = IUToken(from_).totalUnderlyingBalance();
         // We check if we have liquidity on this strategy
-        if (this.balanceOf(from_) > updatedAmount) {
+        if (currentBalance > updatedAmount) {
           amountToWithdraw = updatedAmount;
+        } else {
+          amountToWithdraw = currentBalance;
         }
       }
-      IMaxApyVault(config.vault).withdraw(amountToWithdraw, to_, MAX_LOSS);
+      return amountToWithdraw;
     }
+    return 0;
+  }
+
+  // Function to withdraw specific amount
+  function withdraw(address vault_, address to_, uint256 amount_) external {
+    IMaxApyVault(vault_).withdraw(amount_, to_, MAX_LOSS);
   }
 
   function _getAmountToWithdraw(
     uint256 currentSupply,
     uint256 amount
   ) internal view returns (uint256) {
-    if (currentSupply == 0) return 0;
-    if (currentSupply / 3 < amount) {
+    if (currentSupply == 0) return amount;
+    if (currentSupply / RATIO < amount) {
       return amount;
     }
     return 0;

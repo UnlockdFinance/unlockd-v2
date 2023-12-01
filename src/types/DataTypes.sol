@@ -37,6 +37,8 @@ library DataTypes {
     address interestRateAddress;
     // address of the strategy
     address strategyAddress;
+
+    uint256 freeAmount;
     
   }
 

@@ -10,29 +10,28 @@ interface IStrategy {
   }
 
   // Returns a name for this strategy
-  function name() external view returns (string memory name);
+  function name() external view returns (string memory);
 
   // Returns a description for this strategy
-  function description() external view returns (string memory description);
+  function description() external view returns (string memory);
 
-  function asset() external view returns (address _asset);
+  function asset() external view returns (address);
 
   function getConfig() external view returns (StrategyConfig memory);
 
   // Returns the total value the strategy holds (principle + gain) expressed in asset token amount.
-  function balanceOf(address sharesPool) external view returns (uint256 amount);
+  function balanceOf(address sharesPool) external view returns (uint256);
 
-  // Returns the maximum amount that can be withdrawn
-  function withdrawable(address sharesPool) external view returns (uint256 amount);
+  function calculateAmountToSupply(address from_, uint256 amount_) external returns (uint256);
 
   // Function that invest on the this strategy
-  function supply(uint256 amount_, address from_, StrategyConfig memory config) external;
+  function supply(address vault_, address asset_, address from_, uint256 amount_) external;
+
+  function calculateAmountToWithdraw(
+    address from_,
+    uint256 amount_
+  ) external view returns (uint256);
 
   // Function to withdraw specific amount
-  function withdraw(
-    uint256 amount_,
-    address from,
-    address to,
-    StrategyConfig memory config
-  ) external;
+  function withdraw(address vault_, address to_, uint256 amount_) external;
 }

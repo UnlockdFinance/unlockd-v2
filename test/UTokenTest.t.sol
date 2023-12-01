@@ -7,8 +7,11 @@ import './test-utils/setups/Setup.sol';
 
 import {IMaxApyVault} from '@maxapy/interfaces/IMaxApyVault.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
+import {DebtToken} from '../src/protocol/DebtToken.sol';
 import '../src/protocol/UToken.sol';
 import '../src/interfaces/tokens/IUToken.sol';
+
+import {console} from 'forge-std/console.sol';
 
 contract UTokenSetup is Setup {
   uint256 internal constant ACTOR = 1;
@@ -96,15 +99,44 @@ contract UTokenSetup is Setup {
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 1 ether);
   }
 
-  function test_borrow_all() public {
+  function test_borrow_force_rebalancing() public {
     test_deposit_more_minCap();
     UToken uToken = getUToken('WETH');
+    DebtToken debtToken = DebtToken(uToken.getDebtToken());
     vm.assume(uToken.totalSupply() == 4 ether);
+
+    //////////////////////////////////////////////////////////////
 
     vm.startPrank(makeAddr('protocol'));
     uToken.borrowOnBelhalf('1', 2 ether, makeAddr('protocol'), makeAddr('protocol'));
     vm.stopPrank();
     assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 2 ether);
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 1 ether);
+    //////////////////////////////////////////////////////////////
+
+    vm.startPrank(makeAddr('protocol'));
+    uToken.borrowOnBelhalf('1', 0.5 ether, makeAddr('protocol'), makeAddr('protocol'));
+    vm.stopPrank();
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 2.5 ether);
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 1 ether);
+    //////////////////////////////////////////////////////////////
+
+    vm.startPrank(makeAddr('protocol'));
+    uToken.borrowOnBelhalf('1', 0.5 ether, makeAddr('protocol'), makeAddr('protocol'));
+    vm.stopPrank();
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 3 ether);
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 1 ether);
+  }
+
+  function test_borrow_all() public {
+    test_deposit_more_minCap();
+    UToken uToken = getUToken('WETH');
+    vm.assume(uToken.totalSupply() == 4 ether);
+
+    vm.startPrank(makeAddr('protocol'));
+    uToken.borrowOnBelhalf('1', 4 ether, makeAddr('protocol'), makeAddr('protocol'));
+    vm.stopPrank();
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 4 ether);
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 0);
   }
 }

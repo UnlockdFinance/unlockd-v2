@@ -267,11 +267,14 @@ interface IUToken {
    * @return The scaled total supply
    *
    */
+
   function scaledTotalSupply() external view returns (uint256);
 
   function totalSupply() external view returns (uint256);
 
-  function totalSupplyNotInvested() external view returns (uint256);
+  function totalUnderlyingBalanceNotInvested() external view returns (uint256);
+
+  function totalUnderlyingBalance() external view returns (uint256);
 
   function getDebtToken() external view returns (address);
 }
