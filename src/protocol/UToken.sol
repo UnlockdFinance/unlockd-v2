@@ -102,14 +102,24 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     _mint(onBehalfOf, amount, _reserve.liquidityIndex);
 
     if (_reserve.strategyAddress != address(0)) {
-      _reserve.strategyAddress.functionDelegateCall(
-        abi.encodeWithSelector(
-          IStrategy.supply.selector,
-          amount,
-          address(this),
-          IStrategy(_reserve.strategyAddress).getConfig()
-        )
+      uint256 amountToInvest = IStrategy(_reserve.strategyAddress).calculateAmountToSupply(
+        address(this),
+        amount
       );
+
+      if (amountToInvest > 0) {
+        IStrategy.StrategyConfig memory config = IStrategy(_reserve.strategyAddress).getConfig();
+        _reserve.strategyAddress.functionDelegateCall(
+          abi.encodeWithSelector(
+            IStrategy.supply.selector,
+            config.vault,
+            config.asset,
+            address(this),
+            amountToInvest,
+            IStrategy(_reserve.strategyAddress).getConfig()
+          )
+        );
+      }
     }
 
     emit Deposit(_msgSender(), _reserve.underlyingAsset, amount, onBehalfOf, referralCode);
@@ -148,15 +158,23 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     _reserve.updateInterestRates(0, amountToWithdraw);
 
     if (_reserve.strategyAddress != address(0)) {
-      _reserve.strategyAddress.functionDelegateCall(
-        abi.encodeWithSelector(
-          IStrategy.withdraw.selector,
-          amountToWithdraw,
-          address(this),
-          address(this),
-          IStrategy(_reserve.strategyAddress).getConfig()
-        )
+      uint256 amountNeed = IStrategy(_reserve.strategyAddress).calculateAmountToWithdraw(
+        address(this),
+        amountToWithdraw
       );
+
+      if (amountNeed > 0) {
+        IStrategy.StrategyConfig memory config = IStrategy(_reserve.strategyAddress).getConfig();
+
+        _reserve.strategyAddress.functionDelegateCall(
+          abi.encodeWithSelector(
+            IStrategy.withdraw.selector,
+            config.vault,
+            address(this),
+            amountNeed
+          )
+        );
+      }
     }
 
     _burn(_msgSender(), to, amountToWithdraw, _reserve.liquidityIndex);
@@ -191,15 +209,23 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     }
 
     if (_reserve.strategyAddress != address(0)) {
-      _reserve.strategyAddress.functionDelegateCall(
-        abi.encodeWithSelector(
-          IStrategy.withdraw.selector,
-          amount,
-          address(this),
-          address(this),
-          IStrategy(_reserve.strategyAddress).getConfig()
-        )
+      uint256 amountToWithdraw = IStrategy(_reserve.strategyAddress).calculateAmountToWithdraw(
+        address(this),
+        amount
       );
+
+      if (amountToWithdraw > 0) {
+        IStrategy.StrategyConfig memory config = IStrategy(_reserve.strategyAddress).getConfig();
+
+        _reserve.strategyAddress.functionDelegateCall(
+          abi.encodeWithSelector(
+            IStrategy.withdraw.selector,
+            config.vault,
+            address(this),
+            amountToWithdraw
+          )
+        );
+      }
     }
     // Mint token to the user
     IDebtToken(_reserve.debtTokenAddress).mint(
@@ -236,14 +262,24 @@ contract UToken is IUToken, BaseERC20, ReentrancyGuard, UUPSUpgradeable {
     IERC20(_reserve.underlyingAsset).safeTransferFrom(from, address(this), amount);
     // Deposit again on the strategy if is needed
     if (_reserve.strategyAddress != address(0)) {
-      _reserve.strategyAddress.functionDelegateCall(
-        abi.encodeWithSelector(
-          IStrategy.supply.selector,
-          amount,
-          address(this),
-          IStrategy(_reserve.strategyAddress).getConfig()
-        )
+      uint256 amountToInvest = IStrategy(_reserve.strategyAddress).calculateAmountToSupply(
+        address(this),
+        amount
       );
+
+      if (amountToInvest > 0) {
+        IStrategy.StrategyConfig memory config = IStrategy(_reserve.strategyAddress).getConfig();
+        _reserve.strategyAddress.functionDelegateCall(
+          abi.encodeWithSelector(
+            IStrategy.supply.selector,
+            config.vault,
+            config.asset,
+            address(this),
+            amountToInvest,
+            IStrategy(_reserve.strategyAddress).getConfig()
+          )
+        );
+      }
     }
     // Update the interest rate
     _reserve.updateInterestRates(amount, 0);

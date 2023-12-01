@@ -10,6 +10,8 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
+import {IStrategy} from '../../interfaces/IStrategy.sol';
+
 /**
  * @title ReserveLogic library
  * @author Unlockd
@@ -293,5 +295,33 @@ library ReserveLogic {
     //solium-disable-next-line
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
     return (newLiquidityIndex, newVariableBorrowIndex);
+  }
+
+  function updateAmounts(
+    DataTypes.ReserveData storage reserve,
+    uint256 amountIn,
+    uint256 amountOut,
+    uint256 amountInStrategy,
+    uint256 amountOutStrategy
+  ) internal {
+    if (amountInStrategy == 0) {
+      // OUT
+      reserve.freeAmount -= amountOut;
+      reserve.investedAmount -= amountOutStrategy;
+    } else {
+      // IN
+      reserve.freeAmount += amountIn;
+      reserve.investedAmount += amountInStrategy;
+    }
+  }
+
+  function totalSupply(
+    DataTypes.ReserveData storage reserve,
+    address pool
+  ) internal returns (uint256) {
+    if (reserve.investedAmount > 0) {
+      return reserve.freeAmount + IStrategy(reserve.strategyAddress).balanceOf(address(pool));
+    }
+    return reserve.freeAmount + reserve.investedAmount;
   }
 }
