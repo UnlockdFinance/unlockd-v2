@@ -259,7 +259,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
         variableRateSlope1: 1 ether,
         variableRateSlope2: 1 ether
       });
-    address interestRate = deployerConfig.deployInterestRate(interestParams);
+    _interestRate = deployerConfig.deployInterestRate(interestParams);
 
     DeployUToken.DeployUtokenParams memory utokenParams = DeployUToken.DeployUtokenParams({
       treasury: _treasury,
@@ -269,7 +269,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
       tokenSymbol: string(abi.encodePacked('U', symbol)),
       debtToken: debtToken,
       reserveFactor: 0,
-      interestRate: interestRate,
+      interestRate: _interestRate,
       strategyAddress: _maxApyStrategy != address(0) &&
         MaxApyStrategy(_maxApyStrategy).asset() == underlyingAsset
         ? _maxApyStrategy

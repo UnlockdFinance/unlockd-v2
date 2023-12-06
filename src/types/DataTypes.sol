@@ -7,6 +7,74 @@ library DataTypes {
   // ASSET 
   ///////////////////////////////////////////////////////
 
+  struct MarketBalance {
+  // Total supply invested
+    uint128 totalSupplyScaledNotInvested;   
+    // Total supply
+    uint128 totalSupplyAssets;
+    uint128 totalSupplyScaled;
+    // Total supply borrowed
+    uint128 totalBorrowAssets;
+    uint128 totalBorrowScaled;
+      // last update
+    uint40 lastUpdateTimestamp;
+  }
+
+
+  struct ReserveDataV2 {
+    //the liquidity index. Expressed in ray
+    uint128 liquidityIndex;
+    //variable borrow index. Expressed in ray
+    uint128 variableBorrowIndex;
+    //the current supply rate. Expressed in ray
+    uint128 currentLiquidityRate;
+    //the current variable borrow rate. Expressed in ray
+    uint128 currentVariableBorrowRate;
+    // Reserve factor
+    uint16 reserveFactor;
+    // address asset
+    address underlyingAsset;
+    // address scaled token
+    address scaledTokenAddress;
+    //address of the interest rate strategy
+    address interestRateAddress;
+    // address of the strategy
+    address strategyAddress;
+    // last update
+    uint40 lastUpdateTimestamp;
+  }
+
+  struct CreateMarketParams {
+    address interestRateAddress;
+    address strategyAddress;
+    uint16 reserveFactor;
+  }
+
+  struct CalculateInterestRatesParams {
+    uint256 liquidityAdded;
+    uint256 liquidityTaken;
+    uint256 totalVariableDebt;
+    uint256 totalSupplyAssets;
+    uint256 reserveFactor;
+  }
+  
+  struct ReserveCache {
+    uint256 currScaledVariableDebt;
+    uint256 nextScaledVariableDebt;
+
+    uint256 currLiquidityIndex;
+    uint256 nextLiquidityIndex;
+    
+    uint256 currVariableBorrowIndex;
+    uint256 nextVariableBorrowIndex;
+    
+    uint256 currLiquidityRate;
+    uint256 currVariableBorrowRate;
+    
+    uint256 reserveFactor; 
+    uint40 reserveLastUpdateTimestamp;
+  }
+
   struct ReserveData {
     // Slot 0
     //the liquidity index. Expressed in ray

@@ -59,10 +59,13 @@ contract MaxApyStrategy is IStrategy {
   //////////////////////////////////////////////////////////////////
   // DELEGATED CALLS
 
-  function calculateAmountToSupply(address from_, uint256 amount_) external returns (uint256) {
-    uint256 amountNotInvested = IUToken(from_).totalUnderlyingBalanceNotInvested();
-    if (amountNotInvested > _minCap) {
-      uint256 investAmount = (amountNotInvested - _minCap).percentMul(_percentageToInvest);
+  function calculateAmountToSupply(
+    uint256 totalSupplyNotInvested,
+    address from_,
+    uint256 amount_
+  ) external returns (uint256) {
+    if (totalSupplyNotInvested > _minCap) {
+      uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
       if (investAmount > MIN_AMOUNT_TO_INVEST) {
         return investAmount;
       }
@@ -77,24 +80,19 @@ contract MaxApyStrategy is IStrategy {
   }
 
   function calculateAmountToWithdraw(
+    uint256 totalSupplyNotInvested_,
     address from_,
     uint256 amount_
   ) external view returns (uint256) {
-    uint256 currentSupply = IUToken(from_).totalUnderlyingBalanceNotInvested();
-    uint256 amountToWithdraw = _getAmountToWithdraw(currentSupply, amount_);
+    uint256 amountToWithdraw = _getAmountToWithdraw(totalSupplyNotInvested_, amount_);
     if (amountToWithdraw != 0) {
       // This logic is for recover the minCap
-      if (currentSupply < _minCap) {
-        uint256 amountToMinCap = _minCap - currentSupply;
+      if (totalSupplyNotInvested_ < _minCap) {
+        uint256 amountToMinCap = _minCap - totalSupplyNotInvested_;
         uint256 updatedAmount = amountToWithdraw + amountToMinCap;
-
-        uint256 currentBalance = IUToken(from_).totalUnderlyingBalance();
+        uint256 currentBalance = this.balanceOf(from_);
         // We check if we have liquidity on this strategy
-        if (currentBalance > updatedAmount) {
-          amountToWithdraw = updatedAmount;
-        } else {
-          amountToWithdraw = currentBalance;
-        }
+        amountToWithdraw = currentBalance > updatedAmount ? updatedAmount : currentBalance;
       }
       return amountToWithdraw;
     }

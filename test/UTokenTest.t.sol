@@ -13,7 +13,7 @@ import '../src/interfaces/tokens/IUToken.sol';
 
 import {console} from 'forge-std/console.sol';
 
-contract UTokenSetup is Setup {
+contract UTokenTest is Setup {
   uint256 internal constant ACTOR = 1;
 
   address internal _manager;
@@ -26,14 +26,14 @@ contract UTokenSetup is Setup {
     vm.stopPrank();
   }
 
-  function test_basic_deposit() internal useAssetActor(ACTOR, 100000) {
+  function test_basic_deposit() public useAssetActor(ACTOR, 100000) {
     UToken uToken = getUToken('WETH');
     super.approveAsset('WETH', address(uToken), 100000);
     uToken.deposit(100000, super.getActorAddress(ACTOR), 0);
     assertEq(uToken.balanceOf(super.getActorAddress(ACTOR)), 100000);
   }
 
-  function test_basic_withdraw() internal useAssetActor(ACTOR, 100000) {
+  function test_basic_withdraw() public useAssetActor(ACTOR, 100000) {
     string memory token = 'WETH';
     address actor = super.getActorAddress(ACTOR);
     UToken uToken = super.getUToken(token);

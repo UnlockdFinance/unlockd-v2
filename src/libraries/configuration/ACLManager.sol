@@ -13,6 +13,10 @@ import {Errors} from '../helpers/Errors.sol';
 contract ACLManager is AccessControl, IACLManager {
   // @dev address of the PROTOCOL
   address public UNLOCK_PROTOCOL;
+
+  // @dev address of the UNLOCKTOKEN
+  address public UTOKEN;
+
   // @dev utoken admin in charge of updating the utoken
   bytes32 public constant override UTOKEN_ADMIN = keccak256('UTOKEN_ADMIN');
   // @dev protocol admin in charge of updating the protocol
@@ -55,6 +59,16 @@ contract ACLManager is AccessControl, IACLManager {
   /// @inheritdoc IACLManager
   function isProtocol(address protocol) external view override returns (bool) {
     return UNLOCK_PROTOCOL == protocol;
+  }
+
+  /// @inheritdoc IACLManager
+  function setUToken(address uToken) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    Errors.verifyNotZero(uToken);
+    UTOKEN = uToken;
+  }
+
+  function isUToken(address uToken) external view override returns (bool) {
+    return UTOKEN == uToken;
   }
 
   /// @inheritdoc IACLManager

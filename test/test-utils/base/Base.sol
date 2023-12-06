@@ -51,6 +51,7 @@ contract Base is Test {
   address internal _mockAdapter;
   address internal _maxApyStrategy;
   address internal _maxApy;
+  address internal _interestRate;
   // Wallet Factory
   address internal _walletRegistry;
   address internal _walletFactory;
