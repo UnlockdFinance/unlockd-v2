@@ -475,22 +475,22 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
     // By default we get the EOA from the buyer
     address buyer = order.bid.buyer;
-    address buyerDelegationOwner;
+    address protocolOwnerBuyer;
     if (claimOnUWallet) {
-      (address wallet, address delegationOwner) = GenericLogic.getMainWallet(
+      (address wallet, address protocol) = GenericLogic.getMainWallet(
         _walletRegistry,
         order.bid.buyer
       );
       buyer = wallet;
-      buyerDelegationOwner = delegationOwner;
+      protocolOwnerBuyer = protocol;
     }
     if (order.bid.loanId != 0) {
       // If there is a loanId the Unlockd wallet from the bider is required
-      if (buyerDelegationOwner == address(0)) {
+      if (protocolOwnerBuyer == address(0)) {
         revert Errors.DelegationOwnerZeroAddress();
       }
       // Assign the asset to a new Loan
-      IProtocolOwner(buyerDelegationOwner).setLoanId(order.offer.assetId, order.bid.loanId);
+      IProtocolOwner(protocolOwnerBuyer).setLoanId(order.offer.assetId, order.bid.loanId);
       // Once the asset is sended to the correct wallet we reactivate
       _loans[order.bid.loanId].activate();
     }
@@ -512,16 +512,14 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
 
     {
+      delete _orders[order.orderId];
       // Get delegation owner
-      address delegationOwnerOwner = GenericLogic.getMainWalletProtocolOwner(
+      address protocolOwnerOwner = GenericLogic.getMainWalletProtocolOwner(
         _walletRegistry,
         order.owner
       );
-
-      delete _orders[order.orderId];
-
       // We transfer the ownership to the new Owner
-      IProtocolOwner(delegationOwnerOwner).changeOwner(
+      IProtocolOwner(protocolOwnerOwner).changeOwner(
         signMarket.collection,
         signMarket.tokenId,
         buyer
