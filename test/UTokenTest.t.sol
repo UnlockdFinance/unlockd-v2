@@ -45,7 +45,7 @@ contract UTokenSetup is Setup {
     assertEq(balanceOfAsset(token, actor), 100000);
   }
 
-  function test_deposit_less_minCap() public {
+  function test_deposit_less_minCap() internal {
     vm.assume(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])) == 0);
     UToken uToken = getUToken('WETH');
     address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
@@ -58,7 +58,7 @@ contract UTokenSetup is Setup {
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])), 0.5 ether);
   }
 
-  function test_deposit_more_minCap() public {
+  function test_deposit_more_minCap() internal {
     vm.assume(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])) == 0);
     UToken uToken = getUToken('WETH');
     address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
@@ -71,7 +71,7 @@ contract UTokenSetup is Setup {
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(_uTokens['WETH'])), 1 ether);
   }
 
-  function test_borrow_below_minCap() public {
+  function test_borrow_below_minCap() internal {
     test_deposit_more_minCap();
     UToken uToken = getUToken('WETH');
     vm.assume(uToken.totalSupply() == 4 ether);
@@ -83,7 +83,7 @@ contract UTokenSetup is Setup {
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 0.8 ether);
   }
 
-  function test_borrow_more_than_minCap() public {
+  function test_borrow_more_than_minCap() internal {
     test_deposit_more_minCap();
     UToken uToken = getUToken('WETH');
     vm.assume(uToken.totalSupply() == 4 ether);
@@ -96,7 +96,7 @@ contract UTokenSetup is Setup {
     assertEq(IERC20(makeAsset('WETH')).balanceOf(address(uToken)), 1 ether);
   }
 
-  function test_borrow_all() public {
+  function test_borrow_all() internal {
     test_deposit_more_minCap();
     UToken uToken = getUToken('WETH');
     vm.assume(uToken.totalSupply() == 4 ether);
