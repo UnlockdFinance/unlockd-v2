@@ -14,6 +14,7 @@ import {ReserveAssetLogic} from '../libraries/logic/ReserveAssetLogic.sol';
 import {UTokenStorage} from '../libraries/storage/UTokenStorage.sol';
 import {ScaledToken} from '../tokens/ScaledToken.sol';
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
+import {console} from 'forge-std/console.sol';
 
 contract UTokenV2 {
   using ReserveAssetLogic for DataTypes.ReserveDataV2;
@@ -87,13 +88,19 @@ contract UTokenV2 {
     DataTypes.ReserveDataV2 storage reserve = reserves[underlyingAsset];
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
+    console.log('1 - SCALEND NOT INVESTED : ', balance.totalSupplyScaledNotInvested);
     reserve.updateState(balance);
+    console.log('2 - SCALEND NOT INVESTED : ', balance.totalSupplyScaledNotInvested);
     // Burn SHARES
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
+    console.log('3 - SCALEND NOT INVESTED : ', balance.totalSupplyScaledNotInvested);
     // Check if we have enought to withdraw
     reserve.strategyWithdraw(balance, amount);
+    console.log('4 - SCALEND NOT INVESTED : ', balance.totalSupplyScaledNotInvested);
+
     // Burn scaled tokens
     reserve.burnScaled(balance, onBehalf, amount);
+    console.log('5 - SCALEND NOT INVESTED : ', balance.totalSupplyScaledNotInvested);
   }
 
   function borrow(bytes32 loanId, uint256 amount, address to, address onBehalfOf) external {}

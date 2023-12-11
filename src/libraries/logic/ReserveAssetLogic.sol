@@ -17,6 +17,8 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {ScaledToken} from '../../tokens/ScaledToken.sol';
 
+import {console} from 'forge-std/console.sol';
+
 /**
  * @title ReserveLogic library
  * @author Aave
@@ -335,9 +337,14 @@ library ReserveAssetLogic {
       amount,
       reserve.liquidityIndex
     );
+
+    console.log('PRE SCALEND NOT INVESTED : ', balances.totalSupplyScaledNotInvested);
+
     balances.totalSupplyAssets -= amount.toUint128();
     balances.totalSupplyScaled -= scaledAmount.toUint128();
     balances.totalSupplyScaledNotInvested -= scaledAmount.toUint128();
+    console.log('WITHDRAW', scaledAmount);
+    console.log('SCALEND NOT INVESTED : ', balances.totalSupplyScaledNotInvested);
     // Transfer the amount to the user
     IERC20(reserve.underlyingAsset).safeTransfer(user, amount);
   }
@@ -390,6 +397,8 @@ library ReserveAssetLogic {
     uint256 totalSupplyNotInvested = totalSupplyScaledNotInvested.rayMul(
       reserve.getNormalizedIncome()
     );
+
+    // TODO _ NO FUNCIONA BIEN
     uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateAmountToWithdraw(
       totalSupplyNotInvested,
       address(this),
@@ -401,6 +410,8 @@ library ReserveAssetLogic {
       reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
       );
+
+      console.log('WITHDRAW??', amountNeed);
       // TODO: Revisar los numeros de aqui
       balances.totalSupplyScaledNotInvested += amountNeed
         .rayDiv(reserve.liquidityIndex)

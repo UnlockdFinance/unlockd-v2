@@ -64,13 +64,9 @@ contract MaxApyStrategy is IStrategy {
     address from_,
     uint256 amount_
   ) external returns (uint256) {
-    if (totalSupplyNotInvested > _minCap) {
-      uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
-      if (investAmount > MIN_AMOUNT_TO_INVEST) {
-        return investAmount;
-      }
-    }
-    return 0;
+    if (totalSupplyNotInvested < _minCap) return 0;
+    uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
+    return investAmount > MIN_AMOUNT_TO_INVEST ? investAmount : 0;
   }
 
   // Function that invest on the this strategy
@@ -85,18 +81,16 @@ contract MaxApyStrategy is IStrategy {
     uint256 amount_
   ) external view returns (uint256) {
     uint256 amountToWithdraw = _getAmountToWithdraw(totalSupplyNotInvested_, amount_);
-    if (amountToWithdraw != 0) {
-      // This logic is for recover the minCap
-      if (totalSupplyNotInvested_ < _minCap) {
-        uint256 amountToMinCap = _minCap - totalSupplyNotInvested_;
-        uint256 updatedAmount = amountToWithdraw + amountToMinCap;
-        uint256 currentBalance = this.balanceOf(from_);
-        // We check if we have liquidity on this strategy
-        amountToWithdraw = currentBalance > updatedAmount ? updatedAmount : currentBalance;
-      }
-      return amountToWithdraw;
+    uint256 currentBalance = this.balanceOf(from_);
+    if (currentBalance == 0 || amountToWithdraw == 0) return 0;
+    // This logic is for recover the minCap
+    if (totalSupplyNotInvested_ < _minCap) {
+      uint256 amountToMinCap = _minCap - totalSupplyNotInvested_;
+      uint256 updatedAmount = amountToWithdraw + amountToMinCap;
+      // We check if we have liquidity on this strategy
+      amountToWithdraw = currentBalance > updatedAmount ? updatedAmount : currentBalance;
     }
-    return 0;
+    return amountToWithdraw;
   }
 
   // Function to withdraw specific amount

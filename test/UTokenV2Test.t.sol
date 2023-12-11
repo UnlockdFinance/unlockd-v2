@@ -32,9 +32,10 @@ contract UTokenV2Test is Setup {
     _aclManager.setUToken(address(_uTokenV2));
     _aclManager.setProtocol(makeAddr('protocol'));
     vm.stopPrank();
+    create_new_market();
   }
 
-  function test_create_new_market() public {
+  function create_new_market() internal {
     _uTokenV2.createMarket(
       DataTypes.CreateMarketParams({
         interestRateAddress: address(_interestRateV2),
@@ -49,20 +50,49 @@ contract UTokenV2Test is Setup {
   }
 
   function test_basic_supply() public {
-    test_create_new_market();
     address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
-    DataTypes.MarketBalance memory prevBalance = _uTokenV2.getBalance(_WETH);
-    console.log('BALANCE', prevBalance.totalSupplyAssets);
+    // DataTypes.MarketBalance memory prevBalance = _uTokenV2.getBalance(_WETH);
+    // console.log('BALANCE', prevBalance.totalSupplyAssets);
     // DEPOSIT
     vm.startPrank(actor);
     super.approveAsset('WETH', address(_uTokenV2), 2 ether);
     _uTokenV2.supply(_WETH, 1 ether, actor);
     vm.stopPrank();
     // Get DATA
-    DataTypes.ReserveDataV2 memory reserve = _uTokenV2.getReserveData(_WETH);
-    DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
+    // DataTypes.ReserveDataV2 memory reserve = _uTokenV2.getReserveData(_WETH);
+    // DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
 
-    console.log('BALANCE', balance.totalSupplyAssets);
+    // console.log('BALANCE', balance.totalSupplyAssets);
+    // assertEq(uToken.balanceOf(actor), 100000);
+
+    // WITHDRAW
+  }
+
+  function test_basic_withdraw() public {
+    address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
+    assertEq(_uTokenV2.totalSupplyNotInvested(_WETH), 0);
+    // DataTypes.MarketBalance memory prevBalance = _uTokenV2.getBalance(_WETH);
+    // console.log('BALANCE', prevBalance.totalSupplyAssets);
+    // DEPOSIT
+    vm.startPrank(actor);
+    super.approveAsset('WETH', address(_uTokenV2), 1 ether);
+    _uTokenV2.supply(_WETH, 1 ether, actor);
+    vm.stopPrank();
+    
+    assertEq(_uTokenV2.totalSupplyNotInvested(_WETH), 1 ether);
+    // Get DATA
+    DataTypes.ReserveDataV2 memory reserve = _uTokenV2.getReserveData(_WETH);
+
+    assertEq(ScaledToken(reserve.scaledTokenAddress).balanceOf(actor), 1 ether);
+
+    vm.startPrank(actor);
+    super.approveAsset('WETH', address(_uTokenV2), 1 ether);
+    _uTokenV2.withdraw(_WETH, 1 ether, actor);
+    vm.stopPrank();
+    assertEq(ScaledToken(reserve.scaledTokenAddress).balanceOf(actor), 0);
+    // DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
+    assertEq(_uTokenV2.totalSupplyNotInvested(_WETH), 0);
+    // console.log('BALANCE', balance.totalSupplyAssets);
     // assertEq(uToken.balanceOf(actor), 100000);
 
     // WITHDRAW
