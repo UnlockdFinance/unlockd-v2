@@ -96,7 +96,7 @@ library Errors {
   error UnlockdWalletNotFound();
   error InvalidWalletOwner();
   error NotEqualWallet();
-  error DelegationOwnerZeroAddress();
+  error ProtocolOwnerZeroAddress();
 
   ///////////////////////////////////////////
   ///   LOAN

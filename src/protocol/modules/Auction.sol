@@ -175,6 +175,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           signAuction.loan.aggLtv,
           reserve
         );
+        console.log('ASSET PRICE: ', signAuction.assetPrice);
+        console.log('MIN BID    : ', minBid);
 
         // Validate bid in order
         // Check if the Loan is Unhealty
@@ -286,6 +288,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       // We repay the debt at the beginning
       // The ASSET only support a % of the current debt in case of the next bids
       // we are not repaying more debt until the auction is ended.
+
       OrderLogic.repayDebt(
         OrderLogic.RepayDebtParams({
           loanId: loan.loanId,
@@ -474,7 +477,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     // we need to activate the loan and change the ownership to this new loan
     if (order.bid.loanId != 0) {
       if (protocolOwnerBuyer == address(0)) {
-        revert Errors.DelegationOwnerZeroAddress();
+        revert Errors.ProtocolOwnerZeroAddress();
       }
       // Block the asset
       IProtocolOwner(protocolOwnerBuyer).setLoanId(signAuction.assetId, loan.loanId);
@@ -483,12 +486,13 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     }
 
     // The start amount it was payed as a debt
-    uint256 amount = order.bid.amountOfDebt + order.bid.amountToPay - order.offer.startAmount;
+    uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) - order.offer.startAmount;
+
     loan.underlyingAsset.safeTransfer(order.owner, amount);
     // Remove the order
     delete _orders[orderId];
 
-    // Check the messe it's correct
+    // Check the struct passed it's correct
     if (_loans[loan.loanId].totalAssets != signAuction.loan.totalAssets + 1) {
       revert Errors.TokenAssetsMismatch();
     }

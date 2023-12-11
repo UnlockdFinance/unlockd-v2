@@ -66,16 +66,16 @@ contract MaxApyStrategy is IStrategy {
 
   // Function that invest on the this strategy
   function supply(uint256 amount_, address from_, StrategyConfig memory config) external {
-    uint256 amountNotInvested = IUToken(from_).totalSupplyNotInvested();
-    if (amountNotInvested > config.minCap) {
-      uint256 investAmount = (amountNotInvested - config.minCap).percentMul(
-        config.percentageToInvest
-      );
-      if (investAmount > MIN_AMOUNT_TO_INVEST) {
-        IERC20(config.asset).approve(config.vault, investAmount);
-        IMaxApyVault(config.vault).deposit(investAmount, from_);
-      }
-    }
+    // uint256 amountNotInvested = IUToken(from_).totalSupplyNotInvested();
+    // if (amountNotInvested > config.minCap) {
+    //   uint256 investAmount = (amountNotInvested - config.minCap).percentMul(
+    //     config.percentageToInvest
+    //   );
+    //   if (investAmount > MIN_AMOUNT_TO_INVEST) {
+    //     IERC20(config.asset).approve(config.vault, investAmount);
+    //     IMaxApyVault(config.vault).deposit(investAmount, from_);
+    //   }
+    // }
   }
 
   // Function to withdraw specific amount
@@ -85,20 +85,20 @@ contract MaxApyStrategy is IStrategy {
     address to_,
     StrategyConfig memory config
   ) external {
-    uint256 currentSupply = IUToken(from_).totalSupplyNotInvested();
-    uint256 amountToWithdraw = _getAmountToWithdraw(currentSupply, amount_);
-    if (amountToWithdraw != 0) {
-      // This logic is for recover the minCap
-      if (currentSupply < config.minCap) {
-        uint256 amountToMinCap = config.minCap - currentSupply;
-        uint256 updatedAmount = amountToWithdraw + amountToMinCap;
-        // We check if we have liquidity on this strategy
-        if (this.balanceOf(from_) > updatedAmount) {
-          amountToWithdraw = updatedAmount;
-        }
-      }
-      IMaxApyVault(config.vault).withdraw(amountToWithdraw, to_, MAX_LOSS);
-    }
+    // uint256 currentSupply = IUToken(from_).totalSupplyNotInvested();
+    // uint256 amountToWithdraw = _getAmountToWithdraw(currentSupply, amount_);
+    // if (amountToWithdraw != 0) {
+    //   // This logic is for recover the minCap
+    //   if (currentSupply < config.minCap) {
+    //     uint256 amountToMinCap = config.minCap - currentSupply;
+    //     uint256 updatedAmount = amountToWithdraw + amountToMinCap;
+    //     // We check if we have liquidity on this strategy
+    //     if (this.balanceOf(from_) > updatedAmount) {
+    //       amountToWithdraw = updatedAmount;
+    //     }
+    //   }
+    //   IMaxApyVault(config.vault).withdraw(amountToWithdraw, to_, MAX_LOSS);
+    // }
   }
 
   function _getAmountToWithdraw(

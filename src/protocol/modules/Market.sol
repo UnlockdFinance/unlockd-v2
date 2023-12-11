@@ -487,7 +487,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     if (order.bid.loanId != 0) {
       // If there is a loanId the Unlockd wallet from the bider is required
       if (protocolOwnerBuyer == address(0)) {
-        revert Errors.DelegationOwnerZeroAddress();
+        revert Errors.ProtocolOwnerZeroAddress();
       }
       // Assign the asset to a new Loan
       IProtocolOwner(protocolOwnerBuyer).setLoanId(order.offer.assetId, order.bid.loanId);
@@ -698,7 +698,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       if (amountOfDebt > 0) {
         // This path neet to be a abstract wallet
         if (delegationOwnerBuyer == address(0)) {
-          revert Errors.DelegationOwnerZeroAddress();
+          revert Errors.ProtocolOwnerZeroAddress();
         }
 
         bytes32 newLoanId = LoanLogic.generateId(msgSender, signMarket.nonce, signMarket.deadline);

@@ -8,7 +8,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 library OrderLogic {
   using SafeERC20 for IERC20;
@@ -221,6 +221,7 @@ library OrderLogic {
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256 minDebtOrDefault) {
     uint256 totalDebt = GenericLogic.calculateLoanDebt(loanId, user, reserveOracle, reserveData);
+    console.log('TOTAL DEBT', totalDebt);
     if (totalDebt < defaultAmount) return totalDebt;
 
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
@@ -228,7 +229,8 @@ library OrderLogic {
       totalDebt,
       ltv
     );
-
+    console.log('MIN AMOUNT NEED TO HF:', minAmountNeeded);
+    console.log('DEFAULT AMOUNT       :', defaultAmount);
     minDebtOrDefault = minAmountNeeded < defaultAmount ? minAmountNeeded : defaultAmount;
   }
 
@@ -304,6 +306,7 @@ library OrderLogic {
       params.aggLtv,
       reserveData
     );
+
     totalAmount = params.totalAmount;
     if (debtAmount > 0) {
       if (debtAmount > totalAmount) revert Errors.DebtExceedsAmount();
