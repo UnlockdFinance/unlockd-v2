@@ -26,7 +26,7 @@ import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using PercentageMath for uint256;
@@ -175,8 +175,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           signAuction.loan.aggLtv,
           reserve
         );
-        console.log('ASSET PRICE: ', signAuction.assetPrice);
-        console.log('MIN BID    : ', minBid);
 
         // Validate bid in order
         // Check if the Loan is Unhealty
