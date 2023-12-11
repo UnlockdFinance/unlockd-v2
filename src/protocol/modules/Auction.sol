@@ -414,6 +414,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
    * @param sig validation of this struct
    * */
   function finalize(
+    bool claimOnUWallet,
     bytes32 orderId,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
@@ -435,27 +436,30 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     // The aution need to be ended
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
 
-    // Se the address of the buyer to the EOA
+    // By default we get the EOA from the buyer
     address buyer = order.bid.buyer;
+    address protocolOwnerBuyer;
+
+    if (claimOnUWallet) {
+      (address wallet, address protocolOwner) = GenericLogic.getMainWallet(
+        _walletRegistry,
+        order.bid.buyer
+      );
+      buyer = wallet;
+      protocolOwnerBuyer = protocolOwner;
+    }
 
     // If the bidder has a loan with the new asset
     // we need to activate the loan and change the ownership to this new loan
     if (order.bid.loanId != 0) {
-      (address walletBuyer, address protocolOwnerBuyer) = GenericLogic.getMainWallet(
-        _walletRegistry,
-        buyer
-      );
-
-      // Change the address of the buyer to the UnlockdWallet
-      buyer = walletBuyer;
+      if (protocolOwnerBuyer == address(0)) {
+        revert Errors.DelegationOwnerZeroAddress();
+      }
       // Block the asset
       IProtocolOwner(protocolOwnerBuyer).setLoanId(signAuction.assetId, loan.loanId);
       // Activate the loan from the bidder
       _loans[order.bid.loanId].activate();
     }
-
-    // Get protocol owner
-    address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);
 
     // The start amount it was payed as a debt
     uint256 amount = order.bid.amountOfDebt + order.bid.amountToPay - order.offer.startAmount;
@@ -475,6 +479,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       loan.activate();
       loan.totalAssets = signAuction.loan.totalAssets;
     }
+    // Get protocol owner from owner of the asset to transfer
+    address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, order.owner);
 
     // We transfer the ownership to the new Owner
     IProtocolOwner(protocolOwner).changeOwner(
