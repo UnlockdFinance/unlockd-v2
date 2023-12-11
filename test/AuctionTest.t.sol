@@ -327,8 +327,9 @@ contract AuctionTest is Setup {
     DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
 
     uint256 minBid = Auction(_auction).getMinBidPriceAuction(
-      orderId,
-      address(_uTokens['WETH']),
+      loanId,
+      AssetLogic.assetId(_nft, 1),
+      1 ether,
       0,
       6000
     );
@@ -380,8 +381,9 @@ contract AuctionTest is Setup {
     DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
 
     uint256 minBid = Auction(_auction).getMinBidPriceAuction(
-      orderId,
-      address(_uTokens['WETH']),
+      loanId,
+      AssetLogic.assetId(_nft, 1),
+      1 ether,
       0,
       6000
     );
