@@ -64,7 +64,7 @@ contract DeployProtocolScript is DeployerHelper {
         decimals: 18,
         tokenName: 'UToken WETH',
         tokenSymbol: 'UWETH',
-        strategyAddress: address(0),
+        strategyAddress: address(0), // We don't define any strategy
         debtToken: debtToken,
         reserveFactor: 0,
         interestRate: interestRate
