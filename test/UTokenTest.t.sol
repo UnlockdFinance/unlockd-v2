@@ -23,14 +23,14 @@ contract UTokenSetup is Setup {
     vm.stopPrank();
   }
 
-  function test_basic_deposit() internal useAssetActor(ACTOR, 100000) {
+  function test_basic_deposit() external useAssetActor(ACTOR, 100000) {
     UToken uToken = getUToken('WETH');
     super.approveAsset('WETH', address(uToken), 100000);
     uToken.deposit(100000, super.getActorAddress(ACTOR), 0);
     assertEq(uToken.balanceOf(super.getActorAddress(ACTOR)), 100000);
   }
 
-  function test_basic_withdraw() internal useAssetActor(ACTOR, 100000) {
+  function test_basic_withdraw() external useAssetActor(ACTOR, 100000) {
     string memory token = 'WETH';
     address actor = super.getActorAddress(ACTOR);
     UToken uToken = super.getUToken(token);
