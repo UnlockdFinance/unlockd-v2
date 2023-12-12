@@ -101,8 +101,9 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
     // Calculate the order ID
     bytes32 orderId = OrderLogic.generateId(assetId, loanId);
+    DataTypes.Order memory order = _orders[orderId];
 
-    if (orderId == 0) {
+    if (order.owner == address(0)) {
       minBid = OrderLogic.getMinDebtOrDefault(
         loanId,
         loan.owner,
@@ -113,13 +114,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         reserve
       );
     } else {
-      minBid = OrderLogic.getMinBid(
-        _orders[orderId],
-        _reserveOracle,
-        aggLoanPrice,
-        aggLTV,
-        reserve
-      );
+      minBid = OrderLogic.getMinBid(order, _reserveOracle, aggLoanPrice, aggLTV, reserve);
     }
   }
 
