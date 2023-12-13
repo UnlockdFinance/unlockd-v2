@@ -119,13 +119,15 @@ library ReserveAssetLogic {
 
     // We calculate the current value based on the current scaled
     uint256 totalBalance = balance.totalSupplyScaledNotInvested;
-    balance.totalSupplyAssets = totalBalance.rayMul(getNormalizedIncome(reserve)).toUint128();
+    balance.totalSupplyAssets = totalBalance.rayMul(reserve.getNormalizedIncome()).toUint128();
 
     if (reserve.strategyAddress != address(0)) {
       balance.totalSupplyAssets += IStrategy(reserve.strategyAddress)
         .balanceOf(address(this))
         .toUint128();
     }
+
+    // TODO Updatear el indice que lleva
   }
 
   /**
@@ -230,45 +232,6 @@ library ReserveAssetLogic {
   }
 
   /**
-   * @notice Mints part of the repaid interest to the reserve treasury as a function of the reserve factor for the
-   * specific asset.
-   * @param reserve The reserve to be updated
-   * @param reserveCache The caching layer for the reserve data
-   */
-  //   function _accrueToTreasury(
-  //     DataTypes.ReserveDataV2 storage reserve,
-  //     DataTypes.ReserveCache memory reserveCache
-  //   ) internal {
-  //     AccrueToTreasuryLocalVars memory vars;
-
-  //     if (reserveCache.reserveFactor == 0) {
-  //       return;
-  //     }
-
-  //     //calculate the total variable debt at moment of the last interaction
-  //     vars.prevTotalVariableDebt = reserveCache.currScaledVariableDebt.rayMul(
-  //       reserveCache.currVariableBorrowIndex
-  //     );
-
-  //     //calculate the new total variable debt after accumulation of the interest on the index
-  //     vars.currTotalVariableDebt = reserveCache.currScaledVariableDebt.rayMul(
-  //       reserveCache.nextVariableBorrowIndex
-  //     );
-
-  //     //debt accrued is the sum of the current debt minus the sum of the debt at the last update
-  //     vars.totalDebtAccrued = vars.currTotalVariableDebt + vars.prevTotalVariableDebt;
-
-  //     vars.amountToMint = vars.totalDebtAccrued.percentMul(reserveCache.reserveFactor);
-
-  //     // if (vars.amountToMint != 0) {
-  //     //   reserve.accruedToTreasury += vars
-  //     //     .amountToMint
-  //     //     .rayDiv(reserveCache.nextLiquidityIndex)
-  //     //     .toUint128();
-  //     // }
-  //   }
-
-  /**
    * @notice Updates the reserve indexes and the timestamp of the update.
    */
   function _updateIndexes(
@@ -288,10 +251,6 @@ library ReserveAssetLogic {
         .toUint128();
     }
 
-    // Variable borrow index only gets updated if there is any variable debt.
-    // reserveCache.currVariableBorrowRate != 0 is not a correct validation,
-    // because a positive base variable rate can be stored on
-    // reserveCache.currVariableBorrowRate, but the index should not increase
     if (balance.totalBorrowScaled != 0) {
       uint256 cumulatedVariableBorrowInterest = MathUtils.calculateCompoundedInterest(
         reserve.currentVariableBorrowRate,
@@ -304,7 +263,40 @@ library ReserveAssetLogic {
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
+  // DEBT
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  function increaseDebt(
+    DataTypes.ReserveDataV2 storage reserve,
+    DataTypes.MarketBalance storage balances,
+    uint256 amount
+  ) internal returns (uint256) {
+    uint256 amountScaled = amount.rayDiv(reserve.variableBorrowIndex);
+    if (amountScaled == 0) {
+      revert Errors.InvalidAmount();
+    }
+    balances.totalBorrowScaled += amountScaled.toUint128();
+    // Updates general balances
+    return amountScaled;
+  }
+
+  function decreaseDebt(
+    DataTypes.ReserveDataV2 storage reserve,
+    DataTypes.MarketBalance storage balances,
+    uint256 amount
+  ) internal returns (uint256) {
+    uint256 amountScaled = amount.rayDiv(reserve.variableBorrowIndex);
+    if (amountScaled == 0) {
+      revert Errors.InvalidAmount();
+    }
+    // Updates general balances
+    balances.totalBorrowScaled -= amountScaled.toUint128();
+
+    return amountScaled;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
   // SHARES
+  /////////////////////////////////////////////////////////////////////////////////////////////////
 
   function mintScaled(
     DataTypes.ReserveDataV2 storage reserve,
@@ -338,13 +330,9 @@ library ReserveAssetLogic {
       reserve.liquidityIndex
     );
 
-    console.log('PRE SCALEND NOT INVESTED : ', balances.totalSupplyScaledNotInvested);
-
     balances.totalSupplyAssets -= amount.toUint128();
     balances.totalSupplyScaled -= scaledAmount.toUint128();
     balances.totalSupplyScaledNotInvested -= scaledAmount.toUint128();
-    console.log('WITHDRAW', scaledAmount);
-    console.log('SCALEND NOT INVESTED : ', balances.totalSupplyScaledNotInvested);
     // Transfer the amount to the user
     IERC20(reserve.underlyingAsset).safeTransfer(user, amount);
   }
@@ -411,7 +399,6 @@ library ReserveAssetLogic {
         abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
       );
 
-      console.log('WITHDRAW??', amountNeed);
       // TODO: Revisar los numeros de aqui
       balances.totalSupplyScaledNotInvested += amountNeed
         .rayDiv(reserve.liquidityIndex)

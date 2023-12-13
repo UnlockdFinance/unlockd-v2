@@ -12,7 +12,8 @@
     "lint:fix": "npm run lint -- --write",
     "format": "forge fmt && prettier --write \"src/**/*.+(js|ts|json|yaml|sol)\" \"test/**/*.+(js|ts|json|yaml|sol)\"",
     "fork:create": "ts-node _helpers/fork_create.ts",
-    "fork:destroy": "ts-node _helpers/fork_destroy.ts"
+    "fork:destroy": "ts-node _helpers/fork_destroy.ts",
+    "coverage": "node .coverage/run_coverage.js"
   },
   "repository": {
     "type": "git",

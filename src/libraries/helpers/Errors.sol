@@ -75,13 +75,19 @@ library Errors {
   error NotEqualSender();
 
   error ProtocolAccessDenied();
-  error UTokenAccessDenied();
+
   error GovernanceAccessDenied();
   error EmergencyAccessDenied();
   error RoleAccessDenied();
   error MarketPriceNotCoverDebt();
   error LoanNotUpdated();
   error LoanBlocked();
+  ///////////////////////////////////////////
+  ///   UTOKEN
+  ///////////////////////////////////////////
+  error UnderlyingMarketNotExist();
+  error UnderlyingMarketAlreadyExist();
+  error UTokenAccessDenied();
   ///////////////////////////////////////////
   ///   ROUTER
   ///////////////////////////////////////////

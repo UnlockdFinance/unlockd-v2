@@ -14,12 +14,11 @@ library DataTypes {
     uint128 totalSupplyAssets;
     uint128 totalSupplyScaled;
     // Total supply borrowed
-    uint128 totalBorrowAssets;
     uint128 totalBorrowScaled;
+   
       // last update
     uint40 lastUpdateTimestamp;
   }
-
 
   struct ReserveDataV2 {
     //the liquidity index. Expressed in ray
