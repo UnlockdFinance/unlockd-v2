@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {DataTypes} from '../../types/DataTypes.sol';
 import {GenericLogic} from './GenericLogic.sol';
+import {Constants} from '../helpers/Constants.sol';
 
 library LoanLogic {
   event LoanCreated(address indexed user, bytes32 indexed loanId, uint256 totalAssets);
@@ -43,7 +44,7 @@ library LoanLogic {
       loan.underlyingAsset = params.underlyingAsset;
       loan.totalAssets = params.totalAssets;
 
-      loan.state = DataTypes.LoanState.ACTIVE;
+      loan.state = Constants.LoanState.ACTIVE;
     }
     emit LoanCreated(params.msgSender, loan.loanId, params.totalAssets);
   }
@@ -52,21 +53,21 @@ library LoanLogic {
    * @dev Freeze loan
    */
   function freeze(DataTypes.Loan storage loan) internal {
-    loan.state = DataTypes.LoanState.FREEZE;
+    loan.state = Constants.LoanState.FREEZE;
   }
 
   /**
    * @dev Activate loan
    */
   function activate(DataTypes.Loan storage loan) internal {
-    loan.state = DataTypes.LoanState.ACTIVE;
+    loan.state = Constants.LoanState.ACTIVE;
   }
 
   /**
    * @dev Block loan
    */
   function blocked(DataTypes.Loan storage loan) internal {
-    loan.state = DataTypes.LoanState.BLOCKED;
+    loan.state = Constants.LoanState.BLOCKED;
   }
 
   /**

@@ -58,20 +58,20 @@ contract LoanLogicTest is Base {
     assertEq(loan.owner, makeAddr('filipe'));
     assertEq(loan.underlyingAsset, makeAddr('asset'));
     assertEq(loan.totalAssets, 10);
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
   }
 
   function test_loanLogic_freeze() public {
     test_loanLogic_createLoan_new();
     LoanLogic.freeze(loan);
 
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.FREEZE));
   }
 
   function test_loanLogic_activate() public {
     test_loanLogic_createLoan_new();
     LoanLogic.activate(loan);
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
   }
 
   function test_loanLogic_getLoanStructHash() public {

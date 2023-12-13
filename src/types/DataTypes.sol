@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {Constants} from '../libraries/helpers/Constants.sol';
+
+
 library DataTypes {
 
   ///////////////////////////////////////////////////////
@@ -29,6 +32,8 @@ library DataTypes {
     uint128 currentLiquidityRate;
     //the current variable borrow rate. Expressed in ray
     uint128 currentVariableBorrowRate;
+    // Asset type
+    Constants.AssetType assetType;
     // Reserve factor
     uint16 reserveFactor;
     // address asset
@@ -115,16 +120,6 @@ library DataTypes {
   // ORDER 
   ///////////////////////////////////////////////////////
 
-  enum OrderType {
-    TYPE_LIQUIDATION_AUCTION,
-    //Auction with BIDs
-    TYPE_AUCTION,
-    // Fixed price only buynow function
-    TYPE_FIXED_PRICE,
-    // Fixed price and auction with bids
-    TYPE_FIXED_PRICE_AND_AUCTION
-  }
-
   struct OfferItem {
     // Slot 0
     bytes32 loanId;
@@ -158,7 +153,7 @@ library DataTypes {
     bytes32 orderId;
     // Slot 1
     address owner;
-    OrderType orderType;
+    Constants.OrderType orderType;
     uint88 countBids;
     // Slot 2
     OfferItem offer;
@@ -178,18 +173,13 @@ library DataTypes {
     // Slot 1
     address uToken;
     uint88 totalAssets;
-    LoanState state;
+    Constants.LoanState state;
     // Slot 2
     address underlyingAsset;
     // Slot 3
     address owner;
   }
 
-  enum LoanState {
-    BLOCKED,
-    ACTIVE,
-    FREEZE
-  }
 
   ///////////////////////////////////////////////////////
   // Asset

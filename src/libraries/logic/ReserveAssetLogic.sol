@@ -13,7 +13,7 @@ import {MathUtils} from '../math/MathUtils.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../../types/DataTypes.sol';
+import {DataTypes, Constants} from '../../types/DataTypes.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {ScaledToken} from '../../tokens/ScaledToken.sol';
 
@@ -158,6 +158,7 @@ library ReserveAssetLogic {
   function init(
     DataTypes.ReserveDataV2 storage reserve,
     address underlyingAsset,
+    Constants.AssetType assetType,
     address scaledTokenAddress,
     address interestRateAddress,
     address strategyAddress,
@@ -170,6 +171,7 @@ library ReserveAssetLogic {
     reserve.interestRateAddress = interestRateAddress;
     reserve.strategyAddress = strategyAddress;
     reserve.underlyingAsset = underlyingAsset;
+    reserve.assetType = assetType;
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
   }
 

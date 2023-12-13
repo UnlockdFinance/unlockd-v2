@@ -11,6 +11,7 @@ import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol'
 import {MarketSign} from '../../libraries/signatures/MarketSign.sol';
 import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
 
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 import {OrderLogic} from '../../libraries/logic/OrderLogic.sol';
@@ -106,7 +107,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    */
   function create(
     address uToken,
-    DataTypes.OrderType orderType,
+    Constants.OrderType orderType,
     CreateOrderInput calldata config,
     DataTypes.SignMarket calldata signMarket,
     DataTypes.EIP712Signature calldata sig
@@ -223,14 +224,14 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // Cache Order data
     DataTypes.Order storage order = _orders[orderId];
     address orderOwner = order.owner;
-    DataTypes.OrderType orderType = order.orderType;
+    Constants.OrderType orderType = order.orderType;
     uint40 orderTimeframeEndtime = order.timeframe.endTime;
     DataTypes.Bid memory bid = order.bid;
 
     // Cache Loan data
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
     address loanUToken = loan.uToken;
-    DataTypes.LoanState loanState = loan.state;
+    Constants.LoanState loanState = loan.state;
 
     ValidationLogic.validateCancelOrderMarket(
       msgSender,
@@ -294,7 +295,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     if (signMarket.loan.totalAssets == loan.totalAssets) {
       revert Errors.LoanNotUpdated();
     }
-    DataTypes.LoanState loanState = loan.state;
+    Constants.LoanState loanState = loan.state;
     ValidationLogic.validateOrderBid(
       order.orderType,
       order.timeframe.endTime,
@@ -421,7 +422,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       // Avoid stack too deep
       uint88 loanTotalAssets = loan.totalAssets;
-      DataTypes.LoanState loanState = loan.state;
+      Constants.LoanState loanState = loan.state;
       // Validate if the order is ended
       ValidationLogic.validateOrderClaim(
         signMarket.loan.totalAssets,
@@ -553,7 +554,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       // Avoid stack too deep
       uint88 loanTotalAssets = loan.totalAssets;
-      DataTypes.LoanState loanState = loan.state;
+      Constants.LoanState loanState = loan.state;
       // Validate if the order is ended
       ValidationLogic.validateOrderClaim(
         signMarket.loan.totalAssets,
@@ -648,7 +649,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       // Avoid stack too deep
       uint88 loanTotalAssets = loan.totalAssets;
-      DataTypes.LoanState loanState = loan.state;
+      Constants.LoanState loanState = loan.state;
 
       ValidationLogic.validateBuyNow(
         signMarket.loan.totalAssets,

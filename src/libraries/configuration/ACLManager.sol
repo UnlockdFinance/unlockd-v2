@@ -14,8 +14,8 @@ contract ACLManager is AccessControl, IACLManager {
   // @dev address of the PROTOCOL
   address public UNLOCK_PROTOCOL;
 
-  // @dev address of the UNLOCKTOKEN
-  address public UTOKEN;
+  // @dev address of the UTOKEN_FACTORY
+  address public UTOKEN_FACTORY;
 
   // @dev utoken admin in charge of updating the utoken
   bytes32 public constant override UTOKEN_ADMIN = keccak256('UTOKEN_ADMIN');

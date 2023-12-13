@@ -25,6 +25,7 @@ import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
 
 import {console} from 'forge-std/console.sol';
 
@@ -172,7 +173,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // Creation of the Order
         order.createOrder(
           OrderLogic.ParamsCreateOrder({
-            orderType: DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION,
+            orderType: Constants.OrderType.TYPE_LIQUIDATION_AUCTION,
             orderId: orderId,
             owner: loan.owner,
             loanId: signAuction.loan.loanId,
@@ -197,7 +198,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         );
 
         // If the auction is in market, we migrate this type of auction to liquidation
-        if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+        if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
           ValidationLogic.validateFutureUnhealtyLoanState(
             ValidationLogic.ValidateLoanStateParams({
               user: order.owner,
@@ -343,7 +344,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
     _validateSignature(msgSender, signAuction, sig);
     DataTypes.Order memory order = _orders[orderId];
-    if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
     if (order.owner != msgSender) {
@@ -424,7 +425,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     DataTypes.Order memory order = _orders[orderId];
 
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-    if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
 

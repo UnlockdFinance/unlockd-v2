@@ -39,7 +39,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.ParamsCreateOrder({
         orderId: 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f,
         owner: makeAddr('filipe'),
-        orderType: DataTypes.OrderType.TYPE_AUCTION,
+        orderType: Constants.OrderType.TYPE_AUCTION,
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
         startAmount: 0,
@@ -49,12 +49,12 @@ contract OrderLogicTest is Setup {
         endTime: uint40(block.timestamp)
       })
     );
-    assertEq(uint(order.orderType), uint(DataTypes.OrderType.TYPE_AUCTION));
+    assertEq(uint(order.orderType), uint(Constants.OrderType.TYPE_AUCTION));
   }
 
   function test_orderLogic_updateToLiquidationOrder() public {
     test_orderLogic_createOrder_new();
-    assertEq(uint(order.orderType), uint(DataTypes.OrderType.TYPE_AUCTION));
+    assertEq(uint(order.orderType), uint(Constants.OrderType.TYPE_AUCTION));
     OrderLogic.updateToLiquidationOrder(
       order,
       OrderLogic.ParamsUpdateOrder({
@@ -65,7 +65,7 @@ contract OrderLogicTest is Setup {
       })
     );
 
-    assertEq(uint(order.orderType), uint(DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION));
+    assertEq(uint(order.orderType), uint(Constants.OrderType.TYPE_LIQUIDATION_AUCTION));
   }
 
   function test_orderLogic_borrowByBidder() public {

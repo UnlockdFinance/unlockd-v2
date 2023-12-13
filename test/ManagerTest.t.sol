@@ -11,7 +11,7 @@ import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.so
 
 import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
 import {Manager} from '../src/protocol/modules/Manager.sol';
-import {DataTypes} from '../src/types/DataTypes.sol';
+import {DataTypes, Constants} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 import './test-utils/mock/asset/MintableERC20.sol';
 
@@ -272,14 +272,14 @@ contract AuctionTest is Setup {
     vm.stopPrank();
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loanUpdated.state), uint(Constants.LoanState.FREEZE));
   }
 
   function test_emergencyFreezeLoan_error() external {
@@ -301,7 +301,7 @@ contract AuctionTest is Setup {
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loanUpdated.state), uint(Constants.LoanState.FREEZE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyActivateLoan(loanId);
@@ -309,7 +309,7 @@ contract AuctionTest is Setup {
 
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
   }
 
   function test_emergencyActivateLoan_error() external {
@@ -331,7 +331,7 @@ contract AuctionTest is Setup {
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loanUpdated.state), uint(Constants.LoanState.FREEZE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyBlockLoan(loanId);
@@ -339,6 +339,6 @@ contract AuctionTest is Setup {
 
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.BLOCKED));
+    assertEq(uint(loan.state), uint(Constants.LoanState.BLOCKED));
   }
 }

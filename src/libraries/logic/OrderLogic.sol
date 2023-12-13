@@ -7,6 +7,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
+import {Constants} from '../helpers/Constants.sol';
 
 // import {console} from 'forge-std/console.sol';
 
@@ -18,11 +19,11 @@ library OrderLogic {
     address indexed owner,
     bytes32 indexed orderId,
     bytes32 indexed loanId,
-    DataTypes.OrderType orderType
+    Constants.OrderType orderType
   );
 
   struct ParamsCreateOrder {
-    DataTypes.OrderType orderType;
+    Constants.OrderType orderType;
     address owner;
     bytes32 orderId;
     bytes32 loanId;
@@ -75,7 +76,7 @@ library OrderLogic {
     ParamsUpdateOrder memory params
   ) internal {
     // Check if the Loan is Unhealty
-    order.orderType = DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION;
+    order.orderType = Constants.OrderType.TYPE_LIQUIDATION_AUCTION;
     // Overwrite offer
     order.offer = DataTypes.OfferItem({
       loanId: params.loanId,

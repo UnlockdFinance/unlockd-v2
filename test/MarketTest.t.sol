@@ -12,7 +12,7 @@ import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
 import {Market, MarketSign, IMarketModule} from '../src/protocol/modules/Market.sol';
 import {Manager} from '../src/protocol/modules/Manager.sol';
 
-import {DataTypes} from '../src/types/DataTypes.sol';
+import {DataTypes, Constants} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 import './test-utils/mock/asset/MintableERC20.sol';
 
@@ -271,7 +271,7 @@ contract MarketTest is Setup {
     // vm.recordLogs();
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_AUCTION,
+      Constants.OrderType.TYPE_AUCTION,
       config,
       signMarket,
       sig
@@ -310,7 +310,7 @@ contract MarketTest is Setup {
 
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_AUCTION,
+      Constants.OrderType.TYPE_AUCTION,
       config,
       signMarket,
       sig
@@ -348,7 +348,7 @@ contract MarketTest is Setup {
 
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_FIXED_PRICE,
+      Constants.OrderType.TYPE_FIXED_PRICE,
       config,
       signMarket,
       sig
@@ -386,7 +386,7 @@ contract MarketTest is Setup {
 
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION,
+      Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION,
       config,
       signMarket,
       sig
@@ -418,7 +418,7 @@ contract MarketTest is Setup {
     vm.expectRevert(Errors.OrderNotAllowed.selector);
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION,
+      Constants.OrderType.TYPE_LIQUIDATION_AUCTION,
       config,
       signMarket,
       sig
@@ -457,7 +457,7 @@ contract MarketTest is Setup {
     vm.expectRevert(Errors.UTokenNotAllowed.selector);
     Market(_market).create(
       address(0x0001),
-      DataTypes.OrderType.TYPE_AUCTION,
+      Constants.OrderType.TYPE_AUCTION,
       config,
       signMarket,
       sig
@@ -496,7 +496,7 @@ contract MarketTest is Setup {
 
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_AUCTION,
+      Constants.OrderType.TYPE_AUCTION,
       config,
       signMarket,
       sig
@@ -534,7 +534,7 @@ contract MarketTest is Setup {
     });
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_AUCTION,
+      Constants.OrderType.TYPE_AUCTION,
       config,
       signMarket,
       sig

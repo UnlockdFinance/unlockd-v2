@@ -22,6 +22,8 @@ import {ISellNowModule} from '../../interfaces/modules/ISellNowModule.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
+
 import {DataTypes} from '../../types/DataTypes.sol';
 
 contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
@@ -174,7 +176,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
       uToken = loan.uToken;
       // The loan need to be active
-      if (loan.state != DataTypes.LoanState.ACTIVE) {
+      if (loan.state != Constants.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
       IUToken(loan.uToken).updateStateReserve();

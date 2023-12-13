@@ -27,4 +27,39 @@ library Constants {
   uint256 internal constant MODULEID__MARKET = 5;
   uint256 internal constant MODULEID__BUYNOW = 6;
   uint256 internal constant MODULEID__SELLNOW = 7;
+
+  ////////////////////////////////////////////
+  // LOAN STATE
+  ////////////////////////////////////////////
+
+  enum LoanState {
+    BLOCKED,
+    ACTIVE,
+    FREEZE
+  }
+
+  ////////////////////////////////////////////
+  // GRUP ASSETS TYPE
+  ////////////////////////////////////////////
+
+  enum AssetType {
+    ALL, // All the assets with the exception SPECIAL
+    STABLES, // For the stable coins
+    COMMON, // Common coins WETH etc ...
+    SPECIAL // Only if the collection is also isolated to one asset token
+  }
+
+  ////////////////////////////////////////////
+  // ORDER TYPE
+  ////////////////////////////////////////////
+
+  enum OrderType {
+    TYPE_LIQUIDATION_AUCTION,
+    //Auction with BIDs
+    TYPE_AUCTION,
+    // Fixed price only buynow function
+    TYPE_FIXED_PRICE,
+    // Fixed price and auction with bids
+    TYPE_FIXED_PRICE_AND_AUCTION
+  }
 }

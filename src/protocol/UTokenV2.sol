@@ -14,6 +14,8 @@ import {UTokenStorage} from '../libraries/storage/UTokenStorage.sol';
 import {ScaledToken} from '../tokens/ScaledToken.sol';
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
+import {Constants} from '../libraries/helpers/Constants.sol';
+
 import {console} from 'forge-std/console.sol';
 
 contract UTokenV2 {
@@ -43,6 +45,7 @@ contract UTokenV2 {
   function createMarket(
     DataTypes.CreateMarketParams calldata params,
     address underlyingAsset,
+    Constants.AssetType assetType,
     uint8 decimals,
     string calldata tokenName,
     string calldata tokenSymbol
@@ -54,6 +57,7 @@ contract UTokenV2 {
     // Create Reserve Asset
     reserves[underlyingAsset].init(
       underlyingAsset,
+      assetType,
       _sharesToken(decimals, tokenName, tokenSymbol),
       params.interestRateAddress,
       params.strategyAddress,

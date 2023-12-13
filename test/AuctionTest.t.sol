@@ -14,7 +14,7 @@ import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
 import {Manager} from '../src/protocol/modules/Manager.sol';
 import {Auction, AuctionSign, IAuctionModule} from '../src/protocol/modules/Auction.sol';
 import {Market, MarketSign, IMarketModule} from '../src/protocol/modules/Market.sol';
-import {DataTypes} from '../src/types/DataTypes.sol';
+import {DataTypes, Constants} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 import './test-utils/mock/asset/MintableERC20.sol';
 
@@ -81,7 +81,7 @@ contract AuctionTest is Setup {
 
     Market(_market).create(
       address(_uTokens['WETH']),
-      DataTypes.OrderType.TYPE_AUCTION,
+      Constants.OrderType.TYPE_AUCTION,
       config,
       signMarket,
       sig
@@ -562,7 +562,7 @@ contract AuctionTest is Setup {
       Auction(_auction).finalize(orderId, signAuction, sig);
 
       DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
-      assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+      assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
     }
   }
 

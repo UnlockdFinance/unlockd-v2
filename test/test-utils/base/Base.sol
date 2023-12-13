@@ -8,7 +8,7 @@ import {ReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
 import {UToken} from '../../../src/protocol/UToken.sol';
 import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
-import {DataTypes} from '../../../src/types/DataTypes.sol';
+import {DataTypes, Constants} from '../../../src/types/DataTypes.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 import '../config/Config.sol';
 

@@ -18,6 +18,7 @@ import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
 
 contract Action is BaseCoreModule, ActionSign, IActionModule {
   using LoanLogic for DataTypes.Loan;
@@ -164,7 +165,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         })
       );
 
-      if (loan.state != DataTypes.LoanState.ACTIVE) {
+      if (loan.state != Constants.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
       // We have to update the index BEFORE obtaining the borrowed amount.
@@ -234,7 +235,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         })
       );
 
-      if (loan.state != DataTypes.LoanState.ACTIVE) {
+      if (loan.state != Constants.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
 

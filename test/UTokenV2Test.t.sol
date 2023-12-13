@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {console} from 'forge-std/console.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 import './test-utils/setups/Setup.sol';
 
 import {UTokenV2, DataTypes} from '../src/protocol/UTokenV2.sol';
-
 import {InterestRateV2} from '../src/libraries/base/InterestRateV2.sol';
 import {ScaledToken} from '../src/tokens/ScaledToken.sol';
 
 import '../src/interfaces/tokens/IUToken.sol';
-
 import {console} from 'forge-std/console.sol';
 
 contract UTokenV2Test is Setup {
@@ -43,6 +40,7 @@ contract UTokenV2Test is Setup {
         reserveFactor: 0
       }),
       _WETH,
+      Constants.AssetType.COMMON,
       18,
       string(abi.encodePacked('UToken ', 'WETH')),
       string(abi.encodePacked('U', 'WETH'))
@@ -78,7 +76,7 @@ contract UTokenV2Test is Setup {
     super.approveAsset('WETH', address(_uTokenV2), 1 ether);
     _uTokenV2.supply(_WETH, 1 ether, actor);
     vm.stopPrank();
-    
+
     assertEq(_uTokenV2.totalSupplyNotInvested(_WETH), 1 ether);
     // Get DATA
     DataTypes.ReserveDataV2 memory reserve = _uTokenV2.getReserveData(_WETH);

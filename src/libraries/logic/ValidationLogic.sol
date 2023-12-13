@@ -8,7 +8,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IAllowedControllers} from '@unlockd-wallet/src/interfaces/IAllowedControllers.sol';
-
+import {Constants} from '../helpers/Constants.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
@@ -183,19 +183,19 @@ library ValidationLogic {
   ///////////////////////////////////////////////////////
 
   function validateOrderBid(
-    DataTypes.OrderType orderType,
+    Constants.OrderType orderType,
     uint40 orderTimeframeEndtime,
     uint256 totalAssets,
     uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    Constants.LoanState loanState
   ) internal view {
     if (
-      orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
-      orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION
+      orderType == Constants.OrderType.TYPE_FIXED_PRICE ||
+      orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION
     ) {
       revert Errors.OrderNotAllowed();
     }
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
     // Check if the starting time is not in the past
@@ -209,20 +209,20 @@ library ValidationLogic {
     uint256 totalAssets,
     DataTypes.Order memory order,
     uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    Constants.LoanState loanState
   ) internal view {
     if (
-      order.orderType == DataTypes.OrderType.TYPE_AUCTION ||
-      order.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION
+      order.orderType == Constants.OrderType.TYPE_AUCTION ||
+      order.orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION
     ) {
       revert Errors.OrderNotAllowed();
     }
     if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
-    if (order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
+    if (order.orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
       // Check time only for typefixed price
       Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
     }
@@ -232,11 +232,11 @@ library ValidationLogic {
     uint256 totalAssets,
     DataTypes.Order memory order,
     uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    Constants.LoanState loanState
   ) internal view {
     if (
-      order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
-      order.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION
+      order.orderType == Constants.OrderType.TYPE_FIXED_PRICE ||
+      order.orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION
     ) {
       revert Errors.OrderNotAllowed();
     }
@@ -245,34 +245,34 @@ library ValidationLogic {
 
     // Check if is auction over
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
     if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
   }
 
   struct ValidateCreateOrderMarketParams {
-    DataTypes.OrderType orderType;
+    Constants.OrderType orderType;
+    Constants.LoanState loanState;
     uint256 endAmount;
     uint256 startAmount;
     uint256 endTime;
     uint256 startTime;
     uint256 debtToSell;
     uint256 currentTimestamp;
-    DataTypes.LoanState loanState;
   }
 
   function validateCreateOrderMarket(ValidateCreateOrderMarketParams memory params) internal pure {
-    if (params.loanState != DataTypes.LoanState.ACTIVE) {
+    if (params.loanState != Constants.LoanState.ACTIVE) {
       revert Errors.LoanNotActive();
     }
     // Check order not liquidation
-    if (params.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+    if (params.orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
     if (
-      params.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
-      params.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
+      params.orderType == Constants.OrderType.TYPE_FIXED_PRICE ||
+      params.orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
     ) {
       if (params.endAmount == 0) {
         revert Errors.InvalidEndAmount();
@@ -286,8 +286,8 @@ library ValidationLogic {
     }
 
     if (
-      params.orderType == DataTypes.OrderType.TYPE_AUCTION ||
-      params.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
+      params.orderType == Constants.OrderType.TYPE_AUCTION ||
+      params.orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
     ) {
       if (params.startTime == 0) {
         revert Errors.InvalidEndTime();
@@ -308,9 +308,9 @@ library ValidationLogic {
 
   function validateCancelOrderMarket(
     address msgSender,
-    DataTypes.LoanState loanState,
+    Constants.LoanState loanState,
     address orderOwner,
-    DataTypes.OrderType orderType,
+    Constants.OrderType orderType,
     uint40 orderTimeframeEndTime
   ) internal view {
     // Only ORDER OWNER
@@ -318,13 +318,13 @@ library ValidationLogic {
       revert Errors.NotEqualOrderOwner();
     }
 
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
 
     if (
-      orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION ||
-      orderType == DataTypes.OrderType.TYPE_AUCTION
+      orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION ||
+      orderType == Constants.OrderType.TYPE_AUCTION
     ) {
       // Check time only for typefixed price
       Errors.verifyNotExpiredTimestamp(orderTimeframeEndTime, block.timestamp);
@@ -343,7 +343,7 @@ library ValidationLogic {
     DataTypes.Loan memory loan
   ) internal view {
     if (loan.totalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
-    if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION)
+    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION)
       revert Errors.OrderNotAllowed();
 
     Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
