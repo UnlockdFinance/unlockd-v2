@@ -43,7 +43,8 @@ async function runCoverage() {
   try {
     // Rename .sol files to .txt
     await renameFiles('.sol', '.txt');
-
+    
+    console.log('RUNNING ...');
     // Run coverage command
     await executeCommand(
       'forge coverage --ir-minimum --report lcov && node .coverage/filter_lcov.js && genhtml lcov_filtered.info --output-directory report && open report/index.html'
