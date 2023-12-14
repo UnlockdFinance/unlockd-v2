@@ -49,19 +49,16 @@ contract UTokenV2Test is Setup {
 
   function test_basic_supply() public {
     address actor = getActorWithFunds(ACTOR, 'WETH', 10 ether);
-    // DataTypes.MarketBalance memory prevBalance = _uTokenV2.getBalance(_WETH);
-    // console.log('BALANCE', prevBalance.totalSupplyAssets);
     // DEPOSIT
     vm.startPrank(actor);
     super.approveAsset('WETH', address(_uTokenV2), 2 ether);
     _uTokenV2.supply(_WETH, 1 ether, actor);
     vm.stopPrank();
     // Get DATA
-    // DataTypes.ReserveDataV2 memory reserve = _uTokenV2.getReserveData(_WETH);
-    // DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
+    DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
 
     // console.log('BALANCE', balance.totalSupplyAssets);
-    // assertEq(uToken.balanceOf(actor), 100000);
+    // assertEq(_uTokenV2.balanceOf(actor), 100000);
 
     // WITHDRAW
   }
