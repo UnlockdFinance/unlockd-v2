@@ -167,7 +167,7 @@ library OrderLogic {
 
           That's why we calculate the total amount of debt that the user is capable of repaying. 
         **/
-        uint256 supportedDebt = MathUtils.minOf(currentDebt, totalAmount);;
+        uint256 supportedDebt = MathUtils.minOf(currentDebt, totalAmount);
         // We remove the current debt
         totalAmount = totalAmount - supportedDebt;
 
@@ -208,7 +208,7 @@ library OrderLogic {
       ltv
     );
 
-    maxDebtOrDefault =  MathUtils.maxOf(minAmountNeeded, defaultAmount);
+    maxDebtOrDefault = MathUtils.maxOf(minAmountNeeded, defaultAmount);
   }
 
   function getMinDebtOrDefault(
@@ -228,7 +228,7 @@ library OrderLogic {
       totalDebt,
       ltv
     );
-    minDebtOrDefault = MathUtils.minOf( minAmountNeeded , defaultAmount );
+    minDebtOrDefault = MathUtils.minOf(minAmountNeeded, defaultAmount);
   }
 
   /**
