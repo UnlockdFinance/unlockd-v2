@@ -70,9 +70,14 @@ contract MaxApyStrategy is IStrategy {
   }
 
   // Function that invest on the this strategy
-  function supply(address vault_, address asset_, address from_, uint256 amount_) external {
+  function supply(
+    address vault_,
+    address asset_,
+    address from_,
+    uint256 amount_
+  ) external returns (uint256) {
     IERC20(asset_).approve(vault_, amount_);
-    IMaxApyVault(vault_).deposit(amount_, from_);
+    return IMaxApyVault(vault_).deposit(amount_, from_);
   }
 
   function calculateAmountToWithdraw(
@@ -94,8 +99,8 @@ contract MaxApyStrategy is IStrategy {
   }
 
   // Function to withdraw specific amount
-  function withdraw(address vault_, address to_, uint256 amount_) external {
-    IMaxApyVault(vault_).withdraw(amount_, to_, MAX_LOSS);
+  function withdraw(address vault_, address to_, uint256 amount_) external returns (uint256) {
+    return IMaxApyVault(vault_).withdraw(amount_, to_, MAX_LOSS);
   }
 
   function _getAmountToWithdraw(

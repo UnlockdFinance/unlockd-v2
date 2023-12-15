@@ -29,7 +29,12 @@ interface IStrategy {
   ) external returns (uint256);
 
   // Function that invest on the this strategy
-  function supply(address vault_, address asset_, address from_, uint256 amount_) external;
+  function supply(
+    address vault_,
+    address asset_,
+    address from_,
+    uint256 amount_
+  ) external returns (uint256);
 
   function calculateAmountToWithdraw(
     uint256 totalSupplyNotInvested_,
@@ -38,5 +43,5 @@ interface IStrategy {
   ) external view returns (uint256);
 
   // Function to withdraw specific amount
-  function withdraw(address vault_, address to_, uint256 amount_) external;
+  function withdraw(address vault_, address to_, uint256 amount_) external returns (uint256);
 }

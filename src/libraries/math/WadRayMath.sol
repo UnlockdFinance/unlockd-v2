@@ -4,10 +4,10 @@ pragma solidity ^0.8.19;
 library WadRayMath {
   // HALF_WAD and HALF_RAY expressed with extended notation as constant with operations are not supported in Yul assembly
   uint256 internal constant WAD = 1e18;
-  uint256 internal constant HALF_WAD = 0.5e18;
+  uint256 internal constant HALF_WAD = 0.5e18; // 18
 
   uint256 internal constant RAY = 1e27;
-  uint256 internal constant HALF_RAY = 0.5e27;
+  uint256 internal constant HALF_RAY = 0.5e27; // A Ray is a unit with 27 decimals of precision.
 
   uint256 internal constant WAD_RAY_RATIO = 1e9;
 

@@ -97,11 +97,12 @@ contract UTokenV2 {
     DataTypes.ReserveDataV2 storage reserve = reserves[underlyingAsset];
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
+    // Check if we have enought to withdraw
+    reserve.strategyWithdraw(balance, amount);
+
     reserve.updateState(balance);
 
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
-    // Check if we have enought to withdraw
-    reserve.strategyWithdraw(balance, amount);
 
     // Burn scaled tokens
     reserve.burnScaled(balance, onBehalf, amount);
@@ -129,10 +130,10 @@ contract UTokenV2 {
     if (amount > availableLiquidity) {
       revert Errors.NotEnoughLiquidity();
     }
-
-    reserve.updateState(balance);
     // Check if we have enought to withdraw
     reserve.strategyWithdraw(balance, amount);
+
+    reserve.updateState(balance);
 
     uint256 scaledAmount = reserve.increaseDebt(balance, amount);
 
@@ -178,9 +179,11 @@ contract UTokenV2 {
   // Recalculate Index
   /////////////////////////////////////////////////////////
   /***
+
   -- WARNING -- 
-  This function is exclusively invoked by the pool manager to recalculate the index when using strategies that may result in losses from the pool.
-  To prevent the need for a balanceOf operation, this function is executed periodically, typically every 'x' interval, to rectify the calculations and maintain stability.
+    This function is exclusively invoked by the pool manager to recalculate the index when using strategies that may result in losses from the pool.
+    To prevent the need for a balanceOf operation, this function is executed periodically, typically every 'x' interval, to rectify the calculations and maintain stability.
+
   ***/
   // TODO: Review this part I don't know if this works
   function recalculateIndex(address underlyingAsset) external {

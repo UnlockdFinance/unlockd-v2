@@ -115,8 +115,6 @@ library ReserveAssetLogic {
     DataTypes.ReserveDataV2 storage reserve,
     DataTypes.MarketBalance storage balance
   ) internal {
-    // TODO: Revisar estos calculos.
-
     // We calculate the current value based on the current scaled
     uint256 totalBalance = balance.totalSupplyScaledNotInvested;
     balance.totalSupplyAssets = totalBalance.rayMul(reserve.getNormalizedIncome()).toUint128();
@@ -126,8 +124,6 @@ library ReserveAssetLogic {
         .balanceOf(address(this))
         .toUint128();
     }
-
-    // TODO Updatear el indice que lleva
   }
 
   /**
@@ -397,12 +393,14 @@ library ReserveAssetLogic {
 
     if (amountNeed > 0) {
       IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
-      reserve.strategyAddress.functionDelegateCall(
+      bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
       );
 
-      // TODO: Revisar los numeros de aqui
-      balances.totalSupplyScaledNotInvested += amountNeed
+      // Because of the slippage we need to ensure the exact withdraw
+      uint256 amountWithdrawed = abi.decode(returnData, (uint256));
+
+      balances.totalSupplyScaledNotInvested += amountWithdrawed
         .rayDiv(reserve.liquidityIndex)
         .toUint128();
     }
