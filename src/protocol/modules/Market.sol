@@ -29,7 +29,7 @@ import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 contract Market is BaseCoreModule, IMarketModule, MarketSign {
   using SafeERC20 for IERC20;
@@ -730,7 +730,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
     // Cancel debt from old bidder and refund
     {
-      if (order.bid.buyer != address(0)) {
+      if (order.countBids > 0) {
         // We assuming that the ltv is enought to cover the growing interest of this bid
         OrderLogic.refundBidder(
           OrderLogic.RefundBidderParams({
@@ -752,6 +752,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         }
       }
     }
+
     // Calculated the percentage desired by the user to repay
     totalAmount = OrderLogic.repayDebtToSell(
       order,

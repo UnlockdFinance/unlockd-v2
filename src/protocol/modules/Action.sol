@@ -202,7 +202,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     }
 
     DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
-
+    IUToken(loan.uToken).updateStateReserve();
     address reserveOracle = _reserveOracle;
 
     if (amount != 0) {
@@ -214,7 +214,6 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         reserve
       );
 
-      IUToken(loan.uToken).updateStateReserve();
       IUToken(loan.uToken).repayOnBelhalf(loan.loanId, amount, msgSender, msgSender);
     }
 

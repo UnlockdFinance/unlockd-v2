@@ -21,7 +21,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title ValidationLogic library
@@ -348,6 +348,6 @@ library ValidationLogic {
 
     Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
     if (totalAmount == 0) revert Errors.InvalidTotalAmount();
-    if (totalAmount < minBid) revert Errors.InvalidParams();
+    if (totalAmount < minBid) revert Errors.InvalidBidAmount();
   }
 }

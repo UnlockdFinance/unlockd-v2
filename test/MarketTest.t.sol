@@ -27,6 +27,7 @@ contract MarketTest is Setup {
   address internal _nft;
   address internal _market;
   address internal _action;
+
   address internal _manager;
   uint256 internal deadlineIncrement;
 
@@ -67,26 +68,7 @@ contract MarketTest is Setup {
     // console.log('SUPPLY: ', MintableERC20(_nft).totalSupply());
   }
 
-  function _generate_assets(
-    uint256 startCounter,
-    uint256 totalArray
-  ) internal view returns (bytes32[] memory, DataTypes.Asset[] memory) {
-    // Asesets
-    uint256 counter = totalArray - startCounter;
-    bytes32[] memory assetsIds = new bytes32[](counter);
-    DataTypes.Asset[] memory assets = new DataTypes.Asset[](counter);
-    for (uint256 i = 0; i < counter; ) {
-      uint256 tokenId = startCounter + i;
-      assetsIds[i] = AssetLogic.assetId(_nft, tokenId);
-      assets[i] = DataTypes.Asset({collection: _nft, tokenId: tokenId});
-      unchecked {
-        ++i;
-      }
-    }
-    return (assetsIds, assets);
-  }
-
-  function _generate_signature(
+  function _market_signature(
     GenerateSignParams memory params,
     AssetParams memory asset
   ) internal view returns (DataTypes.SignMarket memory, DataTypes.EIP712Signature memory) {
@@ -126,132 +108,127 @@ contract MarketTest is Setup {
     return (data, sig);
   }
 
-  function _generate_signature_action(
-    GenerateActionSignParams memory params
-  )
-    internal
-    returns (
-      DataTypes.SignAction memory,
-      DataTypes.EIP712Signature memory,
-      bytes32[] memory,
-      DataTypes.Asset[] memory
-    )
-  {
-    // Get nonce from the user
-    uint256 nonce = ActionSign(_action).getNonce(params.user);
-    uint40 deadline = uint40(block.timestamp + 1000);
+  // function _market_signature_action(
+  //   GenerateActionSignParams memory params
+  // )
+  //   internal
+  //   returns (
+  //     DataTypes.SignAction memory,
+  //     DataTypes.EIP712Signature memory,
+  //     bytes32[] memory,
+  //     DataTypes.Asset[] memory
+  //   )
+  // {
+  //   // Get nonce from the user
+  //   uint256 nonce = ActionSign(_action).getNonce(params.user);
+  //   uint40 deadline = uint40(block.timestamp + 1000);
 
-    // Asesets
-    (bytes32[] memory assetsIds, DataTypes.Asset[] memory assets) = _generate_assets(
-      0,
-      params.totalArray
-    );
+  //   // Asesets
+  //   (bytes32[] memory assetsIds, DataTypes.Asset[] memory assets) = _generate_assets(
+  //     0,
+  //     params.totalArray
+  //   );
 
-    DataTypes.SignAction memory data;
-    DataTypes.EIP712Signature memory sig;
-    {
-      // Create the struct
-      data = DataTypes.SignAction({
-        loan: DataTypes.SignLoanConfig({
-          loanId: params.loanId, // Because is new need to be 0
-          aggLoanPrice: params.price,
-          aggLtv: 6000,
-          aggLiquidationThreshold: 6000,
-          totalAssets: uint88(params.totalAssets),
-          nonce: nonce,
-          deadline: deadline
-        }),
-        assets: assetsIds,
-        nonce: nonce,
-        deadline: deadline
-      });
+  //   DataTypes.SignAction memory data;
+  //   DataTypes.EIP712Signature memory sig;
+  //   {
+  //     // Create the struct
+  //     data = DataTypes.SignAction({
+  //       loan: DataTypes.SignLoanConfig({
+  //         loanId: params.loanId, // Because is new need to be 0
+  //         aggLoanPrice: params.price,
+  //         aggLtv: 6000,
+  //         aggLiquidationThreshold: 6000,
+  //         totalAssets: uint88(params.totalAssets),
+  //         nonce: nonce,
+  //         deadline: deadline
+  //       }),
+  //       assets: assetsIds,
+  //       nonce: nonce,
+  //       deadline: deadline
+  //     });
 
-      bytes32 digest = Action(_action).calculateDigest(nonce, data);
-      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
+  //     bytes32 digest = Action(_action).calculateDigest(nonce, data);
+  //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
 
-      // Build signature struct
-      sig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
-    }
-    return (data, sig, assetsIds, assets);
-  }
+  //     // Build signature struct
+  //     sig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
+  //   }
+  //   return (data, sig, assetsIds, assets);
+  // }
 
-  function _generate_borrow(
-    uint256 index,
-    uint256 amountToBorrow,
-    uint256 price,
-    uint256 totalAssets,
-    uint256 totalArray
-  ) internal returns (bytes32 loanId) {
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      ,
-      DataTypes.Asset[] memory assets
-    ) = _generate_signature_action(
-        GenerateActionSignParams({
-          user: super.getActorAddress(index),
-          loanId: 0,
-          price: price,
-          totalAssets: totalAssets,
-          totalArray: totalArray
-        })
-      );
-    vm.recordLogs();
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    Vm.Log[] memory entries = vm.getRecordedLogs();
-    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
+  // function _generate_borrow(
+  //   uint256 index,
+  //   uint256 amountToBorrow,
+  //   uint256 price,
+  //   uint256 totalAssets,
+  //   uint256 totalArray
+  // ) internal returns (bytes32 loanId) {
+  //   // Get data signed
+  //   (
+  //     DataTypes.SignAction memory signAction,
+  //     DataTypes.EIP712Signature memory sig,
+  //     ,
+  //     DataTypes.Asset[] memory assets
+  //   ) = _market_signature_action(
+  //       GenerateActionSignParams({
+  //         user: super.getActorAddress(index),
+  //         loanId: 0,
+  //         price: price,
+  //         totalAssets: totalAssets,
+  //         totalArray: totalArray
+  //       })
+  //     );
+  //   vm.recordLogs();
+  //   // Borrow amount
+  //   Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+  //   Vm.Log[] memory entries = vm.getRecordedLogs();
+  //   bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
-    return loanId;
-  }
+  //   return loanId;
+  // }
 
-  function _generate_borrow_more(
-    bytes32 loanId,
-    uint256 index,
-    uint256 amountToBorrow,
-    uint256 price,
-    uint256 totalAssets
-  ) internal {
-    // Get data signed
-    DataTypes.Asset[] memory assets;
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      ,
+  // function _generate_borrow_more(
+  //   bytes32 loanId,
+  //   uint256 index,
+  //   uint256 amountToBorrow,
+  //   uint256 price,
+  //   uint256 totalAssets
+  // ) internal {
+  //   // Get data signed
+  //   DataTypes.Asset[] memory assets;
+  //   (
+  //     DataTypes.SignAction memory signAction,
+  //     DataTypes.EIP712Signature memory sig,
+  //     ,
 
-    ) = _generate_signature_action(
-        GenerateActionSignParams({
-          user: super.getActorAddress(index),
-          loanId: loanId,
-          price: price,
-          totalAssets: totalAssets,
-          totalArray: 0
-        })
-      );
+  //   ) = _generate_signature_action(
+  //       GenerateActionSignParams({
+  //         user: super.getActorAddress(index),
+  //         loanId: loanId,
+  //         price: price,
+  //         totalAssets: totalAssets,
+  //         totalArray: 0
+  //       })
+  //     );
 
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    Vm.Log[] memory entries = vm.getRecordedLogs();
-  }
+  //   // Borrow amount
+  //   Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+  //   Vm.Log[] memory entries = vm.getRecordedLogs();
+  // }
 
   //////////////////////////////////////////////
   // CREATE ORDER
   //////////////////////////////////////////////
 
-  function test_create_order_type_auction() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 0, 2 ether, 1, 1);
-
+  function test_create_order_type_auction() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0, 2 ether, 1, 1);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 0,
-          totalAssets: 0
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 0, totalAssets: 0}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -268,6 +245,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
+    vm.startPrank(actor);
     // vm.recordLogs();
     Market(_market).create(
       address(_uTokens['WETH']),
@@ -276,15 +254,16 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_type_auction_minBid_set() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 0, 2 ether, 2, 2);
-
+  function test_create_order_type_auction_minBid_set() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0.2 ether, 2 ether, 2, 2);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTOR),
           loanId: loanId,
@@ -307,7 +286,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
-
+    vm.startPrank(actor);
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_AUCTION,
@@ -315,20 +294,17 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_type_fixed_price() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 0, 2 ether, 2, 2);
+  function test_create_order_type_fixed_price() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0.1 ether, 2 ether, 2, 2);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 1 ether,
-          totalAssets: 1
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -339,13 +315,14 @@ contract MarketTest is Setup {
       );
 
     IMarketModule.CreateOrderInput memory config = IMarketModule.CreateOrderInput({
-      startAmount: 0.5 ether,
+      startAmount: 0.6 ether,
       endAmount: 1 ether,
       startTime: 0,
       endTime: 0,
-      debtToSell: 0
+      debtToSell: 100
     });
 
+    vm.startPrank(actor);
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_FIXED_PRICE,
@@ -353,20 +330,17 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_without_order_type_fixed_price_auction() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 0, 2 ether, 2, 2);
+  function test_create_order_without_order_type_fixed_price_auction() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0.2 ether, 2 ether, 2, 2);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 1 ether,
-          totalAssets: 1
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -383,7 +357,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
-
+    vm.startPrank(actor);
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION,
@@ -391,14 +365,16 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_liquidation_auction() public useActor(ACTOR) {
+  function test_create_order_liquidation_auction() public {
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({user: getActorAddress(ACTOR), loanId: 0, price: 0, totalAssets: 0}),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: 0, price: 0, totalAssets: 0}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -415,6 +391,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
+    vm.startPrank(actor);
     vm.expectRevert(Errors.OrderNotAllowed.selector);
     Market(_market).create(
       address(_uTokens['WETH']),
@@ -423,21 +400,17 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_invalid_uToken() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 0, 2 ether, 2, 2);
-
+  function test_create_order_invalid_uToken() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0, 2 ether, 2, 2);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 1 ether,
-          totalAssets: 1
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -454,6 +427,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
+    vm.startPrank(actor);
     vm.expectRevert(Errors.UTokenNotAllowed.selector);
     Market(_market).create(
       address(0x0001),
@@ -462,21 +436,17 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_type_auction_with_debt_loan() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 1.2 ether, 2 ether, 2, 2);
-
+  function test_create_order_type_auction_with_debt_loan() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 1.2 ether, 2 ether, 2, 2);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 1 ether,
-          totalAssets: 1
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -493,7 +463,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
-
+    vm.startPrank(actor);
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_AUCTION,
@@ -501,24 +471,17 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_type_auction_with_debt_loan_with_debt_to_sell_one_asset()
-    public
-    useActor(ACTOR)
-  {
-    bytes32 loanId = _generate_borrow(ACTOR, 1 ether, 2 ether, 1, 1);
-
+  function test_create_order_type_auction_with_debt_loan_with_debt_to_sell_one_asset() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 1 ether, 2 ether, 1, 1);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 0,
-          totalAssets: 0
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 0, totalAssets: 0}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -535,7 +498,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 1000
     });
-
+    vm.startPrank(actor);
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_AUCTION,
@@ -543,21 +506,17 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
-  function test_create_order_type_auction_with_debt_loan_with_marging() public useActor(ACTOR) {
-    bytes32 loanId = _generate_borrow(ACTOR, 0.5 ether, 3 ether, 2, 2);
-
+  function test_create_order_type_auction_with_debt_loan_with_marging() public {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 0.5 ether, 3 ether, 2, 2);
+    address actor = getActorWithFunds(ACTOR, 'WETH', 2 ether);
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 2 ether,
-          totalAssets: 1
-        }),
+    ) = _market_signature(
+        GenerateSignParams({user: actor, loanId: loanId, price: 2 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
           collection: _nft,
@@ -574,6 +533,7 @@ contract MarketTest is Setup {
       endTime: uint40(block.timestamp + 1000),
       debtToSell: 0
     });
+    vm.startPrank(actor);
     Market(_market).create(
       address(_uTokens['WETH']),
       DataTypes.OrderType.TYPE_AUCTION,
@@ -581,6 +541,7 @@ contract MarketTest is Setup {
       signMarket,
       sig
     );
+    vm.stopPrank();
   }
 
   //////////////////////////////////////////////
@@ -619,7 +580,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -666,14 +627,13 @@ contract MarketTest is Setup {
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
     bytes32 loanId = bytes32(entries[entries.length - 1].topics[1]);
     // We borrow more to change the debt
-    vm.startPrank(getActorAddress(ACTOR));
-    _generate_borrow_more(loanId, ACTOR, 0.5 ether, 3 ether, 2);
-    vm.stopPrank();
+
+    borrow_more_action(_action, _nft, loanId, ACTOR, 0.5 ether, 3 ether, 2);
 
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -721,7 +681,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -766,7 +726,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -811,7 +771,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -863,7 +823,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -921,7 +881,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({
             user: getActorAddress(ACTORTWO),
             loanId: loanId,
@@ -947,7 +907,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarketThree,
         DataTypes.EIP712Signature memory sigThree
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({
             user: getActorAddress(ACTORTHREE),
             loanId: loanId,
@@ -986,7 +946,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -1025,7 +985,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({
           user: getActorAddress(ACTORTWO),
           loanId: loanId,
@@ -1074,7 +1034,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1101,7 +1061,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorThree, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1135,7 +1095,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorThree, loanId: loanId, price: 0, totalAssets: 0}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1172,7 +1132,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1215,7 +1175,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1246,7 +1206,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorThree, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1285,7 +1245,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorThree, loanId: loanId, price: 1 ether, totalAssets: 3}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1329,7 +1289,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({
             user: getActorAddress(ACTORTWO),
             loanId: loanId,
@@ -1366,7 +1326,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarketThree,
         DataTypes.EIP712Signature memory sigThree
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({
             user: getActorAddress(ACTORTHREE),
             loanId: loanId,
@@ -1411,7 +1371,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
@@ -1446,7 +1406,42 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
+        GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
+
+    uint256 amount = 1 ether;
+    hoax(actorTwo);
+    approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
+
+    hoax(actorTwo);
+
+    Market(_market).buyNow(false, orderId, amount, 0 ether, signMarket, sig); // BID ON THE ASSET
+
+    assertEq(MintableERC721(_nft).ownerOf(1), getActorAddress(ACTORTWO));
+  }
+
+  function test_buyNow_type_fixed_price_with_debt() public {
+    vm.recordLogs();
+    test_create_order_type_fixed_price();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+
+    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
+    address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 20 ether);
+
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = _market_signature(
         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
@@ -1484,7 +1479,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
@@ -1517,7 +1512,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
@@ -1550,7 +1545,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
@@ -1585,7 +1580,7 @@ contract MarketTest is Setup {
     (
       DataTypes.SignMarket memory signMarket,
       DataTypes.EIP712Signature memory sig
-    ) = _generate_signature(
+    ) = _market_signature(
         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
         AssetParams({
           assetId: AssetLogic.assetId(_nft, 1),
@@ -1620,7 +1615,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1647,7 +1642,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           // The price is 1 eth and we get the loan unhealty beacause the interest of the time.
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
@@ -1678,7 +1673,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           // We increase the price of the current balance in order tho get a healty loan.
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1.5 ether, totalAssets: 1}),
           AssetParams({
@@ -1708,7 +1703,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1733,7 +1728,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1761,7 +1756,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1793,7 +1788,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1820,7 +1815,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
@@ -1850,7 +1845,7 @@ contract MarketTest is Setup {
       (
         DataTypes.SignMarket memory signMarket,
         DataTypes.EIP712Signature memory sig
-      ) = _generate_signature(
+      ) = _market_signature(
           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),

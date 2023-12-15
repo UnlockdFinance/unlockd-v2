@@ -43,7 +43,7 @@ library Errors {
   error InvalidUserCollateralBalance();
   error InvalidOrderOwner();
   error InvalidOrderBuyer();
-
+  error InvalidBidAmount();
   error InvalidLoanOwner();
   error InvalidUToken();
 

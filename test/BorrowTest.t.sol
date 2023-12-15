@@ -130,6 +130,37 @@ contract BorrowTest is Setup {
     }
   }
 
+  // function test_borrow_with_multiples_nfts_different_user() public {
+  //   uint256 amountToBorrow = 1 ether;
+
+  //   address actorTwo = getActorWithFunds(2, 'WETH', 20 ether);
+
+  //   // User doesn't have WETH
+  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+  //   // Get data signed
+  //   (
+  //     DataTypes.SignAction memory signAction,
+  //     DataTypes.EIP712Signature memory sig,
+  //     bytes32[] memory assetsIds,
+  //     DataTypes.Asset[] memory assets
+  //   ) = action_signature(
+  //       _action,
+  //       _nft,
+  //       ActionSignParams({
+  //         user: super.getActorAddress(ACTOR),
+  //         loanId: 0,
+  //         price: 10 ether,
+  //         totalAssets: 10,
+  //         totalArray: 10
+  //       })
+  //     );
+  //   uint256 initialGas = gasleft();
+  //   vm.startPrank(actorTwo);
+  //   // Borrow amount
+  //   Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+  //   vm.stopPrank();
+  // }
+
   function test_borrow_two_times() public useActor(ACTOR) {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH

@@ -185,6 +185,39 @@ contract AuctionTest is Setup {
     return loanId;
   }
 
+  function test_auction_bid_liquidation_auction_with_bid_bigget_than_debt()
+    public
+    returns (bytes32)
+  {
+    bytes32 loanId = borrow_action(_action, _nft, ACTOR, 3 ether, 20 ether, 2, 2);
+
+    address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 12 ether);
+    (
+      DataTypes.SignAuction memory signAuction,
+      DataTypes.EIP712Signature memory sig
+    ) = auction_signature(
+        _auction,
+        AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 3 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
+
+    uint128 bidAmount = 5 ether;
+    hoax(actorTwo);
+    approveAsset('WETH', address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+
+    hoax(actorTwo);
+    Auction(_auction).bid(bidAmount, 0.5 ether, signAuction, sig); // BID ON THE ASSET
+
+    return loanId;
+  }
+
   function test_auction_bid_liquidation_auction() public returns (bytes32) {
     bytes32 loanId = borrow_action(_action, _nft, ACTOR, 1.2 ether, 2 ether, 2, 2);
 

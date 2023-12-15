@@ -277,7 +277,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loan.freeze();
     }
 
-    if (order.bid.buyer == address(0)) {
+    if (order.countBids == 0) {
       // We repay the debt at the beginning
       // The ASSET only support a % of the current debt in case of the next bids
       // we are not repaying more debt until the auction is ended.
