@@ -13,6 +13,7 @@ import {console} from 'forge-std/console.sol';
 
 contract UTokenV2Test is Setup {
   uint256 internal constant ACTOR = 1;
+
   UTokenV2 internal _uTokenV2;
   InterestRateV2 internal _interestRateV2;
   address internal _manager;
@@ -57,7 +58,6 @@ contract UTokenV2Test is Setup {
     // Get DATA
     DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
 
-    // console.log('BALANCE', balance.totalSupplyAssets);
     // assertEq(_uTokenV2.balanceOf(actor), 100000);
 
     // WITHDRAW
@@ -91,5 +91,28 @@ contract UTokenV2Test is Setup {
     // assertEq(uToken.balanceOf(actor), 100000);
 
     // WITHDRAW
+  }
+
+  function test_basic_borrow() public {
+    test_basic_supply();
+    bytes32 loanId = 'new_loan';
+    vm.startPrank(makeAddr('protocol'));
+    _uTokenV2.borrow(_WETH, loanId, 0.5 ether, makeAddr('paco'), makeAddr('paco'));
+    vm.stopPrank();
+    assertEq(IERC20(_WETH).balanceOf(makeAddr('paco')), 0.5 ether);
+  }
+
+  function test_basic_repay() public {
+    test_basic_borrow();
+
+    vm.startPrank(makeAddr('paco'));
+    super.approveAsset('WETH', address(_uTokenV2), 0.5 ether);
+
+    assertEq(IERC20(_WETH).balanceOf(makeAddr('paco')), 0.5 ether);
+    bytes32 loanId = 'new_loan';
+
+    _uTokenV2.repay(_WETH, loanId, 0.5 ether, makeAddr('paco'), makeAddr('paco'));
+    vm.stopPrank();
+    assertEq(IERC20(_WETH).balanceOf(makeAddr('paco')), 0 ether);
   }
 }

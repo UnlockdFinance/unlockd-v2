@@ -64,11 +64,11 @@ contract ACLManager is AccessControl, IACLManager {
   /// @inheritdoc IACLManager
   function setUToken(address uToken) external override onlyRole(DEFAULT_ADMIN_ROLE) {
     Errors.verifyNotZero(uToken);
-    UTOKEN = uToken;
+    UTOKEN_FACTORY = uToken;
   }
 
   function isUToken(address uToken) external view override returns (bool) {
-    return UTOKEN == uToken;
+    return UTOKEN_FACTORY == uToken;
   }
 
   /// @inheritdoc IACLManager
