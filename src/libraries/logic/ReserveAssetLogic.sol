@@ -5,9 +5,10 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
-import {DelegateCall} from '../utils/DelegateCall.sol';
 import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
+
+import {DelegateCall} from '../utils/DelegateCall.sol';
 import {InterestRateV2} from '../base/InterestRateV2.sol';
 import {MathUtils} from '../math/MathUtils.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
@@ -154,7 +155,7 @@ library ReserveAssetLogic {
   function init(
     DataTypes.ReserveDataV2 storage reserve,
     address underlyingAsset,
-    Constants.AssetType assetType,
+    Constants.ReserveType reserveType,
     address scaledTokenAddress,
     address interestRateAddress,
     address strategyAddress,
@@ -167,7 +168,8 @@ library ReserveAssetLogic {
     reserve.interestRateAddress = interestRateAddress;
     reserve.strategyAddress = strategyAddress;
     reserve.underlyingAsset = underlyingAsset;
-    reserve.assetType = assetType;
+    reserve.reserveType = reserveType;
+    reserve.reserveState = Constants.ReserveState.ACTIVE;
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
   }
 

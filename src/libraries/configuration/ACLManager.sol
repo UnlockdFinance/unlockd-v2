@@ -13,7 +13,6 @@ import {Errors} from '../helpers/Errors.sol';
 contract ACLManager is AccessControl, IACLManager {
   // @dev address of the PROTOCOL
   address public UNLOCK_PROTOCOL;
-
   // @dev address of the UTOKEN_FACTORY
   address public UTOKEN_FACTORY;
 

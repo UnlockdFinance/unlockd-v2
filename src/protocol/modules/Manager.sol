@@ -6,7 +6,7 @@ import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
-import {DataTypes} from '../../types/DataTypes.sol';
+import {DataTypes, Constants} from '../../types/DataTypes.sol';
 import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 
 contract Manager is BaseCoreModule, IManagerModule {
@@ -70,6 +70,14 @@ contract Manager is BaseCoreModule, IManagerModule {
 
   function getAllowedController() external view returns (address) {
     return _allowedControllers;
+  }
+
+  function allowCollectiononReserveType(
+    address collection,
+    Constants.ReserveType reserveType
+  ) external {
+    if (collection == address(0)) revert Errors.ZeroAddress();
+    _allowedCollections[collection] = reserveType;
   }
 
   /**

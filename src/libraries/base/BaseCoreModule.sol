@@ -67,6 +67,7 @@ contract BaseCoreModule is BaseCore {
   }
 
   /**
+   * DEPRECATED
    * @dev Modifier to check if this UToken is allowed by the protocol
    * @param uToken Address of the uToken
    */

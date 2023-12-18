@@ -29,6 +29,16 @@ library Constants {
   uint256 internal constant MODULEID__SELLNOW = 7;
 
   ////////////////////////////////////////////
+  // RESERVE STATE
+  ////////////////////////////////////////////
+
+  enum ReserveState {
+    STOPED, // No supply, No borrow
+    FREEZE, // No supply, No withdraw , No borrow, No repay
+    ACTIVE // All OK
+  }
+
+  ////////////////////////////////////////////
   // LOAN STATE
   ////////////////////////////////////////////
 
@@ -39,10 +49,11 @@ library Constants {
   }
 
   ////////////////////////////////////////////
-  // GRUP ASSETS TYPE
+  // GRUP RESERVE TYPE
   ////////////////////////////////////////////
 
-  enum AssetType {
+  enum ReserveType {
+    DISABLED, // Disabled collection
     ALL, // All the assets with the exception SPECIAL
     STABLES, // For the stable coins
     COMMON, // Common coins WETH etc ...

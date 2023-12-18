@@ -34,6 +34,12 @@ contract CoreStorage {
   address internal _signer;
 
   /////////////////////////////////////////
+  //  Allowed NFTS
+  /////////////////////////////////////////
+
+  mapping(address => Constants.ReserveType) internal _allowedCollections;
+
+  /////////////////////////////////////////
   //  Signature Logic
   /////////////////////////////////////////
   mapping(address => uint256) internal _signNonce;

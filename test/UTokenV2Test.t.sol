@@ -41,7 +41,7 @@ contract UTokenV2Test is Setup {
         reserveFactor: 0
       }),
       _WETH,
-      Constants.AssetType.COMMON,
+      Constants.ReserveType.COMMON,
       18,
       string(abi.encodePacked('UToken ', 'WETH')),
       string(abi.encodePacked('U', 'WETH'))
@@ -56,7 +56,7 @@ contract UTokenV2Test is Setup {
     _uTokenV2.supply(_WETH, 1 ether, actor);
     vm.stopPrank();
     // Get DATA
-    DataTypes.MarketBalance memory balance = _uTokenV2.getBalance(_WETH);
+    DataTypes.MarketBalance memory balance = _uTokenV2.getBalances(_WETH);
 
     // assertEq(_uTokenV2.balanceOf(actor), 100000);
 

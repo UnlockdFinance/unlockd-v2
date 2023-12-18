@@ -10,10 +10,12 @@ import {MathUtils} from '../libraries/math/MathUtils.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {ReserveAssetLogic} from '../libraries/logic/ReserveAssetLogic.sol';
-import {UTokenStorage} from '../libraries/storage/UTokenStorage.sol';
+// import {UTokenStorage} from '../libraries/storage/UTokenStorage.sol';
 import {ScaledToken} from '../tokens/ScaledToken.sol';
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
+import {IACLManager} from '../interfaces/IACLManager.sol';
+
 import {Constants} from '../libraries/helpers/Constants.sol';
 
 import {console} from 'forge-std/console.sol';
@@ -35,6 +37,31 @@ contract UTokenV2 {
   mapping(bytes32 => uint256) internal borrowScaledBalanceByLoanId;
   mapping(address => uint256) internal borrowScaledBalanceByUser;
 
+  //////////////////////////////////////////////////////
+
+  modifier onlyProtocol() {
+    if (IACLManager(_aclManager).isProtocol(msg.sender) == false) {
+      revert Errors.ProtocolAccessDenied();
+    }
+    _;
+  }
+
+  modifier onlyAdmin() {
+    if (IACLManager(_aclManager).isUTokenAdmin(msg.sender) == false) {
+      revert Errors.UTokenAccessDenied();
+    }
+    _;
+  }
+
+  modifier onlyEmergency() {
+    if (IACLManager(_aclManager).isEmergencyAdmin(msg.sender) == false) {
+      revert Errors.EmergencyAccessDenied();
+    }
+    _;
+  }
+
+  /////////////////////////////////////////////////////
+
   constructor(address aclManager, address sharesTokenImp) {
     if (aclManager == address(0)) revert Errors.ZeroAddress();
     if (sharesTokenImp == address(0)) revert Errors.ZeroAddress();
@@ -45,11 +72,11 @@ contract UTokenV2 {
   function createMarket(
     DataTypes.CreateMarketParams calldata params,
     address underlyingAsset,
-    Constants.AssetType assetType,
+    Constants.ReserveType reserveType,
     uint8 decimals,
     string calldata tokenName,
     string calldata tokenSymbol
-  ) external {
+  ) external onlyAdmin {
     if (reserves[underlyingAsset].lastUpdateTimestamp != 0) {
       revert Errors.UnderlyingMarketAlreadyExist();
     }
@@ -57,7 +84,7 @@ contract UTokenV2 {
     // Create Reserve Asset
     reserves[underlyingAsset].init(
       underlyingAsset,
-      assetType,
+      reserveType,
       _sharesToken(decimals, tokenName, tokenSymbol),
       params.interestRateAddress,
       params.strategyAddress,
@@ -66,14 +93,20 @@ contract UTokenV2 {
   }
 
   function supply(address underlyingAsset, uint256 amount, address onBehalf) external {
-    if (reserves[underlyingAsset].lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
+    Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(onBehalf);
     Errors.verifyNotZero(amount);
-
     // Move amount to the pool
     DataTypes.ReserveDataV2 storage reserve = reserves[underlyingAsset];
+
+    if (reserve.reserveState != Constants.ReserveState.ACTIVE) {
+      revert Errors.ReserveNotActive();
+    }
+
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
     reserve.updateState(balance);
@@ -88,14 +121,24 @@ contract UTokenV2 {
   }
 
   function withdraw(address underlyingAsset, uint256 amount, address onBehalf) external {
-    if (reserves[underlyingAsset].lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
+    Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(onBehalf);
     Errors.verifyNotZero(amount);
 
     DataTypes.ReserveDataV2 storage reserve = reserves[underlyingAsset];
+
+    if (reserve.reserveState == Constants.ReserveState.FREEZE) {
+      revert Errors.ReserveNotActive();
+    }
+
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
+
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    Errors.verifyNotZero(onBehalf);
+    Errors.verifyNotZero(amount);
 
     // Check if we have enought to withdraw
     reserve.strategyWithdraw(balance, amount);
@@ -114,16 +157,22 @@ contract UTokenV2 {
     uint256 amount,
     address to,
     address onBehalfOf
-  ) external {
-    if (reserves[underlyingAsset].lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
+  ) external onlyProtocol {
     Errors.verifyNotZero(to);
     Errors.verifyNotZero(amount);
     Errors.verifyNotZero(onBehalfOf);
 
-    // Move amount to the pool
     DataTypes.ReserveDataV2 storage reserve = reserves[underlyingAsset];
+
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    if (reserve.reserveState != Constants.ReserveState.ACTIVE) {
+      revert Errors.ReserveNotActive();
+    }
+
+    // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
     uint256 availableLiquidity = this.totalAvailableSupply(underlyingAsset);
@@ -152,16 +201,22 @@ contract UTokenV2 {
     uint256 amount,
     address from,
     address onBehalfOf
-  ) external {
-    if (reserves[underlyingAsset].lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
+  ) external onlyProtocol {
     Errors.verifyNotZero(from);
     Errors.verifyNotZero(amount);
     Errors.verifyNotZero(onBehalfOf);
 
-    // Move amount to the pool
     DataTypes.ReserveDataV2 storage reserve = reserves[underlyingAsset];
+
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    if (reserve.reserveState == Constants.ReserveState.FREEZE) {
+      revert Errors.ReserveNotActive();
+    }
+
+    // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
     uint256 scaledAmount = reserve.decreaseDebt(balance, amount);
@@ -176,38 +231,34 @@ contract UTokenV2 {
   }
 
   /////////////////////////////////////////////////////////
-  // Recalculate Index
+  // Update
   /////////////////////////////////////////////////////////
-  /***
 
-  -- WARNING -- 
-    This function is exclusively invoked by the pool manager to recalculate the index when using strategies that may result in losses from the pool.
-    To prevent the need for a balanceOf operation, this function is executed periodically, typically every 'x' interval, to rectify the calculations and maintain stability.
+  function updateState(address underlyingAsset) external {
+    reserves[underlyingAsset].updateState(balances[underlyingAsset]);
+  }
 
-  ***/
-  // TODO: Review this part I don't know if this works
-  function recalculateIndex(address underlyingAsset) external {
-    uint256 totalSupplyAssets = IERC20(underlyingAsset).balanceOf(address(this));
-    // We add the borrowed amount
-    totalSupplyAssets += balances[underlyingAsset].totalBorrowScaled.rayMul(
-      reserves[underlyingAsset].variableBorrowIndex
-    );
-    if (reserves[underlyingAsset].strategyAddress != address(0)) {
-      totalSupplyAssets += IStrategy(reserves[underlyingAsset].strategyAddress).balanceOf(
-        address(this)
-      );
-    }
-    reserves[underlyingAsset].updateInterestRates(
-      balances[underlyingAsset].totalBorrowScaled,
-      totalSupplyAssets.toUint128(),
-      0,
-      0
-    );
+  function updateReserveState(
+    address underlyingAsset,
+    Constants.ReserveState reserveState
+  ) external onlyEmergency {
+    reserves[underlyingAsset].reserveState = reserveState;
   }
 
   /////////////////////////////////////////////////////////
   // GET
   /////////////////////////////////////////////////////////
+  function validateReserveType(
+    Constants.ReserveType currentReserveType,
+    Constants.ReserveType reserveType
+  ) external view returns (bool) {
+    if (
+      currentReserveType == Constants.ReserveType.ALL &&
+      reserveType != Constants.ReserveType.SPECIAL
+    ) return true;
+    if (currentReserveType == reserveType) return true;
+    return false;
+  }
 
   function getReserveData(
     address underlyingAsset
@@ -231,7 +282,7 @@ contract UTokenV2 {
   // SUPPLY
   /////////////////////////////////////////////////////////
 
-  function getBalance(address underlyingAsset) external returns (DataTypes.MarketBalance memory) {
+  function getBalances(address underlyingAsset) external returns (DataTypes.MarketBalance memory) {
     return balances[underlyingAsset];
   }
 
@@ -254,7 +305,7 @@ contract UTokenV2 {
 
   function totalSupplyNotInvested(address underlyingAsset) external returns (uint256) {
     // TotalSupplyNotInvested
-    uint256 balance = balances[underlyingAsset].totalSupplyScaledNotInvested; // TODO: Le restop ?  balances[underlyingAsset].totalBorrowScaled
+    uint256 balance = balances[underlyingAsset].totalSupplyScaledNotInvested;
     return balance.rayMul(reserves[underlyingAsset].getNormalizedIncome());
   }
 

@@ -88,6 +88,7 @@ library Errors {
   error UnderlyingMarketNotExist();
   error UnderlyingMarketAlreadyExist();
   error UTokenAccessDenied();
+  error ReserveNotActive();
   ///////////////////////////////////////////
   ///   ROUTER
   ///////////////////////////////////////////
