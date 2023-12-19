@@ -42,14 +42,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
    */
   function getAmountToRepay(bytes32 loanId) external view returns (uint256 amount) {
     DataTypes.Loan memory loan = _loans[loanId];
-
-    return
-      GenericLogic.calculateLoanDebt(
-        loanId,
-        loan.owner,
-        _reserveOracle,
-        UTokenFactory(_uTokenFactory).getReserveData(loan.underlyingAsset)
-      );
+    return GenericLogic.calculateLoanDebt(loanId, _uTokenFactory, loan.underlyingAsset);
   }
 
   /**
@@ -170,6 +163,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           amount: amount,
           price: 0,
           reserveOracle: _reserveOracle,
+          uTokenFactory: _uTokenFactory,
           reserve: reserve,
           loanConfig: signAction.loan
         })
@@ -247,6 +241,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           amount: amount,
           price: 0,
           reserveOracle: _reserveOracle,
+          uTokenFactory: _uTokenFactory,
           reserve: reserve,
           loanConfig: signAction.loan
         })

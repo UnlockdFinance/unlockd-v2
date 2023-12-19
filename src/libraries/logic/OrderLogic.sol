@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
-// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {Constants} from '../helpers/Constants.sol';
@@ -94,6 +94,7 @@ library OrderLogic {
     bytes32 loanId;
     address owner;
     address underlyingAsset;
+    address uTokenFactory;
     uint256 amountOfDebt;
     uint256 assetPrice;
     uint256 assetLtv;
@@ -109,20 +110,21 @@ library OrderLogic {
     if (params.amountOfDebt >= maxAmountToBorrow) {
       revert Errors.AmountExceedsDebt();
     }
-
-    // IUToken(params.uToken).borrowOnBelhalf(
-    //   params.loanId,
-    //   params.amountOfDebt,
-    //   address(this),
-    //   params.owner
-    // );
+    // Borrow on the factory
+    IUTokenFactory(params.uTokenFactory).borrow(
+      params.underlyingAsset,
+      params.loanId,
+      params.amountOfDebt,
+      address(this),
+      params.owner
+    );
   }
 
   struct RepayDebtParams {
     address owner;
-    // address uToken;
     address from;
     address underlyingAsset;
+    address uTokenFactory;
     bytes32 loanId;
     uint256 amount;
   }
@@ -130,17 +132,23 @@ library OrderLogic {
   function repayDebt(RepayDebtParams memory params) internal {
     // Check if there is a loan asociated
     // We repay the total debt
-    // IERC20(params.underlyingAsset).approve(params.uToken, params.amount);
+    IERC20(params.underlyingAsset).approve(params.uTokenFactory, params.amount);
     // Repay the debt
-    // IUToken(params.uToken).repayOnBelhalf(params.loanId, params.amount, params.from, params.owner);
+    IUTokenFactory(params.uTokenFactory).repay(
+      params.underlyingAsset,
+      params.loanId,
+      params.amount,
+      params.from,
+      params.owner
+    );
   }
 
   struct RefundBidderParams {
     bytes32 loanId;
     address owner;
-    // address uToken;
     address from;
     address underlyingAsset;
+    address uTokenFactory;
     address reserveOracle;
     uint256 amountToPay;
     uint256 amountOfDebt;
@@ -154,9 +162,8 @@ library OrderLogic {
     if (params.loanId != 0) {
       uint256 currentDebt = GenericLogic.calculateLoanDebt(
         params.loanId,
-        params.owner,
-        params.reserveOracle,
-        params.reserve
+        params.uTokenFactory,
+        params.reserve.underlyingAsset
       );
       // Check if this loan has currentDebt
       if (currentDebt > 0) {
@@ -175,10 +182,10 @@ library OrderLogic {
           RepayDebtParams({
             loanId: params.loanId,
             owner: params.owner,
-            // uToken: params.uToken,
             from: params.from,
+            amount: supportedDebt,
             underlyingAsset: params.underlyingAsset,
-            amount: supportedDebt
+            uTokenFactory: params.uTokenFactory
           })
         );
       }
@@ -195,12 +202,17 @@ library OrderLogic {
     bytes32 loanId,
     address user,
     address reserveOracle,
+    address uTokenFactory,
     uint256 defaultAmount,
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256 maxDebtOrDefault) {
-    uint256 totalDebt = GenericLogic.calculateLoanDebt(loanId, user, reserveOracle, reserveData);
+    uint256 totalDebt = GenericLogic.calculateLoanDebt(
+      loanId,
+      uTokenFactory,
+      reserveData.underlyingAsset
+    );
     if (totalDebt == 0) return defaultAmount;
 
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
@@ -216,12 +228,17 @@ library OrderLogic {
     bytes32 loanId,
     address user,
     address reserveOracle,
+    address uTokenFactory,
     uint256 defaultAmount,
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256 minDebtOrDefault) {
-    uint256 totalDebt = GenericLogic.calculateLoanDebt(loanId, user, reserveOracle, reserveData);
+    uint256 totalDebt = GenericLogic.calculateLoanDebt(
+      loanId,
+      uTokenFactory,
+      reserveData.underlyingAsset
+    );
     if (totalDebt < defaultAmount) return totalDebt;
 
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
@@ -241,6 +258,7 @@ library OrderLogic {
   function getMinBid(
     DataTypes.Order memory order,
     address reserveOracle,
+    address uTokenFactory,
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
@@ -251,6 +269,7 @@ library OrderLogic {
           order.offer.loanId,
           order.owner,
           reserveOracle,
+          uTokenFactory,
           order.offer.startAmount,
           totalCollateral,
           ltv,
@@ -264,6 +283,7 @@ library OrderLogic {
         order.offer.loanId,
         order.owner,
         reserveOracle,
+        uTokenFactory,
         calculateMinBid(lastBid, order.countBids),
         totalCollateral,
         ltv,
@@ -283,7 +303,7 @@ library OrderLogic {
   struct RepayDebtToSellParams {
     address reserveOracle;
     address underlyingAsset;
-    // address uToken;
+    address uTokenFactory;
     address from;
     uint256 totalAmount;
     uint256 aggLoanPrice;
@@ -299,6 +319,7 @@ library OrderLogic {
       order.offer.loanId,
       order.owner,
       params.reserveOracle,
+      params.uTokenFactory,
       // Calculate the % of the owner want to repay the debt
       order.offer.debtToSell > 0 ? params.totalAmount.percentMul(order.offer.debtToSell) : 0,
       params.aggLoanPrice,
@@ -313,14 +334,13 @@ library OrderLogic {
         RepayDebtParams({
           loanId: order.offer.loanId,
           owner: order.owner,
-          // uToken: params.uToken,
           from: params.from,
+          amount: debtAmount,
           underlyingAsset: params.underlyingAsset,
-          amount: debtAmount
+          uTokenFactory: params.uTokenFactory
         })
       );
       // We remove from the total amount the debt repayed
-
       totalAmount = totalAmount - debtAmount;
     }
   }

@@ -46,15 +46,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     view
     returns (uint256 totalAmount, uint256 totalDebt, uint256 minDebt, uint256 bidderBonus)
   {
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
-      params.underlyingAsset
-    );
-
     totalDebt = GenericLogic.calculateLoanDebt(
       params.loanId,
-      params.owner,
-      _reserveOracle,
-      reserve
+      _uTokenFactory,
+      params.underlyingAsset
     );
     // The user need to recover at least until the LTV
     minDebt = GenericLogic.calculateAmountToArriveToLTV(
@@ -97,6 +92,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
       _reserveOracle,
+      _uTokenFactory,
       aggLoanPrice,
       aggLTV,
       IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
@@ -151,6 +147,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           loan.loanId,
           loan.owner,
           _reserveOracle,
+          _uTokenFactory,
           signAuction.assetPrice,
           signAuction.loan.aggLoanPrice,
           signAuction.loan.aggLtv,
@@ -166,6 +163,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
             amount: 0,
             price: signAuction.assetPrice,
             reserveOracle: _reserveOracle,
+            uTokenFactory: _uTokenFactory,
             reserve: reserve,
             loanConfig: signAuction.loan
           })
@@ -193,6 +191,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         minBid = OrderLogic.getMinBid(
           order,
           _reserveOracle,
+          _uTokenFactory,
           signAuction.loan.aggLoanPrice,
           signAuction.loan.aggLtv,
           reserve
@@ -206,6 +205,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
               amount: order.bid.amountOfDebt + order.bid.amountToPay,
               price: signAuction.assetPrice,
               reserveOracle: _reserveOracle,
+              uTokenFactory: _uTokenFactory,
               reserve: reserve,
               loanConfig: signAuction.loan
             })
@@ -242,6 +242,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           loanId: loanId,
           owner: msgSender,
           underlyingAsset: reserve.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: amountOfDebt,
           assetPrice: signAuction.assetPrice,
           assetLtv: signAuction.assetLtv
@@ -272,6 +273,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           owner: order.owner,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amount: minBid
         })
       );
@@ -296,6 +298,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           reserveOracle: _reserveOracle,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: order.bid.amountOfDebt,
           amountToPay: amountToPayBuyer,
           reserve: reserve
@@ -384,6 +387,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         reserveOracle: _reserveOracle,
         from: address(this),
         underlyingAsset: underlyingAsset,
+        uTokenFactory: _uTokenFactory,
         amountOfDebt: order.bid.amountOfDebt,
         amountToPay: order.offer.startAmount + bidderBonus,
         reserve: reserve

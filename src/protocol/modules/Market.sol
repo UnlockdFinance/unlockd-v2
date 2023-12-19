@@ -64,6 +64,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
       _reserveOracle,
+      _uTokenFactory,
       aggLoanPrice,
       aggLTV,
       IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
@@ -88,6 +89,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       order.offer.loanId,
       order.owner,
       _reserveOracle,
+      _uTokenFactory,
       order.offer.endAmount,
       aggLoanPrice,
       aggLTV,
@@ -165,6 +167,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           amount: config.startAmount,
           price: signMarket.assetPrice,
           reserveOracle: _reserveOracle,
+          uTokenFactory: _uTokenFactory,
           reserve: IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset),
           loanConfig: signMarket.loan
         })
@@ -252,6 +255,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           reserveOracle: _reserveOracle,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: bidData.amountOfDebt,
           amountToPay: bidData.amountToPay,
           reserve: reserve
@@ -316,6 +320,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       uint256 nextBid = OrderLogic.getMinBid(
         order,
         _reserveOracle,
+        _uTokenFactory,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
         reserve
@@ -343,6 +348,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           owner: msgSender,
           amountOfDebt: amountOfDebt,
           underlyingAsset: reserve.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           assetPrice: signMarket.assetPrice,
           assetLtv: signMarket.assetLtv
         })
@@ -370,6 +376,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           reserveOracle: _reserveOracle,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: order.bid.amountOfDebt,
           amountToPay: order.bid.amountToPay,
           reserve: reserve
@@ -449,6 +456,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         amount: totalAmount,
         price: signMarket.assetPrice,
         reserveOracle: _reserveOracle,
+        uTokenFactory: _uTokenFactory,
         reserve: reserve,
         loanConfig: signMarket.loan
       })
@@ -460,6 +468,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
+        uTokenFactory: _uTokenFactory,
         from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,
@@ -580,6 +589,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         order.offer.loanId,
         order.owner,
         _reserveOracle,
+        _uTokenFactory,
         totalAmount,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
@@ -600,6 +610,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         reserveOracle: _reserveOracle,
         from: address(this),
         underlyingAsset: loan.underlyingAsset,
+        uTokenFactory: _uTokenFactory,
         amountOfDebt: order.bid.amountOfDebt,
         amountToPay: order.bid.amountToPay,
         reserve: reserve
@@ -677,6 +688,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         order.offer.loanId,
         order.owner,
         _reserveOracle,
+        _uTokenFactory,
         order.offer.endAmount,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
@@ -714,6 +726,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
             loanId: newLoanId,
             owner: msgSender,
             underlyingAsset: reserve.underlyingAsset,
+            uTokenFactory: _uTokenFactory,
             amountOfDebt: amountOfDebt,
             assetPrice: signMarket.assetPrice,
             assetLtv: signMarket.assetLtv
@@ -744,6 +757,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
             reserveOracle: _reserveOracle,
             from: address(this),
             underlyingAsset: underlyingAsset,
+            uTokenFactory: _uTokenFactory,
             amountOfDebt: order.bid.amountOfDebt,
             amountToPay: order.bid.amountToPay,
             reserve: reserve
@@ -762,6 +776,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
+        uTokenFactory: _uTokenFactory,
         from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,

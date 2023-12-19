@@ -62,6 +62,7 @@ library ValidationLogic {
     uint256 amount;
     uint256 price;
     address reserveOracle;
+    address uTokenFactory;
     DataTypes.ReserveData reserve;
     DataTypes.SignLoanConfig loanConfig;
   }
@@ -79,13 +80,14 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (, uint256 userTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
+    (, uint256 baseUserTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
       .calculateFutureLoanData(
         params.loanConfig.loanId,
         params.amount,
         params.price,
         params.user,
         params.reserveOracle,
+        params.uTokenFactory,
         params.reserve,
         params.loanConfig
       );
@@ -104,7 +106,7 @@ library ValidationLogic {
       revert Errors.UnhealtyLoan();
     }
 
-    if (params.loanConfig.totalAssets == 0 && userTotalDebt > baseAmount) {
+    if (params.loanConfig.totalAssets == 0 && baseUserTotalDebt > baseAmount) {
       revert Errors.UnhealtyLoan();
     }
   }
@@ -122,13 +124,14 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (, uint256 userTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
+    (, uint256 baseUserTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
       .calculateFutureLoanData(
         params.loanConfig.loanId,
         params.amount,
         params.price,
         params.user,
         params.reserveOracle,
+        params.uTokenFactory,
         params.reserve,
         params.loanConfig
       );
@@ -148,27 +151,26 @@ library ValidationLogic {
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
     }
-    if (params.loanConfig.totalAssets == 0 && userTotalDebt < baseAmount) {
+    if (params.loanConfig.totalAssets == 0 && baseUserTotalDebt < baseAmount) {
       revert Errors.HealtyLoan();
     }
   }
 
   function validateRepay(
     bytes32 loanId,
-    address user,
+    address uTokenFactory,
     uint256 amount,
     address reserveOracle,
     DataTypes.ReserveData memory reserve
   ) internal view {
     // Check allowance to perform the payment to the UToken
-    uint256 loanDebtInBaseCurrency = GenericLogic.calculateLoanDebt(
+    uint256 loanDebt = GenericLogic.calculateLoanDebt(
       loanId,
-      user,
-      reserveOracle,
-      reserve
+      uTokenFactory,
+      reserve.underlyingAsset
     );
 
-    if (amount > loanDebtInBaseCurrency) {
+    if (amount > loanDebt) {
       revert Errors.AmountExceedsDebt();
     }
   }

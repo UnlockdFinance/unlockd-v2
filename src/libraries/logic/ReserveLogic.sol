@@ -337,6 +337,8 @@ library ReserveLogic {
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // INVEST ON ESTRATEGY
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+
   function strategyInvest(
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balances,
@@ -384,7 +386,6 @@ library ReserveLogic {
       reserve.getNormalizedIncome()
     );
 
-    // TODO _ NO FUNCIONA BIEN
     uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateAmountToWithdraw(
       totalSupplyNotInvested,
       address(this),
