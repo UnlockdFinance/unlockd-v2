@@ -119,16 +119,17 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         owner: loan.owner
       })
     );
+
     if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
       revert Errors.TokenAssetsMismatch();
     }
-    if (signSellNow.loan.totalAssets > 1) {
+    if (signSellNow.loan.totalAssets == 0) {
+      // If there is only one we can remove the loan
+      delete _loans[loan.loanId];
+    } else {
       // Activate loan
       _loans[loan.loanId].activate();
       _loans[signSellNow.loan.loanId].totalAssets = signSellNow.loan.totalAssets;
-    } else {
-      // If there is only one we can remove the loan
-      delete _loans[loan.loanId];
     }
 
     emit ForceSold(
