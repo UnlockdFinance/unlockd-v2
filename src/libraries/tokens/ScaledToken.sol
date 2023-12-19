@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
-
-import {BaseToken, Errors, DataTypes} from '../libraries/base/BaseToken.sol';
-import {IUToken} from '../interfaces/tokens/IUToken.sol';
-import {IDebtToken} from '../interfaces/tokens/IDebtToken.sol';
-
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
+import {BaseToken, Errors, DataTypes} from '../base/BaseToken.sol';
+import {WadRayMath} from '../math/WadRayMath.sol';
 
 /**
  * @title ScaledToken

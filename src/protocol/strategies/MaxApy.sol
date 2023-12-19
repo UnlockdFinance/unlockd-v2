@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 import {IMaxApyVault} from '@maxapy/interfaces/IMaxApyVault.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 
@@ -26,12 +26,12 @@ contract MaxApyStrategy is IStrategy {
     _percentageToInvest = percentageToInvest_;
   }
 
-  function name() external view returns (string memory) {
+  function name() external pure returns (string memory) {
     return 'MaxAPY';
   }
 
   // Returns a description for this strategy
-  function description() external view returns (string memory) {
+  function description() external pure returns (string memory) {
     return 'MaxAPY strategy';
   }
 
@@ -63,7 +63,9 @@ contract MaxApyStrategy is IStrategy {
     uint256 totalSupplyNotInvested,
     address from_,
     uint256 amount_
-  ) external returns (uint256) {
+  ) external view returns (uint256) {
+    from_;
+    amount_;
     if (totalSupplyNotInvested < _minCap) return 0;
     uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
     return investAmount > MIN_AMOUNT_TO_INVEST ? investAmount : 0;
@@ -106,7 +108,7 @@ contract MaxApyStrategy is IStrategy {
   function _getAmountToWithdraw(
     uint256 currentSupply,
     uint256 amount
-  ) internal view returns (uint256) {
+  ) internal pure returns (uint256) {
     if (currentSupply == 0) return amount;
     if (currentSupply / RATIO < amount) {
       return amount;

@@ -6,8 +6,8 @@ import {FixedPointMathLib} from '@solady/utils/FixedPointMathLib.sol';
 
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {IReserveOracle} from '../../interfaces/oracles/IReserveOracle.sol';
-import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+// import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
+// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
@@ -38,17 +38,18 @@ library GenericLogic {
     uint256 healthFactor;
     uint256 totalCollateralInReserve;
     uint256 totalDebtInReserve;
+    uint256 amount;
   }
 
   function calculateFutureLoanData(
     bytes32 loanId,
-    uint256 amount,
-    uint256 price,
+    uint256 amount, // Amoun in the underlying asset selected
+    uint256 price, // Price in Base Amount (USD)
     address user,
     address reserveOracle,
     DataTypes.ReserveData memory reserveData,
     DataTypes.SignLoanConfig memory loanConfig
-  ) internal view returns (uint256, uint256, uint256) {
+  ) internal view returns (uint256, uint256, uint256, uint256) {
     CalculateLoanDataVars memory vars;
 
     // Calculate the reserve price
@@ -56,6 +57,9 @@ library GenericLogic {
     vars.reserveUnitPrice = IReserveOracle(reserveOracle).getAssetPrice(
       reserveData.underlyingAsset
     );
+    // WARNING : We need to transform the asset to the BASE amount
+
+    vars.amount = amount.mulDiv(vars.reserveUnit, vars.reserveUnitPrice);
     // Calculate total debt in base currency
     vars.totalDebtInReserve = getUserDebtInBaseCurrency(
       loanId,
@@ -66,10 +70,13 @@ library GenericLogic {
     );
 
     // If the total assets are 0, then we need to calculate the collateral with the current value
-    uint256 collateral = loanConfig.totalAssets == 0 ? price : loanConfig.aggLoanPrice;
-    vars.totalCollateralInReserve = collateral.mulDiv(vars.reserveUnit, vars.reserveUnitPrice);
+    // All the assets are expresed in the amount of the BASE (USD)
+    vars.totalCollateralInReserve = loanConfig.totalAssets == 0 ? price : loanConfig.aggLoanPrice;
 
-    uint256 updatedDebt = vars.totalDebtInReserve > amount ? vars.totalDebtInReserve - amount : 0;
+    uint256 updatedDebt = vars.totalDebtInReserve > vars.amount
+      ? vars.totalDebtInReserve - vars.amount
+      : 0;
+
     // Calculate the HF
     vars.healthFactor = calculateHealthFactorFromBalances(
       vars.totalCollateralInReserve,
@@ -77,7 +84,7 @@ library GenericLogic {
       loanConfig.aggLiquidationThreshold
     );
 
-    return (vars.totalCollateralInReserve, vars.totalDebtInReserve, vars.healthFactor);
+    return (vars.totalCollateralInReserve, vars.totalDebtInReserve, vars.amount, vars.healthFactor);
   }
 
   struct CalculateLoanDebtDataVars {
@@ -179,15 +186,20 @@ library GenericLogic {
     DataTypes.ReserveData memory reserve,
     uint256 assetPrice,
     uint256 assetUnit
-  ) internal view returns (uint256) {
+  ) internal pure returns (uint256) {
+    reserve;
+    user;
+    assetPrice;
+    assetUnit;
     if (loanId == 0) return 0;
     // fetching variable debt
-    uint256 userTotalDebt = IDebtToken(reserve.debtTokenAddress).scaledBalanceOf(loanId, user);
+    uint256 userTotalDebt = 0;
+    // IDebtToken(reserve.debtTokenAddress).scaledBalanceOf(loanId, user);
     if (userTotalDebt == 0) return 0;
 
-    userTotalDebt = userTotalDebt.rayMul(
-      IUToken(reserve.uToken).getReserveNormalizedVariableDebt()
-    );
+    // userTotalDebt = userTotalDebt.rayMul(
+    //   IUToken(reserve.uToken).getReserveNormalizedVariableDebt()
+    // );
 
     return assetPrice.mulDiv(userTotalDebt, assetUnit);
   }

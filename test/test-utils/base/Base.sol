@@ -6,7 +6,7 @@ import '../mock/yearn/MockYVault.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 import {ReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
-import {UToken} from '../../../src/protocol/UToken.sol';
+// import {UToken} from '../../../src/protocol/UToken.sol';
 import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
 import {DataTypes, Constants} from '../../../src/types/DataTypes.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
@@ -39,7 +39,7 @@ contract Base is Test {
 
   ACLManager internal _aclManager;
 
-  mapping(string => UToken) _uTokens;
+  mapping(string => address) _uTokens;
 
   Unlockd internal _unlock;
 
@@ -76,7 +76,7 @@ contract Base is Test {
     return _aclManager;
   }
 
-  function getUToken(string memory name) internal view returns (UToken) {
+  function getUToken(string memory name) internal view returns (address) {
     return _uTokens[name];
   }
 

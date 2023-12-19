@@ -2,11 +2,10 @@
 pragma solidity 0.8.19;
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
-import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
-
+import {WadRayMath} from '../math/WadRayMath.sol';
+import {PercentageMath} from '../math/PercentageMath.sol';
+import {Errors} from '../helpers/Errors.sol';
+import {DataTypes} from '../../types/DataTypes.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 
 /**
@@ -83,7 +82,7 @@ contract InterestRate is IInterestRate {
    * @return the base variable borrow rate
    *
    */
-  function baseVariableBorrowRate() external view override returns (uint256) {
+  function baseVariableBorrowRate() external view returns (uint256) {
     return _baseVariableBorrowRate;
   }
 
@@ -92,32 +91,24 @@ contract InterestRate is IInterestRate {
    * @return the maximum variable borrow rate
    *
    */
-  function getMaxVariableBorrowRate() external view override returns (uint256) {
+  function getMaxVariableBorrowRate() external view returns (uint256) {
     return _baseVariableBorrowRate + (_variableRateSlope1) + (_variableRateSlope2);
   }
 
   /**
    * @dev Calculates the interest rates depending on the reserve's state and configurations
-   * @param uToken The uToken address
-   * @param liquidityAdded The liquidity added during the operation
-   * @param liquidityTaken The liquidity taken during the operation
-   * @param totalVariableDebt The total borrowed from the reserve at a variable rate
-   * @param reserveFactor The reserve portion of the interest that goes to the treasury of the market
    * @return The liquidity rate, the stable borrow rate and the variable borrow rate
    *
    */
   function calculateInterestRates(
-    address uToken,
-    uint256 liquidityAdded,
-    uint256 liquidityTaken,
-    uint256 totalVariableDebt,
-    uint256 reserveFactor
-  ) external view override returns (uint256, uint256) {
+    CalculateInterestRatesParams memory params
+  ) external view returns (uint256, uint256) {
     //avoid stack too deep
-    uint256 availableLiquidity = IUToken(uToken).totalSupply() +
-      (liquidityAdded) -
-      (liquidityTaken);
-    return calculateInterestRates(availableLiquidity, totalVariableDebt, reserveFactor);
+    uint256 availableLiquidity = params.totalSupplyAssets +
+      (params.liquidityAdded) -
+      (params.liquidityTaken);
+    return
+      calculateInterestRates(availableLiquidity, params.totalVariableDebt, params.reserveFactor);
   }
 
   struct CalcInterestRatesLocalVars {
@@ -142,7 +133,7 @@ contract InterestRate is IInterestRate {
     uint256 availableLiquidity,
     uint256 totalVariableDebt,
     uint256 reserveFactor
-  ) public view override returns (uint256 currentLiquidityRate, uint256 currentVariableBorrowRate) {
+  ) public view returns (uint256 currentLiquidityRate, uint256 currentVariableBorrowRate) {
     uint256 utilizationRate = totalVariableDebt == 0
       ? 0
       : totalVariableDebt.rayDiv(availableLiquidity + (totalVariableDebt));

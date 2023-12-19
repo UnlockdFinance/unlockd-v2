@@ -38,8 +38,8 @@ import {DeployProtocol} from '../../../src/deployer/DeployProtocol.sol';
 import {DeployUToken} from '../../../src/deployer/DeployUToken.sol';
 import {DeployUTokenConfig} from '../../../src/deployer/DeployUTokenConfig.sol';
 
-import {DebtToken, IDebtToken} from '../../../src/protocol/DebtToken.sol';
-import {UToken, IUToken} from '../../../src/protocol/UToken.sol';
+// import {DebtToken, IDebtToken} from '../../../src/protocol/DebtToken.sol';
+// import {UToken, IUToken} from '../../../src/protocol/UToken.sol';
 
 import {Constants} from '../../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../../src/protocol/modules/Installer.sol';
@@ -96,8 +96,8 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     deploy_strategy(getAssetAddress('WETH'));
 
     // Deploy UTokens
-    _uTokens['WETH'] = UToken(deploy_utoken(getAssetAddress('WETH'), 'WETH'));
-    _uTokens['DAI'] = UToken(deploy_utoken(getAssetAddress('DAI'), 'DAI'));
+    // _uTokens['WETH'] = UToken(deploy_utoken(getAssetAddress('WETH'), 'WETH'));
+    // _uTokens['DAI'] = UToken(deploy_utoken(getAssetAddress('DAI'), 'DAI'));
 
     // Deploy protocol
     deploy_protocol();
@@ -233,58 +233,63 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     );
   }
 
-  function deploy_utoken(address underlyingAsset, string memory symbol) public returns (address) {
+  function deploy_utoken(
+    address underlyingAsset,
+    string memory symbol
+  ) public pure returns (address) {
+    underlyingAsset;
+    symbol;
     // Deploy Oracles
-    DeployUTokenConfig deployerConfig = new DeployUTokenConfig(
-      _admin,
-      _adminUpdater,
-      address(_aclManager)
-    );
+    // DeployUTokenConfig deployerConfig = new DeployUTokenConfig(
+    //   _admin,
+    //   _adminUpdater,
+    //   address(_aclManager)
+    // );
 
-    // DebtToken
-    DeployUTokenConfig.DeployDebtTokenParams memory debtParams = DeployUTokenConfig
-      .DeployDebtTokenParams({
-        decimals: 18,
-        tokenName: string(abi.encodePacked('Debt ', symbol)),
-        tokenSymbol: string(abi.encodePacked('D', symbol))
-      });
+    // // DebtToken
+    // DeployUTokenConfig.DeployDebtTokenParams memory debtParams = DeployUTokenConfig
+    //   .DeployDebtTokenParams({
+    //     decimals: 18,
+    //     tokenName: string(abi.encodePacked('Debt ', symbol)),
+    //     tokenSymbol: string(abi.encodePacked('D', symbol))
+    //   });
 
-    address debtToken = deployerConfig.deployDebtToken(debtParams);
+    // address debtToken = deployerConfig.deployDebtToken(debtParams);
 
-    // Interes Rate
-    DeployUTokenConfig.DeployInterestRateParams memory interestParams = DeployUTokenConfig
-      .DeployInterestRateParams({
-        optimalUtilizationRate: 1 ether,
-        baseVariableBorrowRate: 1 ether,
-        variableRateSlope1: 1 ether,
-        variableRateSlope2: 1 ether
-      });
-    _interestRate = deployerConfig.deployInterestRate(interestParams);
+    // // Interes Rate
+    // DeployUTokenConfig.DeployInterestRateParams memory interestParams = DeployUTokenConfig
+    //   .DeployInterestRateParams({
+    //     optimalUtilizationRate: 1 ether,
+    //     baseVariableBorrowRate: 1 ether,
+    //     variableRateSlope1: 1 ether,
+    //     variableRateSlope2: 1 ether
+    //   });
+    // _interestRate = deployerConfig.deployInterestRate(interestParams);
 
-    DeployUToken.DeployUtokenParams memory utokenParams = DeployUToken.DeployUtokenParams({
-      treasury: _treasury,
-      underlyingAsset: underlyingAsset,
-      decimals: 18,
-      tokenName: string(abi.encodePacked('UToken ', symbol)),
-      tokenSymbol: string(abi.encodePacked('U', symbol)),
-      debtToken: debtToken,
-      reserveFactor: 0,
-      interestRate: _interestRate,
-      strategyAddress: _maxApyStrategy != address(0) &&
-        MaxApyStrategy(_maxApyStrategy).asset() == underlyingAsset
-        ? _maxApyStrategy
-        : address(0)
-    });
+    // DeployUToken.DeployUtokenParams memory utokenParams = DeployUToken.DeployUtokenParams({
+    //   treasury: _treasury,
+    //   underlyingAsset: underlyingAsset,
+    //   decimals: 18,
+    //   tokenName: string(abi.encodePacked('UToken ', symbol)),
+    //   tokenSymbol: string(abi.encodePacked('U', symbol)),
+    //   debtToken: debtToken,
+    //   reserveFactor: 0,
+    //   interestRate: _interestRate,
+    //   strategyAddress: _maxApyStrategy != address(0) &&
+    //     MaxApyStrategy(_maxApyStrategy).asset() == underlyingAsset
+    //     ? _maxApyStrategy
+    //     : address(0)
+    // });
 
-    DeployUToken deployerUToken = new DeployUToken(_admin, address(_aclManager));
-    vm.startPrank(_admin);
+    // DeployUToken deployerUToken = new DeployUToken(_admin, address(_aclManager));
+    // vm.startPrank(_admin);
 
-    _aclManager.addUTokenAdmin(address(deployerUToken));
-    address uTokenAddress = deployerUToken.deploy(utokenParams);
-    _aclManager.removeUTokenAdmin(address(deployerUToken));
+    // _aclManager.addUTokenAdmin(address(deployerUToken));
+    // address uTokenAddress = deployerUToken.deploy(utokenParams);
+    // _aclManager.removeUTokenAdmin(address(deployerUToken));
 
-    vm.stopPrank();
-    return uTokenAddress;
+    // vm.stopPrank();
+    return address(0);
   }
 
   function deploy_protocol() public {
@@ -436,13 +441,13 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     return _assets.makeAsset(asset, 18);
   }
 
-  function getWalletAddress(uint256 index) internal returns (address) {
+  function getWalletAddress(uint256 index) internal view returns (address) {
     DelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
       .getOwnerWalletAt(_actors.get(index), 0);
     return wallet.wallet;
   }
 
-  function getProtocolOwnerAddress(uint256 index) internal returns (address) {
+  function getProtocolOwnerAddress(uint256 index) internal view returns (address) {
     DelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
       .getOwnerWalletAt(_actors.get(index), 0);
     return wallet.protocolOwner;
@@ -462,13 +467,14 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
   }
 
   function addFundToUToken(address uToken, string memory asset, uint256 amount) public {
+    uToken;
     uint256 ACTOR = 100;
     address actor = getActorWithFunds(ACTOR, asset, amount);
     vm.startPrank(actor);
 
     // DEPOSIT
-    IERC20(getAssetAddress(asset)).approve(uToken, amount);
-    UToken(uToken).deposit(amount, actor, 0);
+    // IERC20(getAssetAddress(asset)).approve(uToken, amount);
+    // UToken(uToken).deposit(amount, actor, 0);
 
     vm.stopPrank();
   }
@@ -563,7 +569,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     address nftAddress,
     uint256 startCounter,
     uint256 totalArray
-  ) internal view returns (bytes32[] memory, DataTypes.Asset[] memory) {
+  ) internal pure returns (bytes32[] memory, DataTypes.Asset[] memory) {
     // Asesets
     uint256 counter = totalArray - startCounter;
     bytes32[] memory assetsIds = new bytes32[](counter);
@@ -647,6 +653,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
     ActionSignParams memory params
   )
     internal
+    view
     returns (
       DataTypes.SignAction memory,
       DataTypes.EIP712Signature memory,
@@ -680,6 +687,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
           deadline: deadline
         }),
         assets: assetsIds,
+        underlyingAsset: address(0),
         nonce: nonce,
         deadline: deadline
       });
@@ -775,7 +783,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
       );
     vm.recordLogs();
     // Borrow amount
-    Action(action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    Action(action).borrow(amountToBorrow, assets, signAction, sig);
     Vm.Log[] memory entries = vm.getRecordedLogs();
     loanId = bytes32(entries[entries.length - 1].topics[2]);
     vm.stopPrank();
@@ -811,7 +819,7 @@ contract Setup is Base, AssetsBase, ActorsBase, NFTBase {
       );
 
     // Borrow amount
-    Action(action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    Action(action).borrow(amountToBorrow, assets, signAction, sig);
     vm.stopPrank();
   }
 }

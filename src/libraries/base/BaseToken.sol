@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {ERC20Upgradeable} from '../utils/tokens/ERC20Upgradeable.sol';
-import {UTokenStorage} from '../storage/UTokenStorage.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../helpers/Errors.sol';
@@ -46,6 +45,13 @@ abstract contract BaseToken is ERC20Upgradeable {
     _;
   }
 
+  modifier onlyEmergencyAdmin() {
+    if (IACLManager(_aclManager).isEmergencyAdmin(msg.sender) == false) {
+      revert Errors.ProtocolAccessDenied();
+    }
+    _;
+  }
+
   modifier onlyAdmin() {
     if (IACLManager(_aclManager).isUTokenAdmin(_msgSender()) == false) {
       revert Errors.UTokenAccessDenied();
@@ -72,14 +78,14 @@ abstract contract BaseToken is ERC20Upgradeable {
   ////////////////////////////////////////////////////7
 
   function __BaseToken_init(
-    address aclManager,
-    uint8 decimals,
-    string calldata name,
-    string calldata symbol
+    address aclManager_,
+    uint8 decimals_,
+    string calldata name_,
+    string calldata symbol_
   ) internal initializer {
-    _aclManager = aclManager;
-    _decimals = decimals;
-    __ERC20_init(name, symbol);
+    _aclManager = aclManager_;
+    _decimals = decimals_;
+    __ERC20_init(name_, symbol_);
 
     // Set inital state
     _active = true;
@@ -90,11 +96,11 @@ abstract contract BaseToken is ERC20Upgradeable {
   // PUBLIC
   ////////////////////////////////////////////////////7
 
-  function setActive(bool active) external onlyAdmin {
+  function setActive(bool active) external onlyEmergencyAdmin {
     _active = active;
   }
 
-  function setFrozen(bool frozen) external onlyAdmin {
+  function setFrozen(bool frozen) external onlyEmergencyAdmin {
     _frozen = frozen;
   }
 
@@ -110,11 +116,11 @@ abstract contract BaseToken is ERC20Upgradeable {
     super._transfer(sender, recipient, amount);
   }
 
-  function _mint(address account, uint256 amount) internal virtual override isActive isFrozen {
+  function _mint(address account, uint256 amount) internal virtual override isFrozen isActive {
     super._mint(account, amount);
   }
 
-  function _burn(address account, uint256 amount) internal virtual override isActive {
+  function _burn(address account, uint256 amount) internal virtual override isFrozen {
     super._burn(account, amount);
   }
 }

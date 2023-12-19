@@ -19,7 +19,6 @@ import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
 // import {console} from 'forge-std/console.sol';
 
@@ -67,9 +66,7 @@ library ValidationLogic {
     DataTypes.SignLoanConfig loanConfig;
   }
 
-  function validateFutureLoanState(
-    ValidateLoanStateParams memory params
-  ) internal view returns (uint256 userPendingDebt) {
+  function validateFutureLoanState(ValidateLoanStateParams memory params) internal view {
     // We always need to define the LTV and the Liquidation threshold
     if (params.loanConfig.aggLtv == 0 || params.loanConfig.aggLtv > 9999) {
       revert Errors.InvalidCurrentLtv();
@@ -82,15 +79,16 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
-      params.loanConfig.loanId,
-      params.amount,
-      params.price,
-      params.user,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
-    );
+    (, uint256 userTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
+      .calculateFutureLoanData(
+        params.loanConfig.loanId,
+        params.amount,
+        params.price,
+        params.user,
+        params.reserveOracle,
+        params.reserve,
+        params.loanConfig
+      );
 
     // ........................ DEBUG MODE ....................................
     // console.log('> validateFutureLoanState ----------------------------------------------- <');
@@ -106,15 +104,12 @@ library ValidationLogic {
       revert Errors.UnhealtyLoan();
     }
 
-    if (params.loanConfig.totalAssets == 0 && userTotalDebt > params.amount) {
+    if (params.loanConfig.totalAssets == 0 && userTotalDebt > baseAmount) {
       revert Errors.UnhealtyLoan();
     }
-    return userTotalDebt;
   }
 
-  function validateFutureUnhealtyLoanState(
-    ValidateLoanStateParams memory params
-  ) internal view returns (uint256 userPendingDebt) {
+  function validateFutureUnhealtyLoanState(ValidateLoanStateParams memory params) internal view {
     // We always need to define the LTV and the Liquidation threshold
     if (params.loanConfig.aggLtv == 0 || params.loanConfig.aggLtv > 9999) {
       revert Errors.InvalidCurrentLtv();
@@ -127,15 +122,16 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
-      params.loanConfig.loanId,
-      params.amount,
-      params.price,
-      params.user,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
-    );
+    (, uint256 userTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
+      .calculateFutureLoanData(
+        params.loanConfig.loanId,
+        params.amount,
+        params.price,
+        params.user,
+        params.reserveOracle,
+        params.reserve,
+        params.loanConfig
+      );
 
     // ........................ DEBUG MODE ....................................
     // console.log(
@@ -152,10 +148,9 @@ library ValidationLogic {
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
     }
-    if (params.loanConfig.totalAssets == 0 && userTotalDebt < params.amount) {
+    if (params.loanConfig.totalAssets == 0 && userTotalDebt < baseAmount) {
       revert Errors.HealtyLoan();
     }
-    return userTotalDebt;
   }
 
   function validateRepay(
@@ -202,7 +197,7 @@ library ValidationLogic {
     Errors.verifyNotExpiredTimestamp(orderTimeframeEndtime, block.timestamp);
 
     // Check if it is a biddable order
-    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
   }
 
   function validateBuyNow(
@@ -217,7 +212,7 @@ library ValidationLogic {
     ) {
       revert Errors.OrderNotAllowed();
     }
-    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
     if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
@@ -248,7 +243,7 @@ library ValidationLogic {
     if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
-    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
   }
 
   struct ValidateCreateOrderMarketParams {
@@ -342,7 +337,7 @@ library ValidationLogic {
     DataTypes.Order memory order,
     DataTypes.Loan memory loan
   ) internal view {
-    if (loan.totalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loan.totalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
     if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION)
       revert Errors.OrderNotAllowed();
 

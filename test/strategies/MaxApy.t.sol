@@ -43,8 +43,8 @@ contract MaxApyTest is Setup {
 
     // Create wallet and mint to the safe wallet
     createWalletAndMintTokens(ACTOR, 'PUNK');
-    writeTokenBalance(_actor, _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
-    writeTokenBalance(address(_market), _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
+    // writeTokenBalance(_actor, _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
+    // writeTokenBalance(address(_market), _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
     _protocolOwner = getProtocolOwnerAddress(ACTOR);
     _wallet = getWalletAddress(ACTOR);
     _nft = super.getNFT('PUNK');

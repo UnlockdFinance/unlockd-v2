@@ -18,12 +18,11 @@ library DataTypes {
     uint128 totalSupplyScaled;
     // Total supply borrowed
     uint128 totalBorrowScaled;
-   
       // last update
     uint40 lastUpdateTimestamp;
   }
 
-  struct ReserveDataV2 {
+  struct ReserveData {
     //the liquidity index. Expressed in ray
     uint128 liquidityIndex;
     //variable borrow index. Expressed in ray
@@ -40,6 +39,8 @@ library DataTypes {
     uint16 reserveFactor;
     // address asset
     address underlyingAsset;
+    // Decimals of the underlyingAsset
+    uint8 decimals;
     // address scaled token
     address scaledTokenAddress;
     //address of the interest rate strategy
@@ -50,73 +51,7 @@ library DataTypes {
     uint40 lastUpdateTimestamp;
   }
 
-  struct CreateMarketParams {
-    address interestRateAddress;
-    address strategyAddress;
-    uint16 reserveFactor;
-  }
-
-  struct CalculateInterestRatesParams {
-    uint256 liquidityAdded;
-    uint256 liquidityTaken;
-    uint256 totalVariableDebt;
-    uint256 totalSupplyAssets;
-    uint256 reserveFactor;
-  }
-  
-  struct ReserveCache {
-    uint256 currScaledVariableDebt;
-    uint256 nextScaledVariableDebt;
-
-    uint256 currLiquidityIndex;
-    uint256 nextLiquidityIndex;
-    
-    uint256 currVariableBorrowIndex;
-    uint256 nextVariableBorrowIndex;
-    
-    uint256 currLiquidityRate;
-    uint256 currVariableBorrowRate;
-    
-    uint256 reserveFactor; 
-    uint40 reserveLastUpdateTimestamp;
-  }
-
-  struct ReserveData {
-    // Slot 0
-    //the liquidity index. Expressed in ray
-    uint128 liquidityIndex;
-    //variable borrow index. Expressed in ray
-    uint128 variableBorrowIndex;
-    // Slot 1
-    //the current supply rate. Expressed in ray
-    uint128 currentLiquidityRate;
-    //the current variable borrow rate. Expressed in ray
-    uint128 currentVariableBorrowRate;
-    // Slot 2
-    address uToken;
-    // last update
-    uint40 lastUpdateTimestamp;
-    // Decimals of the underlyingAsset
-    uint8 decimals;
-    // Reserve factor
-    uint16 reserveFactor;
-    // Slot 3
-    //debt token
-    address debtTokenAddress;
-    // Slot 4
-    // Underlying Token
-    address underlyingAsset;
-    // Slot 5
-    //address of the interest rate strategy 
-    address interestRateAddress;
-    // address of the strategy
-    address strategyAddress;
-    // Amount that are not invested
-    uint256 freeAmount;
-    // Invested amount
-    uint256 investedAmount;
-    
-  }
+   
 
   ///////////////////////////////////////////////////////
   // ORDER 
@@ -173,7 +108,6 @@ library DataTypes {
     // Slot 0
     bytes32 loanId;
     // Slot 1
-    address uToken;
     uint88 totalAssets;
     Constants.LoanState state;
     // Slot 2
@@ -260,6 +194,7 @@ library DataTypes {
   struct SignAction {
     SignLoanConfig loan;
     bytes32[] assets;
+    address underlyingAsset;
     uint256 nonce;
     uint256 deadline;
   }

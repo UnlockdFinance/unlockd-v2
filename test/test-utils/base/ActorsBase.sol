@@ -7,7 +7,7 @@ contract ActorsBase {
   // Actors
   ActorsState internal _actors;
 
-  function getActorAddress(uint256 index) internal returns (address) {
+  function getActorAddress(uint256 index) internal view returns (address) {
     return _actors.get(index);
   }
 }

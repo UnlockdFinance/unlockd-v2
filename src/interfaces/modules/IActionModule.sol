@@ -19,7 +19,6 @@ interface IActionModule is ILoan {
   // Functions
 
   function borrow(
-    address uToken,
     uint256 amount,
     DataTypes.Asset[] calldata assets,
     DataTypes.SignAction calldata signAction,

@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {Constants} from '../helpers/Constants.sol';
@@ -93,13 +93,13 @@ library OrderLogic {
   struct BorrowByBidderParams {
     bytes32 loanId;
     address owner;
-    address uToken;
+    address underlyingAsset;
     uint256 amountOfDebt;
     uint256 assetPrice;
     uint256 assetLtv;
   }
 
-  function borrowByBidder(BorrowByBidderParams memory params) internal {
+  function borrowByBidder(BorrowByBidderParams memory params) internal pure {
     if (params.loanId == 0) revert Errors.InvalidLoanId();
     uint256 maxAmountToBorrow = GenericLogic.calculateAvailableBorrows(
       params.assetPrice,
@@ -110,17 +110,17 @@ library OrderLogic {
       revert Errors.AmountExceedsDebt();
     }
 
-    IUToken(params.uToken).borrowOnBelhalf(
-      params.loanId,
-      params.amountOfDebt,
-      address(this),
-      params.owner
-    );
+    // IUToken(params.uToken).borrowOnBelhalf(
+    //   params.loanId,
+    //   params.amountOfDebt,
+    //   address(this),
+    //   params.owner
+    // );
   }
 
   struct RepayDebtParams {
     address owner;
-    address uToken;
+    // address uToken;
     address from;
     address underlyingAsset;
     bytes32 loanId;
@@ -130,15 +130,15 @@ library OrderLogic {
   function repayDebt(RepayDebtParams memory params) internal {
     // Check if there is a loan asociated
     // We repay the total debt
-    IERC20(params.underlyingAsset).approve(params.uToken, params.amount);
+    // IERC20(params.underlyingAsset).approve(params.uToken, params.amount);
     // Repay the debt
-    IUToken(params.uToken).repayOnBelhalf(params.loanId, params.amount, params.from, params.owner);
+    // IUToken(params.uToken).repayOnBelhalf(params.loanId, params.amount, params.from, params.owner);
   }
 
   struct RefundBidderParams {
     bytes32 loanId;
     address owner;
-    address uToken;
+    // address uToken;
     address from;
     address underlyingAsset;
     address reserveOracle;
@@ -175,7 +175,7 @@ library OrderLogic {
           RepayDebtParams({
             loanId: params.loanId,
             owner: params.owner,
-            uToken: params.uToken,
+            // uToken: params.uToken,
             from: params.from,
             underlyingAsset: params.underlyingAsset,
             amount: supportedDebt
@@ -283,7 +283,7 @@ library OrderLogic {
   struct RepayDebtToSellParams {
     address reserveOracle;
     address underlyingAsset;
-    address uToken;
+    // address uToken;
     address from;
     uint256 totalAmount;
     uint256 aggLoanPrice;
@@ -313,7 +313,7 @@ library OrderLogic {
         RepayDebtParams({
           loanId: order.offer.loanId,
           owner: order.owner,
-          uToken: params.uToken,
+          // uToken: params.uToken,
           from: params.from,
           underlyingAsset: params.underlyingAsset,
           amount: debtAmount

@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IUToken, DataTypes} from '../../interfaces/tokens/IUToken.sol';
+// import {IUToken, DataTypes} from '../../interfaces/tokens/IUToken.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
-import {GenericLogic} from './GenericLogic.sol';
+import {GenericLogic, DataTypes} from './GenericLogic.sol';
 
 library BuyNowLogic {
   /**
    *  @dev In charge of the calculation to buy the asset to get the max Amount needed contributed by
    *  the user and the max amount to borrow by the protocol to buy the asset.
-   *  @param uToken address of the token to buy the asset
+   *  @param underlyingAsset address of the token to buy the asset
    *  @param buyData struct with the information needed to buy the asset
    */
   function calculations(
-    address uToken,
+    address underlyingAsset,
     DataTypes.SignBuyNow calldata buyData
-  ) internal view returns (uint256, uint256) {
-    if (IUToken(uToken).UNDERLYING_ASSET_ADDRESS() != buyData.underlyingAsset) {
+  ) internal pure returns (uint256, uint256) {
+    if (underlyingAsset != buyData.underlyingAsset) {
       revert Errors.NotEqualUnderlyingAsset();
     }
 

@@ -99,6 +99,7 @@ contract SellNowTest is Setup {
           deadline: deadline
         }),
         assets: assetsIds,
+        underlyingAsset: address(0),
         nonce: nonce,
         deadline: deadline
       });
@@ -128,7 +129,7 @@ contract SellNowTest is Setup {
       );
 
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     // We check the new balance
     assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
     // Check if the asset is locked
@@ -474,7 +475,7 @@ contract SellNowTest is Setup {
       LoanData({loanId: loanId, aggLoanPrice: 2 ether, totalAssets: 3})
     );
     hoax(_actor);
-    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotUpdated.selector));
     SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
   }
 
@@ -643,7 +644,7 @@ contract SellNowTest is Setup {
       LoanData({loanId: loanId, aggLoanPrice: 1.5 ether, totalAssets: 0}) // Set unhealty loan
     );
     hoax(_admin);
-    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotUpdated.selector));
     SellNow(_sellNow).forceSell(_reservoirAdapter, asset, data, sig);
   }
 }

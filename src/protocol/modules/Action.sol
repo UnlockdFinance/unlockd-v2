@@ -13,7 +13,8 @@ import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 
 import {IActionModule} from '../../interfaces/modules/IActionModule.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {UTokenFactory} from '../UTokenFactory.sol';
 import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
@@ -47,7 +48,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         loanId,
         loan.owner,
         _reserveOracle,
-        IUToken(loan.uToken).getReserve()
+        UTokenFactory(_uTokenFactory).getReserveData(loan.underlyingAsset)
       );
   }
 
@@ -56,19 +57,17 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
    *  - Create a new loan and borrow some colateral
    *  - If the amount is 0 and you pass the array of assets you can add colaterall to a especific loanId
    *  - If the amount is > 0 and the loanId exist
-   *  @param uToken address of the utoken
    *  @param amount Amount asked for the user to perform the borrow
    *  @param signAction struct with all the parameter needed to perform the borrow
    *  @param sig validation of the signature
    *
    * */
   function borrow(
-    address uToken,
     uint256 amount,
     DataTypes.Asset[] calldata assets,
     DataTypes.SignAction calldata signAction,
     DataTypes.EIP712Signature calldata sig
-  ) external isUTokenAllowed(uToken) {
+  ) external {
     address msgSender = unpackTrailingParamMsgSender();
     _checkHasUnlockdWallet(msgSender);
 
@@ -77,8 +76,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
     uint256 cachedAssets = assets.length;
 
-    DataTypes.ReserveData memory reserve = IUToken(uToken).getReserve();
-
+    DataTypes.ReserveData memory reserve = UTokenFactory(_uTokenFactory).getReserveData(
+      signAction.underlyingAsset
+    );
     // Generate the loanID
     // Check if exist
     DataTypes.Loan memory loan;
@@ -97,11 +97,11 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         signAction.loan.nonce,
         signAction.loan.deadline
       );
+
       _loans[loanId].createLoan(
         LoanLogic.ParamsCreateLoan({
           msgSender: msgSender,
-          uToken: uToken,
-          underlyingAsset: reserve.underlyingAsset,
+          underlyingAsset: signAction.underlyingAsset,
           // We added only when we lock the assets
           totalAssets: 0,
           loanId: loanId
@@ -117,14 +117,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       if (loan.owner != msgSender) {
         revert Errors.InvalidLoanOwner();
       }
-      if (loan.uToken != uToken) {
-        revert Errors.InvalidUToken();
-      }
     }
 
     if (cachedAssets != 0) {
-      // If there is a list of assets we block them to the new loanId
-
       (address wallet, address protocolOwner) = GenericLogic.getMainWallet(
         _walletRegistry,
         msgSender
@@ -134,6 +129,20 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       for (uint256 i; i < cachedAssets; ) {
         DataTypes.Asset memory asset = assets[i];
         bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
+
+        // Validation of params
+        if (assetId != signAction.assets[i]) {
+          revert('NOT_VALID');
+        }
+
+        if (
+          UTokenFactory(_uTokenFactory).validateReserveType(
+            reserve.reserveType,
+            _allowedCollections[asset.collection]
+          ) == false
+        ) {
+          revert('NOT_VALID');
+        }
 
         ValidationLogic.validateLockAsset(
           assetId,
@@ -148,6 +157,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           ++i;
         }
       }
+      // Update total assets
       _loans[loan.loanId].totalAssets = loan.totalAssets + uint88(cachedAssets);
     }
 
@@ -169,16 +179,22 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         revert Errors.LoanNotActive();
       }
       // We have to update the index BEFORE obtaining the borrowed amount.
-      IUToken(uToken).updateStateReserve();
+      UTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
 
-      IUToken(reserve.uToken).borrowOnBelhalf(loan.loanId, amount, msgSender, msgSender);
+      UTokenFactory(_uTokenFactory).borrow(
+        loan.underlyingAsset,
+        loan.loanId,
+        amount,
+        msgSender,
+        msgSender
+      );
     }
 
     if (signAction.loan.totalAssets != _loans[loan.loanId].totalAssets) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
 
-    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.uToken);
+    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.underlyingAsset);
   }
 
   /**
@@ -201,8 +217,10 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     if (loan.owner != msgSender) {
       revert Errors.NotEqualSender();
     }
+    UTokenFactory uTokenFactory = UTokenFactory(_uTokenFactory);
 
-    DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
+    DataTypes.ReserveData memory reserve = uTokenFactory.getReserveData(loan.underlyingAsset);
+    uTokenFactory.updateState(loan.underlyingAsset);
 
     address reserveOracle = _reserveOracle;
 
@@ -215,8 +233,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         reserve
       );
 
-      IUToken(loan.uToken).updateStateReserve();
-      IUToken(loan.uToken).repayOnBelhalf(loan.loanId, amount, msgSender, msgSender);
+      uTokenFactory.repay(loan.underlyingAsset, loan.loanId, amount, msgSender, msgSender);
     }
 
     if (signAction.assets.length != 0) {
@@ -247,7 +264,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     }
 
     if (signAction.loan.totalAssets != _loans[loan.loanId].totalAssets - signAction.assets.length) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
     // If the loan is empty we remove the loan
     if (signAction.loan.totalAssets == 0) {

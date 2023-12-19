@@ -188,7 +188,7 @@ contract SellNowSignTest is Setup {
 
   function buildSignatureAndData(
     uint256 deadline
-  ) private returns (DataTypes.EIP712Signature memory, DataTypes.SignSellNow memory) {
+  ) private view returns (DataTypes.EIP712Signature memory, DataTypes.SignSellNow memory) {
     uint256 nonce = SignSeam(_seam).getNonce(super.getActorAddress(ACTOR));
 
     DataTypes.SignSellNow memory data = buildData(nonce, deadline);

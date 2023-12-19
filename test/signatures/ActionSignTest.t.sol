@@ -191,7 +191,7 @@ contract ActionSignTest is Setup {
 
   function buildSignatureAndData(
     uint256 deadline
-  ) private returns (DataTypes.EIP712Signature memory, DataTypes.SignAction memory) {
+  ) private view returns (DataTypes.EIP712Signature memory, DataTypes.SignAction memory) {
     uint256 nonce = ActionSignSeam(_seam).getNonce(super.getActorAddress(ACTOR));
 
     DataTypes.SignAction memory data = buildData(nonce, deadline);
@@ -234,6 +234,7 @@ contract ActionSignTest is Setup {
           deadline: deadline
         }),
         assets: assets,
+        underlyingAsset: address(0),
         nonce: nonce,
         deadline: deadline
       });

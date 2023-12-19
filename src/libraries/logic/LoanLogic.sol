@@ -13,7 +13,6 @@ library LoanLogic {
 
   struct ParamsCreateLoan {
     address msgSender;
-    address uToken;
     address underlyingAsset;
     bytes32 loanId;
     uint88 totalAssets;
@@ -39,7 +38,6 @@ library LoanLogic {
   function createLoan(DataTypes.Loan storage loan, ParamsCreateLoan memory params) internal {
     unchecked {
       loan.loanId = params.loanId;
-      loan.uToken = params.uToken;
       loan.owner = params.msgSender;
       loan.underlyingAsset = params.underlyingAsset;
       loan.totalAssets = params.totalAssets;

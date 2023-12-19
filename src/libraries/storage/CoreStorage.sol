@@ -32,7 +32,8 @@ contract CoreStorage {
   address internal _reserveOracle;
   // SIGNED ADDRESS
   address internal _signer;
-
+  // UTOKEN FACTORY
+  address internal _uTokenFactory;
   /////////////////////////////////////////
   //  Allowed NFTS
   /////////////////////////////////////////

@@ -10,7 +10,7 @@ contract TestLib {
   function calculations(
     address uToken,
     DataTypes.SignBuyNow calldata buyData
-  ) public view returns (uint256, uint256) {
+  ) public pure returns (uint256, uint256) {
     return BuyNowLogic.calculations(uToken, buyData);
   }
 }
@@ -32,7 +32,7 @@ contract BuyNowLogicTest is Setup {
 
   function test_buyNow_calculations_wrong_uToken() external {
     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualUnderlyingAsset.selector));
-    (uint256 minAmount, uint256 maxAmount) = test.calculations(
+    test.calculations(
       uTokenWrong,
       DataTypes.SignBuyNow({
         asset: DataTypes.SignAsset({

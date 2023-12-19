@@ -19,7 +19,9 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 
 import {SellNowSign} from '../../libraries/signatures/SellNowSign.sol';
 import {ISellNowModule} from '../../interfaces/modules/ISellNowModule.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+
+// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
@@ -73,10 +75,13 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
     DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
 
-    IUToken(loan.uToken).updateStateReserve();
-    DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
+    IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      loan.underlyingAsset
+    );
+    uint256 totalDebt = 0;
 
-    uint256 totalDebt = ValidationLogic.validateFutureUnhealtyLoanState(
+    ValidationLogic.validateFutureUnhealtyLoanState(
       ValidationLogic.ValidateLoanStateParams({
         user: loan.owner,
         amount: 0,
@@ -117,12 +122,12 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         totalDebt: totalDebt,
         marketPrice: signSellNow.marketPrice,
         underlyingAsset: loan.underlyingAsset,
-        uToken: loan.uToken,
+        uTokenFactory: _uTokenFactory,
         owner: loan.owner
       })
     );
     if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
     if (signSellNow.loan.totalAssets > 1) {
       // Activate loan
@@ -169,20 +174,22 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     ValidationLogic.validateOwnerAsset(wallet, asset.collection, asset.tokenId);
 
     uint256 totalDebt = 0;
-    address uToken = address(0);
     bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
     // Check if is not already locked
     if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
       DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
-      uToken = loan.uToken;
+
       // The loan need to be active
       if (loan.state != Constants.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
-      IUToken(loan.uToken).updateStateReserve();
-      DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
 
-      totalDebt = ValidationLogic.validateFutureLoanState(
+      IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+      DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+        loan.underlyingAsset
+      );
+      // TODO : ESTE TOTAL DEBT NO SE PUEDE USAR POR QUE ESTA EN USD
+      ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
           user: loan.owner,
           amount: signSellNow.marketPrice,
@@ -192,6 +199,8 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           loanConfig: signSellNow.loan
         })
       );
+
+      totalDebt = 0; // Calculate the current debt in the asset of the debt
     }
     // Sell the asset using the adapter
     SellNowLogic.sellAsset(
@@ -215,13 +224,13 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           totalDebt: totalDebt,
           marketPrice: signSellNow.marketPrice,
           underlyingAsset: signSellNow.underlyingAsset,
-          uToken: uToken,
+          uTokenFactory: _uTokenFactory,
           owner: msgSender
         })
       );
 
       if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
-        revert Errors.TokenAssetsMismatch();
+        revert Errors.LoanNotUpdated();
       }
       // If we don't have more loans we can remoe it
       if (signSellNow.loan.totalAssets == 0) {

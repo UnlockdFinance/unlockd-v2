@@ -298,7 +298,7 @@ contract AuctionTest is Setup {
     hoax(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
 
-    DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
+    // DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
 
     uint256 minBid = Auction(_auction).getMinBidPriceAuction(
       orderId,
@@ -331,7 +331,7 @@ contract AuctionTest is Setup {
     hoax(actorTwo);
     Auction(_auction).bid(uint128(minBid), 0, signAuction, sig); // BID ON THE ASSET
 
-    DataTypes.Order memory nextOrder = Auction(_auction).getOrderAuction(orderId);
+    // DataTypes.Order memory nextOrder = Auction(_auction).getOrderAuction(orderId);
   }
 
   function test_auction_bid_error_with_market_auction_ongoing_healty() public {
@@ -351,7 +351,7 @@ contract AuctionTest is Setup {
     // We force borrow more because a price increased
     // borrow_more_action(_action, _nft, loanId, ACTOR, 0.2 ether, 10 ether, 1);
 
-    DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
+    // DataTypes.Order memory prevOrder = Market(_market).getOrder(orderId);
 
     uint256 minBid = Auction(_auction).getMinBidPriceAuction(
       orderId,
@@ -385,7 +385,7 @@ contract AuctionTest is Setup {
     vm.expectRevert(Errors.HealtyLoan.selector);
     Auction(_auction).bid(uint128(minBid), 0, signAuction, sig); // BID ON THE ASSET
 
-    DataTypes.Order memory nextOrder = Auction(_auction).getOrderAuction(orderId);
+    // DataTypes.Order memory nextOrder = Auction(_auction).getOrderAuction(orderId);
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -524,13 +524,13 @@ contract AuctionTest is Setup {
       // Add funds to the actor two
 
       hoax(actor);
-      vm.expectRevert(Errors.TokenAssetsMismatch.selector);
+      vm.expectRevert(Errors.LoanNotUpdated.selector);
       Auction(_auction).finalize(orderId, signAuction, sig);
     }
   }
 
   function test_auction_finalize_liquidation_auction_reactivate_loan() public {
-    address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
     vm.recordLogs();
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();

@@ -249,7 +249,7 @@ contract RepayTest is Setup {
       }
     }
     hoax(getActorAddress(ACTOR));
-    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotUpdated.selector));
     Action(_action).repay(0, signAction, sig);
   }
 
@@ -435,7 +435,7 @@ contract RepayTest is Setup {
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assets,
+      ,
 
     ) = action_signature(
         _action,

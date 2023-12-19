@@ -52,6 +52,7 @@ contract ActionSign is BaseSignature {
         TYPEHASH,
         LoanLogic.getLoanStructHash(nonce, signAction.loan),
         keccak256(abi.encodePacked(signAction.assets)),
+        signAction.underlyingAsset,
         nonce,
         signAction.deadline
       )

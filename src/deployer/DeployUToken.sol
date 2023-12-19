@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {UToken, IUToken} from '../protocol/UToken.sol';
-import {DebtToken, IDebtToken} from '../protocol/DebtToken.sol';
+// import {UToken, IUToken} from '../protocol/UToken.sol';
+// import {DebtToken, IDebtToken} from '../protocol/DebtToken.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 import {ACLManager} from '../libraries/configuration/ACLManager.sol';
@@ -30,35 +30,35 @@ contract DeployUToken {
     _aclManager = aclManager;
   }
 
-  function deploy(DeployUtokenParams calldata params) external returns (address) {
+  function deploy(DeployUtokenParams calldata params) external view returns (address) {
     require(ACLManager(_aclManager).isUTokenAdmin(address(this)), 'NOT_UTOKEN_ADMIN');
-
+    params;
     // UToken deployment
-    UToken uTokenImplementation = new UToken();
+    // UToken uTokenImplementation = new UToken();
 
-    bytes memory data = abi.encodeWithSelector(
-      IUToken.initialize.selector,
-      _aclManager,
-      params.treasury,
-      params.underlyingAsset,
-      params.interestRate,
-      params.strategyAddress,
-      params.debtToken,
-      params.decimals,
-      params.reserveFactor,
-      params.tokenName,
-      params.tokenSymbol
-    );
+    // bytes memory data = abi.encodeWithSelector(
+    //   IUToken.initialize.selector,
+    //   _aclManager,
+    //   params.treasury,
+    //   params.underlyingAsset,
+    //   params.interestRate,
+    //   params.strategyAddress,
+    //   params.debtToken,
+    //   params.decimals,
+    //   params.reserveFactor,
+    //   params.tokenName,
+    //   params.tokenSymbol
+    // );
 
-    UnlockdUpgradeableProxy proxy = new UnlockdUpgradeableProxy(
-      address(uTokenImplementation),
-      data
-    );
+    // UnlockdUpgradeableProxy proxy = new UnlockdUpgradeableProxy(
+    //   address(uTokenImplementation),
+    //   data
+    // );
 
-    //Only updateable by Admin UTOKEN
+    // //Only updateable by Admin UTOKEN
 
-    DebtToken(params.debtToken).setUToken(address(proxy));
+    // DebtToken(params.debtToken).setUToken(address(proxy));
 
-    return address(proxy);
+    return address(0);
   }
 }

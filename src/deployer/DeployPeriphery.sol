@@ -12,6 +12,8 @@ import {Manager} from '../protocol/modules/Manager.sol';
 import {Unlockd} from '../protocol/Unlockd.sol';
 import {Constants} from '../libraries/helpers/Constants.sol';
 
+import {Errors} from '../libraries/helpers/Errors.sol';
+
 contract DeployPeriphery {
   // MAINNET
   struct DeployInstallParams {
@@ -26,11 +28,16 @@ contract DeployPeriphery {
   address internal immutable _adminUpdater;
 
   constructor(address adminUpdater, address aclManager) {
+    Errors.verifyNotZero(adminUpdater);
+    Errors.verifyNotZero(aclManager);
+
     _adminUpdater = adminUpdater;
     _aclManager = aclManager;
   }
 
   function deployReserveOracle(address baseAsset, uint baseUnit) external returns (address) {
+    Errors.verifyNotZero(baseAsset);
+
     ReserveOracle reserveOracle = new ReserveOracle(_aclManager, baseAsset, baseUnit);
     return address(reserveOracle);
   }
@@ -41,6 +48,8 @@ contract DeployPeriphery {
     address reservoirRouter,
     address ethAddress
   ) external returns (address) {
+    Errors.verifyNotZero(reservoirRouter);
+
     ReservoirAdapter impReservoir = new ReservoirAdapter(reservoirRouter, _aclManager, ethAddress);
 
     return address(impReservoir);

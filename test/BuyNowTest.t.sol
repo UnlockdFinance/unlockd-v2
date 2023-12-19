@@ -285,6 +285,6 @@ contract BuyNowTest is Setup {
 
     (DataTypes.SignBuyNow memory data, ) = _generate_signature(_actor);
     vm.expectRevert(abi.encodeWithSelector(Errors.UTokenNotAllowed.selector));
-    (uint256 minAmount, uint256 maxAmount) = BuyNow(_buyNow).getCalculations(address(0x001), data);
+    BuyNow(_buyNow).getCalculations(address(0x001), data);
   }
 }

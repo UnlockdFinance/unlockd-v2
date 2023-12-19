@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {DebtToken, IDebtToken} from '../protocol/DebtToken.sol';
-import {UToken, IUToken} from '../protocol/UToken.sol';
+// import {DebtToken, IDebtToken} from '../protocol/DebtToken.sol';
+// import {UToken, IUToken} from '../protocol/UToken.sol';
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 import {ACLManager} from '../libraries/configuration/ACLManager.sol';
 import {InterestRate} from '../libraries/base/InterestRate.sol';
@@ -43,17 +43,18 @@ contract DeployUTokenConfig {
     return address(interestRate);
   }
 
-  function deployDebtToken(DeployDebtTokenParams calldata params) external returns (address) {
-    DebtToken impDebtToken = new DebtToken();
-    bytes memory debtData = abi.encodeWithSelector(
-      IDebtToken.initialize.selector,
-      _aclManager,
-      params.decimals,
-      params.tokenName,
-      params.tokenSymbol
-    );
+  function deployDebtToken(DeployDebtTokenParams calldata params) external pure returns (address) {
+    params;
+    // DebtToken impDebtToken = new DebtToken();
+    // bytes memory debtData = abi.encodeWithSelector(
+    //   IDebtToken.initialize.selector,
+    //   _aclManager,
+    //   params.decimals,
+    //   params.tokenName,
+    //   params.tokenSymbol
+    // );
 
-    UnlockdUpgradeableProxy proxy = new UnlockdUpgradeableProxy(address(impDebtToken), debtData);
-    return address(proxy);
+    // UnlockdUpgradeableProxy proxy = new UnlockdUpgradeableProxy(address(impDebtToken), debtData);
+    return address(0);
   }
 }
