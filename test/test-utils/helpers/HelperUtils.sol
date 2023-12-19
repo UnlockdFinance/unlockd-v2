@@ -19,7 +19,9 @@ library HelperUtils {
     bytes32 loanId,
     address user,
     address uToken
-  ) internal view returns (uint256) {
+  ) internal pure returns (uint256) {
+    user;
+    uToken;
     if (loanId == 0) return 0;
     // uint256 userTotalDebt = IDebtToken(IUToken(uToken).getDebtToken()).scaledBalanceOf(
     //   loanId,
