@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
 import {IERC721ReceiverUpgradeable} from  '@openzeppelin-upgradeable/contracts/token/ERC721/IERC721ReceiverUpgradeable.sol';
+
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
 
@@ -34,6 +35,10 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /// @param tokenId ID of the burned token.
     /// @param owner Address of the token owner.
     event Burn(address indexed burner, uint256 tokenId, address indexed owner);
+
+    /// @notice Emitted when the contract is initialized.
+    /// @param underlyingAsset address of the underlying asset.
+    event Initialized(address indexed underlyingAsset);
 
     /*//////////////////////////////////////////////////////////////
                               MODIFIERS

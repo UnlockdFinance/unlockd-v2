@@ -4,11 +4,13 @@ pragma solidity 0.8.19;
 import {ISablierV2LockupLinear} from '../../interfaces/wrappers/ISablierV2LockupLinear.sol';
 import {BaseERC721Wrapper, Errors} from '../../libraries/base/BaseERC721Wrapper.sol';
 
+import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
+
 /**
  * @title USablierLockUpLinear - ERC721 wrapper representing a Sablier token stream
  * @dev Implements minting and burning for Sablier token streams without transfer capabilities
  **/
-contract USablierLockUpLinear is BaseERC721Wrapper {
+contract USablierLockUpLinear is BaseERC721Wrapper, UUPSUpgradeable {
 
     /*//////////////////////////////////////////////////////////////
                            VARIABLES
@@ -47,6 +49,8 @@ contract USablierLockUpLinear is BaseERC721Wrapper {
             wethAddress, 
             usdcAddress
         );
+
+        emit Initialized(underlyingAsset);
     }
 
     /// @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
@@ -66,7 +70,7 @@ contract USablierLockUpLinear is BaseERC721Wrapper {
     }
 
     /*//////////////////////////////////////////////////////////////
-                            ERC721
+                                ERC721
     //////////////////////////////////////////////////////////////*/
     /// @notice Mints a new token.
     /// @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
@@ -77,9 +81,17 @@ contract USablierLockUpLinear is BaseERC721Wrapper {
         if(_sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
         if(!_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
 
-        _sablier.safeTransferFrom(msg.sender, address(this), tokenId);
         baseMint(to, tokenId);
 
         emit Mint(msg.sender, tokenId, to);
-    }   
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           UUPSUpgradeable
+    //////////////////////////////////////////////////////////////*/
+    /**
+     * @notice Checks authorization for UUPS upgrades
+     * @dev Only ACL manager is allowed to upgrade
+     */
+    function _authorizeUpgrade(address) internal override onlyProtocol {}   
 }
