@@ -129,6 +129,17 @@ library Errors {
   error BorrorRateOverflow();
   error BorrowIndexOverflow();
 
+  ///////////////////////////////////////////
+  ///   WRAPPERS
+  ///////////////////////////////////////////
+  
+  error TransferNotSupported();
+  error ApproveNotSupported();
+  error SetApprovalForAllNotSupported();
+  error StreamERC20NotSupported();
+  error CallerNotNFTOwner();
+  error StreamCancelable();
+
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
       revert ZeroAddress();
