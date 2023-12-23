@@ -7,8 +7,8 @@ import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
 
 /**
- * @title USablierLockUpLinear - ERC721 wrapper representing a Sablier token stream
- * @dev Implements minting and burning for Sablier token streams without transfer capabilities
+ * @title ERC721 Base Wrapper
+ * @dev Implements a generic ERC721 wrapper for any NFT that needs to be "managed"
  **/
 abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgradeable {
 
@@ -38,6 +38,9 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /*//////////////////////////////////////////////////////////////
                               MODIFIERS
     //////////////////////////////////////////////////////////////*/
+    /**
+     * @dev Modifier that checks if the sender has Protocol ROLE
+     */
     modifier onlyProtocol() {
         if (IACLManager(_aclManager).isProtocol(_msgSender()) == false) {
         revert Errors.ProtocolAccessDenied();
@@ -58,7 +61,16 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
-    /// @dev Initializes the contract with Sablier, WETH, and USDC addresses.=
+    /// @notice Initializer for the BaseERC721Wrapper contract.
+    /// @dev Sets up the base ERC721 wrapper with necessary details and configurations.
+    /// This function uses the `initializer` modifier to ensure it's only called once, 
+    /// which is a common pattern in upgradeable contracts to replace constructors.
+    /// @param name The name for the ERC721 token.
+    /// @param symbol The symbol for the ERC721 token.
+    /// @param underlyingAsset The address of the underlying ERC721 asset.
+    /// @param aclManager The address of the ACL (Access Control List) manager contract.
+    /// @param wethAddress The address of the WETH (Wrapped ETH) contract.
+    /// @param usdcAddress The address of the USDC (USD Coin) contract.
     function __BaseERC721Wrapper_init(
         string memory name, 
         string memory symbol,

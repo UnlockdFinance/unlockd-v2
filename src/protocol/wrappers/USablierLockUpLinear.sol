@@ -49,6 +49,9 @@ contract USablierLockUpLinear is BaseERC721Wrapper {
         );
     }
 
+    /// @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
+    /// @dev This constructor sets the Sablier lockup linear address and disables further initializations.
+    /// @param sablierLockUpLinearAddress The address of the Sablier lockup linear contract, 
     constructor(address sablierLockUpLinearAddress) {
         _sablier = ISablierV2LockupLinear(sablierLockUpLinearAddress);
         _disableInitializers();
