@@ -57,7 +57,8 @@ contract USablierLockUpLinear is BaseERC721Wrapper {
     /*//////////////////////////////////////////////////////////////
                             SABLIER
     //////////////////////////////////////////////////////////////*/
-    function withDrawFromStream(uint256 tokenId) external {
+    function withDrawFromStream(uint256 tokenId) external onlyProtocol {
+        // need to withdraw all the stream balance and repay the loan or the utoken. 
         _sablier.withdrawMax(tokenId, address(this));
     }
 
