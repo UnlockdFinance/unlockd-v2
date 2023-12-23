@@ -32,7 +32,9 @@ contract USablierLockUpLinear is BaseERC721Wrapper, UUPSUpgradeable {
     /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
-    /// @dev Initializes the contract with Sablier, WETH, and USDC addresses.=
+    /** 
+     * @dev Initializes the contract with Sablier, WETH, and USDC addresses.=
+     */
     function initialize(
         address underlyingAsset, 
         address aclManager, 
@@ -53,9 +55,11 @@ contract USablierLockUpLinear is BaseERC721Wrapper, UUPSUpgradeable {
         emit Initialized(underlyingAsset);
     }
 
-    /// @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
-    /// @dev This constructor sets the Sablier lockup linear address and disables further initializations.
-    /// @param sablierLockUpLinearAddress The address of the Sablier lockup linear contract, 
+    /** 
+     * @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
+     * @dev This constructor sets the Sablier lockup linear address and disables further initializations.
+     * @param sablierLockUpLinearAddress The address of the Sablier lockup linear contract, 
+     */
     constructor(address sablierLockUpLinearAddress) {
         _sablier = ISablierV2LockupLinear(sablierLockUpLinearAddress);
         _disableInitializers();
@@ -72,11 +76,13 @@ contract USablierLockUpLinear is BaseERC721Wrapper, UUPSUpgradeable {
     /*//////////////////////////////////////////////////////////////
                                 ERC721
     //////////////////////////////////////////////////////////////*/
-    /// @notice Mints a new token.
-    /// @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
-    /// and if the asset in the stream is supported by the protocol.
-    /// @param to The address to mint the token to.
-    /// @param tokenId The token ID to mint.
+    /**
+     * @notice Mints a new token.
+     * @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
+     * and if the asset in the stream is supported by the protocol.
+     * @param to The address to mint the token to.
+     * @param tokenId The token ID to mint.
+     */
     function mint(address to, uint256 tokenId) external isStreamERC20Allowed(address(_sablier.getStream(tokenId).asset)) {
         if(_sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
         if(!_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
