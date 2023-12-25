@@ -68,9 +68,15 @@ contract USablierLockUpLinear is BaseERC721Wrapper, UUPSUpgradeable {
     /*//////////////////////////////////////////////////////////////
                             SABLIER
     //////////////////////////////////////////////////////////////*/
-    function withDrawFromStream(uint256 tokenId) external onlyProtocol {
-        // need to withdraw all the stream balance and repay the loan or the utoken. 
-        _sablier.withdrawMax(tokenId, address(this));
+    /**
+     * @notice The protocol will call to withdraw from the stream
+     * if HF < 1, and enough funds are available in the stream to make the position green.
+     * Otherwise the protocol will wait for a bidder/redeem or the stream to end.
+     * @param tokenId the token id representing the stream
+     * @param to the address to send the funds to
+     */
+    function withDrawFromStream(uint256 tokenId, address to) external onlyProtocol {
+        _sablier.withdrawMax(tokenId, to);
     }
 
     /*//////////////////////////////////////////////////////////////
