@@ -236,6 +236,7 @@ contract UTokenFactory is BaseEmergency, IUTokenFactory {
   /////////////////////////////////////////////////////////
   // GET
   /////////////////////////////////////////////////////////
+
   function validateReserveType(
     Constants.ReserveType currentReserveType,
     Constants.ReserveType reserveType
