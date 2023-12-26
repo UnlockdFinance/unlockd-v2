@@ -4,6 +4,14 @@ pragma solidity 0.8.19;
 import {AggregatorV3Interface} from '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 
 contract Source is AggregatorV3Interface {
+  uint8 _decimals;
+  int256 _value;
+
+  constructor(uint8 decimals_, int256 value_) {
+    _decimals = decimals_;
+    _value = value_;
+  }
+
   function decimals() external pure returns (uint8) {
     return 18;
   }
@@ -26,7 +34,7 @@ contract Source is AggregatorV3Interface {
     )
   {
     _roundId;
-    return (0, 1, 0, 0, 1);
+    return (1, 1, 0, 0, 1);
   }
 
   function latestRoundData()
@@ -40,8 +48,7 @@ contract Source is AggregatorV3Interface {
       uint80 answeredInRound
     )
   {
-    // 1DAI = 0.0004829 ETH
-    return (0, 482900000000000, block.timestamp, block.timestamp, 1);
+    return (1, _value, block.timestamp, block.timestamp, 1);
   }
 
   function version() external pure returns (uint256) {

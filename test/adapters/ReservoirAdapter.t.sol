@@ -25,8 +25,6 @@ import '../test-utils/mock/asset/MintableERC20.sol';
 import {NFTMarket} from '../test-utils/mock/market/NFTMarket.sol';
 
 contract ReservoidAdapterTest is Setup {
-  uint256 internal ACTOR = 1;
-
   address internal _actor;
   address internal _nft;
   address internal _protocolOwner;
@@ -37,17 +35,15 @@ contract ReservoidAdapterTest is Setup {
   function setUp() public virtual override {
     super.setUp();
     _market = new NFTMarket();
-    _actor = getActorAddress(ACTOR);
+    _actor = makeAddr('protocol');
     // Fill the protocol with funds
-    addFundToUToken(address(_uTokens['WETH']), 'WETH', 10 ether);
-    addFundToUToken(address(_uTokens['DAI']), 'DAI', 10 ether);
+    addFundToUToken('WETH', 10 ether);
+    addFundToUToken('DAI', 10 ether);
 
     // Create wallet and mint to the safe wallet
-    createWalletAndMintTokens(ACTOR, 'PUNK');
-    // writeTokenBalance(_actor, _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
-    // writeTokenBalance(address(_market), _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
-    _protocolOwner = getProtocolOwnerAddress(ACTOR);
-    _wallet = getWalletAddress(ACTOR);
+    (_wallet, , _protocolOwner, ) = createWalletAndMintTokens(_actor, 'PUNK');
+    writeTokenBalance(_actor, makeAsset('WETH'), 100 ether);
+    writeTokenBalance(address(_market), makeAsset('WETH'), 100 ether);
     _nft = super.getNFT('PUNK');
 
     vm.startPrank(_admin);
@@ -126,8 +122,10 @@ contract ReservoidAdapterTest is Setup {
     // Send amount to the adapter
     hoax(_actor);
     IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
+
     // Execute buy
-    hoax(_actor);
+    vm.startPrank(_actor);
+
     IMarketAdapter(_reservoirAdapter).buy(
       IMarketAdapter.BuyParams({
         wallet: _wallet,
@@ -146,6 +144,7 @@ contract ReservoidAdapterTest is Setup {
         )
       })
     );
+    vm.stopPrank();
     // We check that the current owner is the wallet
     assertEq(ERC721(_nft).ownerOf(111), _actor);
   }

@@ -55,7 +55,7 @@ library Constants {
   enum ReserveType {
     DISABLED, // Disabled collection
     ALL, // All the assets with the exception SPECIAL
-    STABLES, // For the stable coins
+    STABLE, // For the stable coins
     COMMON, // Common coins WETH etc ...
     SPECIAL // Only if the collection is also isolated to one asset token
   }

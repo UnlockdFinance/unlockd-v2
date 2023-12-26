@@ -9,7 +9,7 @@ import {Errors} from '../helpers/Errors.sol';
 contract BaseEmergency is IEmergency {
   using SafeERC20 for IERC20;
 
-  address internal immutable _aclManager;
+  address immutable _aclManager;
 
   modifier onlyEmergencyAdmin() {
     if (IACLManager(_aclManager).isEmergencyAdmin(msg.sender) == false) {

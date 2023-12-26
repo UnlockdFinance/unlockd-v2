@@ -50,7 +50,7 @@ contract DeployPeriphery {
   ) external returns (address) {
     Errors.verifyNotZero(reservoirRouter);
 
-    ReservoirAdapter impReservoir = new ReservoirAdapter(reservoirRouter, _aclManager, ethAddress);
+    ReservoirAdapter impReservoir = new ReservoirAdapter(_aclManager, reservoirRouter, ethAddress);
 
     return address(impReservoir);
   }

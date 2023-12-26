@@ -42,121 +42,118 @@ contract ACLManager is AccessControl, IACLManager {
   }
 
   /// @inheritdoc IACLManager
-  function setRoleAdmin(
-    bytes32 role,
-    bytes32 adminRole
-  ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+  function setRoleAdmin(bytes32 role, bytes32 adminRole) external onlyRole(DEFAULT_ADMIN_ROLE) {
     _setRoleAdmin(role, adminRole);
   }
 
   /// @inheritdoc IACLManager
-  function setProtocol(address protocol) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+  function setProtocol(address protocol) external onlyRole(DEFAULT_ADMIN_ROLE) {
     Errors.verifyNotZero(protocol);
     UNLOCK_PROTOCOL = protocol;
   }
 
   /// @inheritdoc IACLManager
-  function isProtocol(address protocol) external view override returns (bool) {
+  function isProtocol(address protocol) external view returns (bool) {
     return UNLOCK_PROTOCOL == protocol;
   }
 
   /// @inheritdoc IACLManager
-  function setUToken(address uToken) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+  function setUTokenFactory(address uToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
     Errors.verifyNotZero(uToken);
     UTOKEN_FACTORY = uToken;
   }
 
-  function isUToken(address uToken) external view override returns (bool) {
+  function isUTokenFactory(address uToken) external view returns (bool) {
     return UTOKEN_FACTORY == uToken;
   }
 
   /// @inheritdoc IACLManager
-  function addUTokenAdmin(address admin) external override {
+  function addUTokenAdmin(address admin) external {
     grantRole(UTOKEN_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function removeUTokenAdmin(address admin) external override {
+  function removeUTokenAdmin(address admin) external {
     revokeRole(UTOKEN_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function isUTokenAdmin(address admin) external view override returns (bool) {
+  function isUTokenAdmin(address admin) external view returns (bool) {
     return hasRole(UTOKEN_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function addProtocolAdmin(address borrower) external override {
+  function addProtocolAdmin(address borrower) external {
     grantRole(PROTOCOL_ADMIN, borrower);
   }
 
   /// @inheritdoc IACLManager
-  function removeProtocolAdmin(address borrower) external override {
+  function removeProtocolAdmin(address borrower) external {
     revokeRole(PROTOCOL_ADMIN, borrower);
   }
 
   /// @inheritdoc IACLManager
-  function isAuctionAdmin(address borrower) external view override returns (bool) {
+  function isAuctionAdmin(address borrower) external view returns (bool) {
     return hasRole(PROTOCOL_ADMIN, borrower);
   }
 
   /// @inheritdoc IACLManager
-  function addAuctionAdmin(address borrower) external override {
+  function addAuctionAdmin(address borrower) external {
     grantRole(PROTOCOL_ADMIN, borrower);
   }
 
   /// @inheritdoc IACLManager
-  function removeAuctionAdmin(address borrower) external override {
+  function removeAuctionAdmin(address borrower) external {
     revokeRole(PROTOCOL_ADMIN, borrower);
   }
 
   /// @inheritdoc IACLManager
-  function isProtocolAdmin(address protocol) external view override returns (bool) {
+  function isProtocolAdmin(address protocol) external view returns (bool) {
     return hasRole(PROTOCOL_ADMIN, protocol);
   }
 
   /// @inheritdoc IACLManager
-  function addEmergencyAdmin(address admin) external override {
+  function addEmergencyAdmin(address admin) external {
     grantRole(EMERGENCY_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function removeEmergencyAdmin(address admin) external override {
+  function removeEmergencyAdmin(address admin) external {
     revokeRole(EMERGENCY_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function isEmergencyAdmin(address admin) external view override returns (bool) {
+  function isEmergencyAdmin(address admin) external view returns (bool) {
     return hasRole(EMERGENCY_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function addPriceUpdater(address admin) external override {
+  function addPriceUpdater(address admin) external {
     grantRole(PRICE_UPDATER, admin);
   }
 
   /// @inheritdoc IACLManager
-  function removePriceUpdater(address admin) external override {
+  function removePriceUpdater(address admin) external {
     revokeRole(PRICE_UPDATER, admin);
   }
 
   /// @inheritdoc IACLManager
-  function isPriceUpdater(address admin) external view override returns (bool) {
+  function isPriceUpdater(address admin) external view returns (bool) {
     return hasRole(PRICE_UPDATER, admin);
   }
 
   /// @inheritdoc IACLManager
-  function addGovernanceAdmin(address admin) external override {
+  function addGovernanceAdmin(address admin) external {
     grantRole(GOVERNANCE_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function removeGovernanceAdmin(address admin) external override {
+  function removeGovernanceAdmin(address admin) external {
     revokeRole(GOVERNANCE_ADMIN, admin);
   }
 
   /// @inheritdoc IACLManager
-  function isGovernanceAdmin(address admin) external view override returns (bool) {
+  function isGovernanceAdmin(address admin) external view returns (bool) {
     return hasRole(GOVERNANCE_ADMIN, admin);
   }
 }

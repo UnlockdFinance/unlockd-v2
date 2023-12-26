@@ -78,8 +78,8 @@ contract DeployFakeUTokenScript is DeployerHelper {
     ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
     ACLManager(addresses.aclManager).addUTokenAdmin(msg.sender);
     // Deploy
-    addresses.uTokenTwo = deployerUToken.deploy(utokenParams);
-    manager.addUToken(addresses.uTokenTwo, true);
+    // addresses.uTokenTwo = deployerUToken.deploy(utokenParams);
+    // manager.addUToken(addresses.uTokenTwo, true);
 
     // Revoke Grant
     ACLManager(addresses.aclManager).removeUTokenAdmin(address(deployerUToken));

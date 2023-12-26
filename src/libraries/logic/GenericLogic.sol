@@ -203,7 +203,7 @@ library GenericLogic {
     address uTokenFactory,
     uint256 assetPrice,
     uint256 assetUnit
-  ) internal pure returns (uint256) {
+  ) internal view returns (uint256) {
     if (loanId == 0) return 0;
     // fetching variable debt
     uint256 userTotalDebt = IUTokenFactory(uTokenFactory).getDebtFromLoanId(

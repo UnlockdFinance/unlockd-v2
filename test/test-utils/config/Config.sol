@@ -10,6 +10,8 @@ library Config {
     string chainName;
     uint256 blockNumber;
     address weth;
+    address dai;
+    address usdc;
     address reservoirRouter;
     address reservoirETH;
     address gnosisSafeProxyFactory;
@@ -27,6 +29,8 @@ library Config {
           chainName: 'mainnet',
           blockNumber: 17271292,
           weth: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+          dai: 0x6B175474E89094C44Da98b954EedeAC495271d0F,
+          usdc: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
           reservoirRouter: 0xC2c862322E9c97D6244a3506655DA95F05246Fd8,
           reservoirETH: 0x0000000000000000000000000000000000000000,
           gnosisSafeProxyFactory: 0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2,
@@ -41,6 +45,8 @@ library Config {
         chainName: 'sepolia',
         blockNumber: 4470394,
         weth: 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9,
+        dai: 0xe5118E47e061ab15Ca972D045b35193F673bcc36, // Aave DAI
+        usdc: 0xEbCC972B6B3eB15C0592BE1871838963d0B94278, // Aave USDC
         reservoirRouter: 0x1aeD60A97192157fDA7fb26267A439d523d09c5e,
         reservoirETH: 0x0000000000000000000000000000000000000000,
         gnosisSafeProxyFactory: 0xC22834581EbC8527d974F8a1c97E1bEA4EF910BC,

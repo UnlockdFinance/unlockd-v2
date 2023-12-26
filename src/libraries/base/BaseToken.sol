@@ -60,7 +60,7 @@ abstract contract BaseToken is ERC20Upgradeable {
   }
 
   modifier onlyUToken() {
-    if (IACLManager(_aclManager).isUToken(_msgSender()) == false)
+    if (IACLManager(_aclManager).isUTokenFactory(_msgSender()) == false)
       revert Errors.UTokenAccessDenied();
     _;
   }

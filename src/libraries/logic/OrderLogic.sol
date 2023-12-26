@@ -100,7 +100,7 @@ library OrderLogic {
     uint256 assetLtv;
   }
 
-  function borrowByBidder(BorrowByBidderParams memory params) internal pure {
+  function borrowByBidder(BorrowByBidderParams memory params) internal {
     if (params.loanId == 0) revert Errors.InvalidLoanId();
     uint256 maxAmountToBorrow = GenericLogic.calculateAvailableBorrows(
       params.assetPrice,

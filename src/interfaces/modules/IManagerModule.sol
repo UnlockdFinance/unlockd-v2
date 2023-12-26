@@ -23,7 +23,7 @@ interface IManagerModule {
 
   function setWalletRegistry(address walletRegistry) external;
 
-  function addUToken(address uToken, bool active) external;
+  // function addUToken(address uToken, bool active) external;
 
   function addMarketAdapters(address adapter, bool active) external;
 }

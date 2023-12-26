@@ -38,15 +38,14 @@ contract MaxApyTest is Setup {
     _market = new NFTMarket();
     _actor = getActorAddress(ACTOR);
     // Fill the protocol with funds
-    addFundToUToken(address(_uTokens['WETH']), 'WETH', 10 ether);
-    addFundToUToken(address(_uTokens['DAI']), 'DAI', 10 ether);
+    addFundToUToken('WETH', 10 ether);
+    addFundToUToken('DAI', 10 ether);
 
     // Create wallet and mint to the safe wallet
-    createWalletAndMintTokens(ACTOR, 'PUNK');
+    (_wallet, , _protocolOwner, ) = createWalletAndMintTokens(_actor, 'PUNK');
     // writeTokenBalance(_actor, _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
     // writeTokenBalance(address(_market), _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
-    _protocolOwner = getProtocolOwnerAddress(ACTOR);
-    _wallet = getWalletAddress(ACTOR);
+
     _nft = super.getNFT('PUNK');
 
     vm.startPrank(_admin);

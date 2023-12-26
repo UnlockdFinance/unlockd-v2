@@ -60,21 +60,29 @@ interface IUTokenFactory {
   function validateReserveType(
     Constants.ReserveType currentReserveType,
     Constants.ReserveType reserveType
-  ) external returns (bool);
+  ) external view returns (bool);
 
   function getReserveData(
     address underlyingAsset
   ) external view returns (DataTypes.ReserveData memory);
 
-  function getTotalDebtFromUser(address underlyingAsset, address user) external returns (uint256);
+  function getTotalDebtFromUser(
+    address underlyingAsset,
+    address user
+  ) external view returns (uint256);
 
-  function getDebtFromLoanId(address underlyingAsset, bytes32 loanId) external returns (uint256);
+  function getDebtFromLoanId(
+    address underlyingAsset,
+    bytes32 loanId
+  ) external view returns (uint256);
 
-  function getBalances(address underlyingAsset) external returns (DataTypes.MarketBalance memory);
+  function getBalances(
+    address underlyingAsset
+  ) external view returns (DataTypes.MarketBalance memory);
 
-  function totalSupply(address underlyingAsset) external returns (uint256);
+  function totalSupply(address underlyingAsset) external view returns (uint256);
 
-  function totalAvailableSupply(address underlyingAsset) external returns (uint256);
+  function totalAvailableSupply(address underlyingAsset) external view returns (uint256);
 
-  function totalSupplyNotInvested(address underlyingAsset) external returns (uint256);
+  function totalSupplyNotInvested(address underlyingAsset) external view returns (uint256);
 }

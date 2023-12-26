@@ -24,8 +24,6 @@ contract BuyNowLogicTest is Setup {
   function setUp() public override useFork(MAINNET) {
     deploy_acl_manager();
 
-    uToken = deploy_utoken(makeAsset('WETH'), 'WETH');
-    uTokenWrong = deploy_utoken(makeAsset('DAI'), 'DAI');
     // By default Mainnet
     test = new TestLib();
   }
@@ -60,7 +58,7 @@ contract BuyNowLogicTest is Setup {
 
   function test_buyNow_calculations() external {
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
-      uToken,
+      makeAsset('WETH'),
       DataTypes.SignBuyNow({
         asset: DataTypes.SignAsset({
           assetId: 0x952d72a21d7cc0fcc1bc09ed86fbffc8c63ecf57742377a17e9461f7a2d704fd,
@@ -90,7 +88,7 @@ contract BuyNowLogicTest is Setup {
 
   function test_buyNow_calculations_price_bigger() external {
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
-      uToken,
+      makeAsset('WETH'),
       DataTypes.SignBuyNow({
         asset: DataTypes.SignAsset({
           assetId: 0x952d72a21d7cc0fcc1bc09ed86fbffc8c63ecf57742377a17e9461f7a2d704fd,
@@ -120,7 +118,7 @@ contract BuyNowLogicTest is Setup {
 
   function test_buyNow_calculations_marketprice_bigger() external {
     (uint256 minAmount, uint256 maxAmount) = test.calculations(
-      uToken,
+      makeAsset('WETH'),
       DataTypes.SignBuyNow({
         asset: DataTypes.SignAsset({
           assetId: 0x952d72a21d7cc0fcc1bc09ed86fbffc8c63ecf57742377a17e9461f7a2d704fd,

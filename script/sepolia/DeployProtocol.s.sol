@@ -101,15 +101,6 @@ contract DeployProtocolScript is DeployerHelper {
       addresses.unlockd = deployerProtocol.deploy(VERSION);
 
       ACLManager(addresses.aclManager).setProtocol(addresses.unlockd);
-
-      // DeployProtocol.DeployInstallParams memory params = DeployProtocol.DeployInstallParams({
-      //   unlockd: addresses.unlockd,
-      //   signer: DeployConfig.SIGNER,
-      //   reserveOracle: reserveOracle,
-      //   uTokens: listUTokens,
-      //   adapters: listMarketAdapters,
-      //   walletRegistry: addresses.walletRegistry
-      // });
       ACLManager(addresses.aclManager).addProtocolAdmin(msg.sender);
       ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
 
@@ -117,19 +108,9 @@ contract DeployProtocolScript is DeployerHelper {
 
       {
         Manager managerImp = new Manager(Constants.MODULEID__MANAGER, VERSION);
-        //   Action actionImp = new Action(Constants.MODULEID__ACTION, VERSION);
-        //   Auction auctionImp = new Auction(Constants.MODULEID__AUCTION, VERSION);
-        //   Market marketImp = new Market(Constants.MODULEID__MARKET, VERSION);
-        //   BuyNow buyNowImp = new BuyNow(Constants.MODULEID__BUYNOW, VERSION);
-        //   SellNow sellNowImp = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
         //   // Install Modules
         address[] memory modules = new address[](1);
         modules[0] = address(managerImp);
-        //   modules[1] = address(actionImp);
-        //   modules[2] = address(auctionImp);
-        //   modules[3] = address(marketImp);
-        //   modules[4] = address(buyNowImp);
-        //   modules[5] = address(sellNowImp);
 
         address installer = Unlockd(addresses.unlockd).moduleIdToProxy(
           Constants.MODULEID__INSTALLER
@@ -139,9 +120,6 @@ contract DeployProtocolScript is DeployerHelper {
 
       /*** CONFIGURE PROTOCOL */
       {
-        address[] memory listUTokens = new address[](1);
-        listUTokens[0] = addresses.uToken;
-
         address[] memory listMarketAdapters = new address[](1);
         listMarketAdapters[0] = adapter;
 
@@ -154,15 +132,6 @@ contract DeployProtocolScript is DeployerHelper {
         manager.setReserveOracle(reserveOracle);
         manager.setWalletRegistry(addresses.walletRegistry);
         manager.setAllowedControllers(addresses.allowedControllers);
-
-        // Configure UTokens
-        uint256 i = 0;
-        while (i < listUTokens.length) {
-          manager.addUToken(listUTokens[i], true);
-          unchecked {
-            ++i;
-          }
-        }
 
         // Configure Adapters
         uint256 x = 0;

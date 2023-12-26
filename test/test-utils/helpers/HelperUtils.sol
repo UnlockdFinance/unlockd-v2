@@ -15,23 +15,6 @@ library HelperUtils {
     }
   }
 
-  function getUserDebtInBaseCurrency(
-    bytes32 loanId,
-    address user,
-    address uToken
-  ) internal pure returns (uint256) {
-    user;
-    uToken;
-    if (loanId == 0) return 0;
-    // uint256 userTotalDebt = IDebtToken(IUToken(uToken).getDebtToken()).scaledBalanceOf(
-    //   loanId,
-    //   user
-    // );
-    // userTotalDebt = userTotalDebt.rayMul(IUToken(uToken).getReserveNormalizedVariableDebt());
-    // return userTotalDebt;
-    return 0;
-  }
-
   function toHex16(bytes16 data) internal pure returns (bytes32 result) {
     result =
       (bytes32(data) & 0xFFFFFFFFFFFFFFFF000000000000000000000000000000000000000000000000) |

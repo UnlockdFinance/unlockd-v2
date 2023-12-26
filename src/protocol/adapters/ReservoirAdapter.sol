@@ -12,6 +12,8 @@ import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
+import {console} from 'forge-std/console.sol';
+
 contract ReservoirAdapter is BaseEmergency, IMarketAdapter {
   using SafeERC20 for IERC20;
   using Address for address;
