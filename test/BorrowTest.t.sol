@@ -582,79 +582,74 @@ contract BorrowTest is Setup {
   //     );
   //   }
 
-  //   function test_borrow_token_frezze() public {
-  //     vm.startPrank(getActorAddress(ACTOR));
-  //     uint256 amountToBorrow = 1 ether;
-  //     // User doesn't have WETH
+  function test_borrow_token_frezze() public {
+    vm.startPrank(_actor);
+    uint256 amountToBorrow = 1 ether;
+    // User doesn't have WETH
 
-  //     // FIRST BORROW
-  //     assertEq(balanceOfAsset('WETH', getActorAddress(ACTOR)), 0);
-  //     // Get data signed
-  //     (
-  //       DataTypes.SignAction memory signAction,
-  //       DataTypes.EIP712Signature memory sig,
-  //       ,
-  //       DataTypes.Asset[] memory assets
-  //     ) = action_signature(
-  //         _action,
-  //         _nft,
-  //         ActionSignParams({
-  //           user: getActorAddress(ACTOR),
-  //           loanId: 0,
-  //           price: 10 ether,
-  //           totalAssets: 10,
-  //           totalArray: 10
-  //         })
-  //       );
-  //     uint256 initialGas = gasleft();
-  //     vm.recordLogs();
-  //     // Borrow amount
-  //     Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-  //     uint256 gasUsed = initialGas - gasleft();
-  //     console.log('GAS Used:', gasUsed);
+    // FIRST BORROW
+    assertEq(balanceAssets(makeAsset('WETH', _actor), 0));
+    // Get data signed
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      ,
+      DataTypes.Asset[] memory assets
+    ) = action_signature(
+        _action,
+        _nft,
+        makeAsset('WETH'),
+        ActionSignParams({
+          user: _actor,
+          loanId: 0,
+          price: 10 ether,
+          totalAssets: 10,
+          totalArray: 10
+        })
+      );
+    uint256 initialGas = gasleft();
+    vm.recordLogs();
+    // Borrow amount
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    uint256 gasUsed = initialGas - gasleft();
+    console.log('GAS Used:', gasUsed);
 
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
 
-  //     // SECOND BORROW
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
+    // SECOND BORROW
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
-  //     vm.stopPrank();
-  //     ///////////////////////
-  //     vm.startPrank(_admin);
-  //     Manager(_manager).emergencyFreezeLoan(loanId);
+    vm.stopPrank();
+    ///////////////////////
+    vm.startPrank(_admin);
+    Manager(_manager).emergencyFreezeLoan(loanId);
+    vm.stopPrank();
 
-  //     vm.stopPrank();
+    ///////////////////////
+    vm.startPrank(_actor);
+    (
+      DataTypes.SignAction memory signActionTwo,
+      DataTypes.EIP712Signature memory sigTwo,
+      ,
+      DataTypes.Asset[] memory assetsTwo
+    ) = action_signature(
+        _action,
+        _nft,
+        makeAsset('WETH'),
+        ActionSignParams({
+          user: _actor,
+          loanId: loanId,
+          price: 10 ether,
+          totalAssets: 10,
+          totalArray: 0
+        })
+      );
 
-  //     ///////////////////////
-  //     vm.startPrank(getActorAddress(ACTOR));
-  //     (
-  //       DataTypes.SignAction memory signActionTwo,
-  //       DataTypes.EIP712Signature memory sigTwo,
-  //       ,
-  //       DataTypes.Asset[] memory assetsTwo
-  //     ) = action_signature(
-  //         _action,
-  //         _nft,
-  //         ActionSignParams({
-  //           user: super.getActorAddress(ACTOR),
-  //           loanId: loanId,
-  //           price: 10 ether,
-  //           totalAssets: 10,
-  //           totalArray: 0
-  //         })
-  //       );
+    // We check the new balance
+    assertEq(balanceAssets(makeAsset('WETH', _actor), amountToBorrow));
 
-  //     // We check the new balance
-  //     assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-
-  //     vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotActive.selector));
-  //     Action(_action).borrow(
-  //       address(_uTokens['WETH']),
-  //       amountToBorrow,
-  //       assetsTwo,
-  //       signActionTwo,
-  //       sigTwo
-  //     );
-  //     vm.stopPrank();
-  //   }
+    vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotActive.selector));
+    Action(_action).borrow(amountToBorrow, assetsTwo, signActionTwo, sigTwo);
+    vm.stopPrank();
+  }
 }
