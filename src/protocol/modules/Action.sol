@@ -125,7 +125,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
         // Validation of params
         if (assetId != signAction.assets[i]) {
-          revert('NOT_VALID');
+          revert Errors.NotValidReserve();
         }
 
         if (
@@ -134,7 +134,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
             _allowedCollections[asset.collection]
           ) == false
         ) {
-          revert('NOT_VALID');
+          revert Errors.NotValidReserve();
         }
 
         ValidationLogic.validateLockAsset(
