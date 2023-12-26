@@ -240,11 +240,14 @@ contract UTokenFactory is BaseEmergency, IUTokenFactory {
     Constants.ReserveType currentReserveType,
     Constants.ReserveType reserveType
   ) external pure returns (bool) {
-    if (
-      currentReserveType == Constants.ReserveType.ALL &&
-      reserveType != Constants.ReserveType.SPECIAL
-    ) return true;
+    if (reserveType == Constants.ReserveType.DISABLED) return false;
     if (currentReserveType == reserveType) return true;
+
+    if (
+      reserveType == Constants.ReserveType.ALL &&
+      currentReserveType != Constants.ReserveType.SPECIAL
+    ) return true;
+
     return false;
   }
 

@@ -36,7 +36,7 @@ import {console} from 'forge-std/console.sol';
 //     addFundToUToken(address(_uTokens['WETH']), 'WETH', 10 ether);
 //     addFundToUToken(address(_uTokens['DAI']), 'DAI', 10 ether);
 //     // Add funds to the market
-//     writeTokenBalance(address(_market), getAssetAddress('WETH'), 100 ether);
+//     writeTokenBalance(address(_market), makeAsset('WETH'), 100 ether);
 
 //     // Create wallet and mint to the safe wallet
 //     createWalletAndMintTokens(ACTOR, 'PUNK');
@@ -204,7 +204,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 2,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -214,13 +214,13 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         2,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 0);
 //     vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
 //     DataTypes.Asset memory asset = DataTypes.Asset({
 //       collection: dataSellWETHCurrency.nftAsset,
@@ -233,7 +233,7 @@ import {console} from 'forge-std/console.sol';
 //     );
 //     hoax(_actor);
 //     SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
-//     assertEq(IERC20(getAssetAddress('WETH')).balanceOf(_actor), 1 ether);
+//     assertEq(IERC20(makeAsset('WETH')).balanceOf(_actor), 1 ether);
 //     assertEq(IERC721(address(_nft)).ownerOf(2), address(_market));
 //   }
 
@@ -245,7 +245,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -255,7 +255,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
@@ -284,7 +284,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -294,7 +294,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
@@ -324,7 +324,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -334,7 +334,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         0.1 ether
 //       ),
 //       price: 0.1 ether,
@@ -366,7 +366,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 2,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -376,7 +376,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         2,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         0.2 ether
 //       ),
 //       price: 0.2 ether,
@@ -408,7 +408,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -418,7 +418,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         0.5 ether
 //       ),
 //       price: 0.5 ether,
@@ -448,7 +448,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -458,7 +458,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
@@ -485,7 +485,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 2,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -495,13 +495,13 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         2,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         0.5 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 0);
 //     vm.assume(IERC721(address(_nft)).ownerOf(2) == getWalletAddress(ACTOR));
 //     DataTypes.Asset memory asset = DataTypes.Asset({
 //       collection: dataSellWETHCurrency.nftAsset,
@@ -515,7 +515,7 @@ import {console} from 'forge-std/console.sol';
 //     hoax(_actor);
 //     vm.expectRevert('SafeERC20: low-level call failed');
 //     SellNow(_sellNow).sell(_reservoirAdapter, asset, data, sig);
-//     assertEq(IERC20(getAssetAddress('WETH')).balanceOf(_actor), 0);
+//     assertEq(IERC20(makeAsset('WETH')).balanceOf(_actor), 0);
 //     assertEq(IERC721(address(_nft)).ownerOf(2), getWalletAddress(ACTOR));
 //   }
 
@@ -525,7 +525,7 @@ import {console} from 'forge-std/console.sol';
 
 //   function test_sellnow_force_sell_only_one_asset() public {
 //     vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 0);
 
 //     bytes32 loanId = borrow_asset(1);
 //     // Preparing data to execute
@@ -533,7 +533,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -543,7 +543,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
@@ -567,7 +567,7 @@ import {console} from 'forge-std/console.sol';
 
 //   function test_sellnow_force_sell_two_assets() public {
 //     vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 0);
 //     uint88 totalAssets = 3;
 //     bytes32 loanId = borrow_asset(totalAssets);
 //     // Preparing data to execute
@@ -575,7 +575,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -585,7 +585,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
@@ -609,7 +609,7 @@ import {console} from 'forge-std/console.sol';
 
 //   function test_sellnow_force_sell_error_token_asset_mismatch() public {
 //     vm.assume(IERC721(address(_nft)).ownerOf(1) == getWalletAddress(ACTOR));
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 0);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 0);
 //     uint88 totalAssets = 3;
 //     bytes32 loanId = borrow_asset(totalAssets);
 //     // Preparing data to execute
@@ -617,7 +617,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: 1,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -627,7 +627,7 @@ import {console} from 'forge-std/console.sol';
 //         NFTMarket.sell.selector,
 //         address(_nft),
 //         1,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,

@@ -44,7 +44,7 @@ contract ReservoidAdapterTest is Setup {
     (_wallet, , _protocolOwner, ) = createWalletAndMintTokens(_actor, 'PUNK');
     writeTokenBalance(_actor, makeAsset('WETH'), 100 ether);
     writeTokenBalance(address(_market), makeAsset('WETH'), 100 ether);
-    _nft = super.getNFT('PUNK');
+    _nft = _nfts.get('PUNK');
 
     vm.startPrank(_admin);
     _aclManager.setProtocol(_actor);

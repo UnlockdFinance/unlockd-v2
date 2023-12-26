@@ -14,8 +14,8 @@ struct NFTsState {
 }
 
 library NFTs {
-  function get(NFTsState storage self, string memory name) internal view returns (MintableERC721) {
-    return self.list[name];
+  function get(NFTsState storage self, string memory name) internal view returns (address) {
+    return address(self.list[name]);
   }
 
   function totalSupply(NFTsState storage self, string memory name) internal view returns (uint256) {

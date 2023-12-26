@@ -49,7 +49,7 @@ contract BuyNowLogicTest is Setup {
         value: 0,
         marketApproval: makeAddr('market_1'),
         marketPrice: 1 ether,
-        underlyingAsset: getAssetAddress('WETH'),
+        underlyingAsset: makeAsset('WETH'),
         nonce: 1,
         deadline: block.number + 1000
       })
@@ -76,7 +76,7 @@ contract BuyNowLogicTest is Setup {
         value: 0,
         marketApproval: makeAddr('market_1'),
         marketPrice: 1 ether,
-        underlyingAsset: getAssetAddress('WETH'),
+        underlyingAsset: makeAsset('WETH'),
         nonce: 1,
         deadline: block.number + 1000
       })
@@ -106,7 +106,7 @@ contract BuyNowLogicTest is Setup {
         value: 0,
         marketApproval: makeAddr('market_1'),
         marketPrice: 1 ether,
-        underlyingAsset: getAssetAddress('WETH'),
+        underlyingAsset: makeAsset('WETH'),
         nonce: 1,
         deadline: block.number + 1000
       })
@@ -136,7 +136,7 @@ contract BuyNowLogicTest is Setup {
         value: 0,
         marketApproval: makeAddr('market_1'),
         marketPrice: 2 ether,
-        underlyingAsset: getAssetAddress('WETH'),
+        underlyingAsset: makeAsset('WETH'),
         nonce: 1,
         deadline: block.number + 1000
       })

@@ -35,8 +35,8 @@ import {console} from 'forge-std/console.sol';
 //     addFundToUToken(address(_uTokens['WETH']), 'WETH', 10 ether);
 //     addFundToUToken(address(_uTokens['DAI']), 'DAI', 10 ether);
 //     // Add funds to the market
-//     writeTokenBalance(address(_market), getAssetAddress('WETH'), 100 ether);
-//     writeTokenBalance(address(_actor), getAssetAddress('WETH'), 100 ether);
+//     writeTokenBalance(address(_market), makeAsset('WETH'), 100 ether);
+//     writeTokenBalance(address(_actor), makeAsset('WETH'), 100 ether);
 //     // Create wallet and mint to the safe wallet
 //     createWalletAndMintTokens(ACTOR, 'PUNK');
 //     _tokenId = mintNextNFTToken(address(_market), 'PUNK');
@@ -100,7 +100,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: _tokenId,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -111,24 +111,24 @@ import {console} from 'forge-std/console.sol';
 //         getWalletAddress(ACTOR),
 //         address(_nft),
 //         _tokenId,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
 
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 100 ether);
 //     vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
 
 //     (DataTypes.SignBuyNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
 //       _actor
 //     );
 //     hoax(_actor);
-//     IERC20(getAssetAddress('WETH')).approve(address(_unlock), 1 ether);
+//     IERC20(makeAsset('WETH')).approve(address(_unlock), 1 ether);
 //     hoax(_actor);
 //     BuyNow(_buyNow).buy(_reservoirAdapter, address(_uTokens['WETH']), 1 ether, data, sig);
-//     // assertEq(IERC20(getAssetAddress('WETH')).balanceOf(_actor), 1 ether);
+//     // assertEq(IERC20(makeAsset('WETH')).balanceOf(_actor), 1 ether);
 //     assertEq(IERC721(address(_nft)).ownerOf(_tokenId), getWalletAddress(ACTOR));
 //   }
 
@@ -137,7 +137,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: _tokenId,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -148,21 +148,21 @@ import {console} from 'forge-std/console.sol';
 //         getWalletAddress(ACTOR),
 //         address(_nft),
 //         _tokenId,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
 
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 100 ether);
 //     vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
 
 //     (DataTypes.SignBuyNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
 //       _actor
 //     );
 //     hoax(_actor);
-//     IERC20(getAssetAddress('WETH')).approve(address(_unlock), 1 ether);
+//     IERC20(makeAsset('WETH')).approve(address(_unlock), 1 ether);
 //     hoax(_actor);
 //     BuyNow(_buyNow).buy(_reservoirAdapter, address(_uTokens['WETH']), 0.9 ether, data, sig);
 
@@ -183,7 +183,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: _tokenId,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -194,21 +194,21 @@ import {console} from 'forge-std/console.sol';
 //         getWalletAddress(ACTOR),
 //         address(_nft),
 //         _tokenId,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
 
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 100 ether);
 //     vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
 
 //     (DataTypes.SignBuyNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
 //       _actor
 //     );
 //     hoax(_actor);
-//     IERC20(getAssetAddress('WETH')).approve(address(_unlock), 1 ether);
+//     IERC20(makeAsset('WETH')).approve(address(_unlock), 1 ether);
 
 //     vm.startPrank(_actor);
 //     vm.expectRevert(abi.encodeWithSelector(Errors.AmountToLow.selector));
@@ -225,7 +225,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: _tokenId,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -236,14 +236,14 @@ import {console} from 'forge-std/console.sol';
 //         getWalletAddress(ACTOR),
 //         address(_nft),
 //         _tokenId,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
 
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 100 ether);
 //     vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
 
 //     (DataTypes.SignBuyNow memory data, ) = _generate_signature(_actor);
@@ -262,7 +262,7 @@ import {console} from 'forge-std/console.sol';
 //       blockNumber: block.number,
 //       nftAsset: address(_nft),
 //       nftTokenId: _tokenId,
-//       currency: getAssetAddress('WETH'),
+//       currency: makeAsset('WETH'),
 //       from: getWalletAddress(ACTOR),
 //       to: address(_market),
 //       approval: address(_market),
@@ -273,14 +273,14 @@ import {console} from 'forge-std/console.sol';
 //         getWalletAddress(ACTOR),
 //         address(_nft),
 //         _tokenId,
-//         getAssetAddress('WETH'),
+//         makeAsset('WETH'),
 //         1 ether
 //       ),
 //       price: 1 ether,
 //       value: 0
 //     });
 
-//     vm.assume(IERC20(getAssetAddress('WETH')).balanceOf(_actor) == 100 ether);
+//     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_actor) == 100 ether);
 //     vm.assume(IERC721(address(_nft)).ownerOf(_tokenId) == address(_market));
 
 //     (DataTypes.SignBuyNow memory data, ) = _generate_signature(_actor);

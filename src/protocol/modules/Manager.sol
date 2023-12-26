@@ -80,25 +80,14 @@ contract Manager is BaseCoreModule, IManagerModule {
     _allowedCollections[collection] = reserveType;
   }
 
-  // /**
-  //  * @dev Allow a uToken to interact with the protocol
-  //  * @param uToken Address of the uToken
-  //  * @param active Bolean to allow or disable the UToken on the protocol
-  //  */
-  // function addUToken(address uToken, bool active) external onlyGovernance {
-  //   if (uToken == address(0)) revert Errors.ZeroAddress();
-  //   _allowedUTokens[uToken] = active ? 1 : 0;
+  function setUTokenFactory(address uTokenFactory) external onlyAdmin {
+    if (uTokenFactory == address(0)) revert Errors.ZeroAddress();
+    _uTokenFactory = uTokenFactory;
+  }
 
-  //   if (active) {
-  //     emit ActivateUToken(uToken);
-  //   } else {
-  //     emit DisableUToken(uToken);
-  //   }
-  // }
-
-  // function isUTokenActive(address uToken) external view returns (uint256) {
-  //   return _allowedUTokens[uToken];
-  // }
+  function getUTokenFactory() external view returns (address) {
+    return _uTokenFactory;
+  }
 
   /**
    * @dev Allow Market adapter to interact with the protocol

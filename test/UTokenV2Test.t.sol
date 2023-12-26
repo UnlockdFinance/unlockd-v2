@@ -21,7 +21,7 @@ import './test-utils/setups/Setup.sol';
 
 //   function setUp() public virtual override {
 //     super.setUpByChain(11155111, 4783334);
-//     _WETH = getAssetAddress('WETH');
+//     _WETH = makeAsset('WETH');
 
 //     ScaledToken token = new ScaledToken();
 //     _uTokenV2 = new UTokenV2(address(_aclManager), address(token));

@@ -46,7 +46,7 @@ contract MaxApyTest is Setup {
     // writeTokenBalance(_actor, _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
     // writeTokenBalance(address(_market), _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
 
-    _nft = super.getNFT('PUNK');
+    _nft = _nfts.get('PUNK');
 
     vm.startPrank(_admin);
     _aclManager.setProtocol(_actor);
