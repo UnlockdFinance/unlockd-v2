@@ -17,8 +17,8 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
     ERC721Upgradeable internal _erc721;
-    address internal _wethAddress;
-    address internal _usdcAddress;
+    address public _wethAddress;
+    address public _usdcAddress;
     address internal _aclManager;
 
     /*//////////////////////////////////////////////////////////////

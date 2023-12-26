@@ -7,10 +7,10 @@ import {BaseERC721Wrapper, Errors} from '../../libraries/base/BaseERC721Wrapper.
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 
 /**
- * @title USablierLockUpLinear - ERC721 wrapper representing a Sablier token stream
+ * @title USablierLockupLinear - ERC721 wrapper representing a Sablier token stream
  * @dev Implements minting and burning for Sablier token streams without transfer capabilities
  **/
-contract USablierLockUpLinear is BaseERC721Wrapper, UUPSUpgradeable {
+contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
 
     /*//////////////////////////////////////////////////////////////
                            VARIABLES
