@@ -13,11 +13,6 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
-interface IERC1967Proxy {
-  function upgradeTo(address newImplementation) external;
-  function _getImplementation() external returns (address);
-}
-
 contract USablierLockupLinearTest is Setup {
   uint256 internal constant ACTOR = 1;
 
@@ -25,12 +20,12 @@ contract USablierLockupLinearTest is Setup {
   address internal _usdcAddress = 0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8;
   
   USablierLockupLinear sablierLockUp;
-  ISablierV2LockupLinear sablier = ISablierV2LockupLinear(0xd4300c5bC0B9e27c73eBAbDc747ba990B1B570Db);
+  ISablierV2LockupLinear sablier = ISablierV2LockupLinear(0x7a43F8a888fa15e68C103E18b0439Eb1e98E4301);
   ERC1967Proxy sablierProxy;
   USablierLockupLinear sablierImplementation;
 
   function setUp() public virtual override {
-    super.setUpByChain(11155111, 4783334);
+    super.setUpByChain(11155111, 4917297);
     vm.startPrank(_admin);
     _aclManager.setProtocol(makeAddr('protocol'));
 
@@ -142,6 +137,7 @@ contract USablierLockupLinearTest is Setup {
         totalAmount: 1 ether,
         asset: ERC20(_wethAddress),
         cancelable: true,
+        transferable: true,
         durations: duration,
         broker: broker
     });
@@ -234,6 +230,7 @@ contract USablierLockupLinearTest is Setup {
         totalAmount: 1 ether,
         asset: ERC20(_wethAddress),
         cancelable: false,
+        transferable: true,
         durations: duration,
         broker: broker
     });

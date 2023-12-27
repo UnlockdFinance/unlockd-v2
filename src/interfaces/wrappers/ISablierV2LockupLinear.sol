@@ -88,6 +88,7 @@ interface ISablierV2LockupLinear {
         uint128 totalAmount;
         IERC20 asset;
         bool cancelable;
+        bool transferable;
         Durations durations;
         Broker broker;
     }
@@ -109,7 +110,8 @@ interface ISablierV2LockupLinear {
     function getStream(uint256 streamId) external view returns (Stream memory stream);
 
     function isCancelable(uint256 streamId) external view returns (bool result);
-    function isStream(uint256 streamId) external view returns (bool result);
+    function isTransferable(uint256 streamId) external view returns (bool result);
+    function isStream(uint256 streamId) external view returns (bool result);  
     
     function createWithDurations(CreateWithDurations calldata params)
         external
