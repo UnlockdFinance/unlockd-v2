@@ -18,6 +18,7 @@ contract USablierLockupLinearTest is Setup {
 
   address internal _wethAddress = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
   address internal _usdcAddress = 0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8;
+  address internal protocol = makeAddr('protocol');
   
   USablierLockupLinear sablierLockUp;
   ISablierV2LockupLinear sablier = ISablierV2LockupLinear(0x7a43F8a888fa15e68C103E18b0439Eb1e98E4301);
@@ -27,7 +28,7 @@ contract USablierLockupLinearTest is Setup {
   function setUp() public virtual override {
     super.setUpByChain(11155111, 4917297);
     vm.startPrank(_admin);
-    _aclManager.setProtocol(makeAddr('protocol'));
+    _aclManager.setProtocol(protocol);
 
     sablierImplementation = new USablierLockupLinear(address(sablier));
     sablierProxy = new ERC1967Proxy(
@@ -85,6 +86,22 @@ contract USablierLockupLinearTest is Setup {
     assertEq(sablier.balanceOf(address(2)), 1, "Balance should be 1");
     vm.stopPrank();
   }
+  
+  function test_Withdraw_From_Stream() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+
+    mintSablierNFT();
+    
+    vm.startPrank(address(2)); 
+    sablier.setApprovalForAll(address(sablierLockUp), true);
+    sablierLockUp.mint(address(2), 1);
+    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    
+    vm.startPrank(protocol); //onlyProtocol
+    sablierLockUp.withdrawFromStream(1, address(2));
+    vm.stopPrank();
+  }
 
   /*//////////////////////////////////////////////////////////////
                             NEGATIVES
@@ -98,7 +115,24 @@ contract USablierLockupLinearTest is Setup {
   function test_Withdraw_Not_OnlyProtocol() public {
     vm.prank(address(this)); 
     vm.expectRevert(0x56e40536);
-    sablierLockUp.withDrawFromStream(1, address(1));
+    sablierLockUp.withdrawFromStream(1, address(1));
+  }
+
+  function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+
+    mintSablierNFT();
+    
+    vm.startPrank(address(2)); 
+    sablier.setApprovalForAll(address(sablierLockUp), true);
+    sablierLockUp.mint(address(2), 1);
+    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    
+    vm.startPrank(address(this)); //onlyProtocol
+    vm.expectRevert(Errors.ProtocolAccessDenied.selector);
+    sablierLockUp.withdrawFromStream(1, address(2));
+    vm.stopPrank();
   }
 
   // Test invalid input 

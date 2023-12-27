@@ -75,8 +75,8 @@ contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
      * @param tokenId the token id representing the stream
      * @param to the address to send the funds to
      */
-    function withDrawFromStream(uint256 tokenId, address to) external onlyProtocol {
-        _sablier.withdrawMax(tokenId, to);
+    function withdrawFromStream(uint256 tokenId, address to) external onlyProtocol {
+        _sablier.withdrawMaxAndTransfer(tokenId, to);
     }
 
     /*//////////////////////////////////////////////////////////////

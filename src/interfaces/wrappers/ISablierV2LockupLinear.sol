@@ -118,6 +118,7 @@ interface ISablierV2LockupLinear {
         returns (uint256 streamId);
 
     function withdrawableAmountOf(uint256 streamId) external view returns (uint128 withdrawableAmount);
+    function withdrawMaxAndTransfer(uint256 streamId, address newRecipient) external;
     function withdraw(uint256 streamId, address to, uint128 amount) external;
     function withdrawMax(uint256 streamId, address to) external;
 }
