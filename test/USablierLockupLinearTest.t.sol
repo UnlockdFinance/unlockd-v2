@@ -56,11 +56,27 @@ contract USablierLockupLinearTest is Setup {
     assertEq(sablierLockUp._usdcAddress(), _usdcAddress, "USDC address mismatch");
   }
 
+  function test_authorizeUpgrade() public {
+    USablierLockupLinear newImplementation = new USablierLockupLinear(address(sablier));
+
+    // Not protocol -> should fail
+    vm.prank(address(1));
+    vm.expectRevert(Errors.ProtocolAccessDenied.selector); 
+    sablierLockUp.upgradeTo(address(newImplementation));
+
+    // Protocol -> should succeed
+    vm.prank(protocol);
+    sablierLockUp.upgradeTo(address(newImplementation));
+
+    // Verify upgraded
+    //assertEq(sablierLockUp.getCurrentVersion(), 2);
+  }
+
   function test_Mint() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -74,7 +90,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -91,7 +107,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -99,7 +115,11 @@ contract USablierLockupLinearTest is Setup {
     assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
     
     vm.startPrank(protocol); //onlyProtocol
+    uint256 balanceBefore = IERC20(_wethAddress).balanceOf(address(2));
+    uint256 streamBalance = sablier.withdrawableAmountOf(1);
     sablierLockUp.withdrawFromStream(1, address(2));
+    uint256 balanceAfter = IERC20(_wethAddress).balanceOf(address(2));
+    assertEq(balanceAfter, balanceBefore + streamBalance, "Balance after should be balance before + streamBalance");
     vm.stopPrank();
   }
 
@@ -122,7 +142,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -140,7 +160,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(3)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -153,30 +173,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    IERC20(_wethAddress).approve(address(sablier), 2 ether);
-    
-    ISablierV2LockupLinear.Durations memory duration = ISablierV2LockupLinear.Durations({
-      cliff: 1701375965,
-      total: 1701529208
-    });
-
-    ISablierV2LockupLinear.Broker memory broker = ISablierV2LockupLinear.Broker({
-      fee: 0,
-      account: address(0)
-    });
-
-    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear.CreateWithDurations({
-        sender: address(1),
-        recipient: address(2),
-        totalAmount: 1 ether,
-        asset: ERC20(_wethAddress),
-        cancelable: true, //changed to fail the test
-        transferable: true,
-        durations: duration,
-        broker: broker
-    });
-
-    sablier.createWithDurations(create);
+    mintSablierNFT(true, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -189,30 +186,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    IERC20(_wethAddress).approve(address(sablier), 2 ether);
-    
-    ISablierV2LockupLinear.Durations memory duration = ISablierV2LockupLinear.Durations({
-      cliff: 1701375965,
-      total: 1701529208
-    });
-
-    ISablierV2LockupLinear.Broker memory broker = ISablierV2LockupLinear.Broker({
-      fee: 0,
-      account: address(0)
-    });
-
-    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear.CreateWithDurations({
-        sender: address(1),
-        recipient: address(2),
-        totalAmount: 1 ether,
-        asset: ERC20(_wethAddress),
-        cancelable: false,
-        transferable: false,
-        durations: duration,
-        broker: broker
-    });
-
-    sablier.createWithDurations(create);
+    mintSablierNFT(false, false);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -229,7 +203,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -242,7 +216,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -255,7 +229,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -268,7 +242,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT();
+    mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
@@ -280,7 +254,7 @@ contract USablierLockupLinearTest is Setup {
   /*//////////////////////////////////////////////////////////////
                               UTILS
   //////////////////////////////////////////////////////////////*/
-  function mintSablierNFT() public {
+  function mintSablierNFT(bool isCancelable, bool isTransferable) public {
 
     IERC20(_wethAddress).approve(address(sablier), 2 ether);
     
@@ -299,8 +273,8 @@ contract USablierLockupLinearTest is Setup {
         recipient: address(2),
         totalAmount: 1 ether,
         asset: ERC20(_wethAddress),
-        cancelable: false,
-        transferable: true,
+        cancelable: isCancelable,
+        transferable: isTransferable,
         durations: duration,
         broker: broker
     });
