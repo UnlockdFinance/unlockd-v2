@@ -95,6 +95,7 @@ interface ISablierV2LockupLinear {
     /*//////////////////////////////////////////////////////////////
                             ERC721 COMPATIBLE
     //////////////////////////////////////////////////////////////*/
+    function balanceOf(address owner) external view returns (uint256);
     function ownerOf(uint256 tokenId) external view returns (address);
     function safeTransferFrom(address from, address to, uint256 tokenId) external;
     function tokenURI(uint256 tokenId) external view returns (string memory);

@@ -89,9 +89,9 @@ contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
      * @param to The address to mint the token to.
      * @param tokenId The token ID to mint.
      */
-    function mint(address to, uint256 tokenId) external isStreamERC20Allowed(address(_sablier.getStream(tokenId).asset)) {
+    function mint(address to, uint256 tokenId) external isStreamERC20Allowed(address(_sablier.getAsset(tokenId))) {
         if(_sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
-        if(!_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
+        if(_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
 
         baseMint(to, tokenId);
 
