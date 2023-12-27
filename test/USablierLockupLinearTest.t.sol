@@ -115,7 +115,7 @@ contract USablierLockupLinearTest is Setup {
     vm.stopPrank();
   }
 
-  function test_Mint_is_NOT_Cancebable() public {
+  function test_Mint_is_Cancebable() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
@@ -136,7 +136,7 @@ contract USablierLockupLinearTest is Setup {
         recipient: address(2),
         totalAmount: 1 ether,
         asset: ERC20(_wethAddress),
-        cancelable: true,
+        cancelable: true, //changed to fail the test
         transferable: true,
         durations: duration,
         broker: broker
@@ -147,6 +147,42 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(sablierLockUp), true);
     vm.expectRevert(Errors.StreamCancelable.selector);
+    sablierLockUp.mint(address(2), 1);
+    vm.stopPrank();
+  }
+
+  function test_Mint_is_NOT_Transferable() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+
+    IERC20(_wethAddress).approve(address(sablier), 2 ether);
+    
+    ISablierV2LockupLinear.Durations memory duration = ISablierV2LockupLinear.Durations({
+      cliff: 1701375965,
+      total: 1701529208
+    });
+
+    ISablierV2LockupLinear.Broker memory broker = ISablierV2LockupLinear.Broker({
+      fee: 0,
+      account: address(0)
+    });
+
+    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear.CreateWithDurations({
+        sender: address(1),
+        recipient: address(2),
+        totalAmount: 1 ether,
+        asset: ERC20(_wethAddress),
+        cancelable: false,
+        transferable: false,
+        durations: duration,
+        broker: broker
+    });
+
+    sablier.createWithDurations(create);
+    
+    vm.startPrank(address(2)); 
+    sablier.setApprovalForAll(address(sablierLockUp), true);
+    vm.expectRevert(Errors.StreamNotTransferable.selector);
     sablierLockUp.mint(address(2), 1);
     vm.stopPrank();
   }

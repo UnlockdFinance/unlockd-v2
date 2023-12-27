@@ -139,6 +139,7 @@ library Errors {
   error StreamERC20NotSupported();
   error CallerNotNFTOwner();
   error StreamCancelable();
+  error StreamNotTransferable();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
