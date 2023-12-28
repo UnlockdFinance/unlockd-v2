@@ -96,8 +96,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     //////////////////////////////////////////////////////////////*/
     /**
      * @notice Mints a new token.
-     * @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
-     * and if the asset in the stream is supported by the protocol.
+     * @dev Mints a new ERC721 token representing the underlying asset and stores the real asset in this contract.
      * @param to The address to mint the token to.
      * @param tokenId The token ID to mint.
      */
@@ -110,7 +109,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
 
     /**
      * @notice Burns a token.
-     * @dev Burns an ERC721 token and transfers the corresponding Sablier stream back to the burner.
+     * @dev Burns an ERC721 token and transfers the underlying asset to its owner.
      * @param tokenId The token ID to burn.
      */
     function baseBurn(uint256 tokenId, address to) internal {
