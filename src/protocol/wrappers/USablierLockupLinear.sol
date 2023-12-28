@@ -25,9 +25,8 @@ contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
      * @dev Modifier to check if this UToken is allowed by the protocol
      * @param asset Address of the ERC20 token streaming
      */
-    modifier isStreamERC20Allowed(address asset) {
-        if (!_ERC20Allowed[asset]) revert Errors.StreamERC20NotSupported();
-        _;
+    function isStreamERC20Allowed(address asset) internal view returns (bool) {
+        
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -106,7 +105,8 @@ contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
      * @param to The address to mint the token to.
      * @param tokenId The token ID to mint.
      */
-    function mint(address to, uint256 tokenId) external isStreamERC20Allowed(address(_sablier.getAsset(tokenId))) {
+    function mint(address to, uint256 tokenId) external {
+        if(!_ERC20Allowed[address(_sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
         if(_sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
         if(_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
         if(!_sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
