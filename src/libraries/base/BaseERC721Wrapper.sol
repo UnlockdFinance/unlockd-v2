@@ -138,16 +138,14 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /**
      * @dev See {ERC721-approve}.
      */
-    function approve(address to, uint256 tokenId) public pure override {
-        to; tokenId;
+    function approve(address, uint256) public pure override {
         revert Errors.ApproveNotSupported();
     }
 
     /**
      * @dev See {ERC721-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved) public pure override {
-        operator; approved;
+    function setApprovalForAll(address, bool) public pure override {
         revert Errors.SetApprovalForAllNotSupported();
     }
 
@@ -169,8 +167,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /**
      * @dev See {ERC721-_transfer}.
      */
-    function _transfer(address from, address to, uint256 tokenId) internal pure override {
-        from; to; tokenId;
+    function _transfer(address, address, uint256) internal pure override {
         revert Errors.TransferNotSupported();
     }
 }
