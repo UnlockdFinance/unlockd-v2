@@ -28,17 +28,16 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
     function initialize(
         string memory name, 
         string memory symbol,
-        address underlyingAsset, 
         address aclManager
     ) external initializer {
+
         __BaseERC721Wrapper_init(
             name, 
             symbol,
-            underlyingAsset, 
             aclManager
         );
 
-        emit Initialized(underlyingAsset);
+        emit Initialized(name, symbol);
     }
 
     /** 
@@ -46,7 +45,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
      * @dev This constructor sets the Sablier lockup linear address and disables further initializations.
      * @param sablierLockUpLinearAddress The address of the Sablier lockup linear contract, 
      */
-    constructor(address sablierLockUpLinearAddress) {
+    constructor(address sablierLockUpLinearAddress) BaseERC721Wrapper(sablierLockUpLinearAddress) {
         _sablier = ISablierV2LockupLinear(sablierLockUpLinearAddress);
         _disableInitializers();
     }

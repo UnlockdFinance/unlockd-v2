@@ -16,7 +16,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
-    ERC721Upgradeable internal _erc721;
+    ERC721Upgradeable internal immutable _erc721;
     address internal _aclManager;
 
     /*//////////////////////////////////////////////////////////////
@@ -40,9 +40,10 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
 
     /**
      * @dev Emitted when the contract is initialized.
-     * @param underlyingAsset address of the underlying asset.
+     * @param name of the underlying asset.
+     * @param symbol of the underlying asset.
      */
-    event Initialized(address indexed underlyingAsset);
+    event Initialized(string name, string symbol);
 
     /*//////////////////////////////////////////////////////////////
                               MODIFIERS
@@ -77,18 +78,24 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * which is a common pattern in upgradeable contracts to replace constructors.
      * @param name The name for the ERC721 token.
      * @param symbol The symbol for the ERC721 token.
-     * @param underlyingAsset The address of the underlying ERC721 asset.
      * @param aclManager The address of the ACL (Access Control List) manager contract.
      */
     function __BaseERC721Wrapper_init(
         string memory name, 
         string memory symbol,
-        address underlyingAsset, 
         address aclManager
     ) internal initializer {
         __ERC721_init(name, symbol); 
-        _erc721 = ERC721Upgradeable(underlyingAsset);
         _aclManager = aclManager;
+    }
+
+    /** 
+     * @notice Initializes the underlying asset contract by setting the ERC721 address.
+     * @param underlyingAsset The address of the underlying asset to be wrapped.
+     */ 
+    constructor(address underlyingAsset) {
+        _erc721 = ERC721Upgradeable(underlyingAsset);
+        _disableInitializers();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -148,10 +155,10 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * @dev See {ERC721-onERC721Received}.
      */
     function onERC721Received(
-    address operator, 
-    address from, 
-    uint256 tokenId, 
-    bytes calldata data
+    address, 
+    address, 
+    uint256, 
+    bytes calldata
     ) external override returns (bytes4) {
         return this.onERC721Received.selector;
     }
