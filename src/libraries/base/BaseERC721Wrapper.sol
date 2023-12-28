@@ -52,7 +52,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * @dev Modifier that checks if the sender has Protocol ROLE
      */
     modifier onlyProtocol() {
-        if (IACLManager(_aclManager).isProtocol(_msgSender()) != true) {
+        if (!IACLManager(_aclManager).isProtocol(_msgSender())) {
             revert Errors.ProtocolAccessDenied();
         }
         _;
@@ -62,7 +62,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * @dev Modifier that checks if the sender has Emergency ROLE
      */
     modifier onlyEmergency() {
-        if (IACLManager(_aclManager).isEmergencyAdmin(_msgSender()) != true) {
+        if (!IACLManager(_aclManager).isEmergencyAdmin(_msgSender())) {
             revert Errors.EmergencyAccessDenied();
         }
         _;
