@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {ISablierV2LockupLinear} from '../../interfaces/wrappers/ISablierV2LockupLinear.sol';
+import {IUSablierLockupLinear} from '../../interfaces/wrappers/IUSablierLockupLinear.sol';
 import {BaseERC721Wrapper, Errors} from '../../libraries/base/BaseERC721Wrapper.sol';
 
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
@@ -10,24 +11,13 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
  * @title USablierLockupLinear - ERC721 wrapper representing a Sablier token stream
  * @dev Implements minting and burning for Sablier token streams without transfer capabilities
  **/
-contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
+contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSUpgradeable {
 
     /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
     ISablierV2LockupLinear private immutable _sablier;
     mapping(address => bool) private _ERC20Allowed;
-
-    /*//////////////////////////////////////////////////////////////
-                              MODIFIERS
-    //////////////////////////////////////////////////////////////*/
-    /**
-     * @dev Modifier to check if this UToken is allowed by the protocol
-     * @param asset Address of the ERC20 token streaming
-     */
-    function isStreamERC20Allowed(address asset) internal view returns (bool) {
-        
-    }
 
     /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
@@ -105,13 +95,17 @@ contract USablierLockupLinear is BaseERC721Wrapper, UUPSUpgradeable {
      * @param to The address to mint the token to.
      * @param tokenId The token ID to mint.
      */
-    function mint(address to, uint256 tokenId) external {
+    function mint(address to, uint256 tokenId) external override {
         if(!_ERC20Allowed[address(_sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
         if(_sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
         if(_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
         if(!_sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
 
         baseMint(to, tokenId);
+    }
+
+    function burn(address to, uint256 tokenId) external override {
+        baseBurn(tokenId, to);
     }
 
     /*//////////////////////////////////////////////////////////////

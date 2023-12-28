@@ -113,7 +113,9 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * @dev Burns an ERC721 token and transfers the corresponding Sablier stream back to the burner.
      * @param tokenId The token ID to burn.
      */
-    function baseBurn(uint256 tokenId, address to) external onlyProtocol {
+    function baseBurn(uint256 tokenId, address to) internal {
+        if(!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
+        
         _burn(tokenId);
         _erc721.safeTransferFrom(address(this), to, tokenId);
 

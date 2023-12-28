@@ -140,6 +140,7 @@ library Errors {
   error CallerNotNFTOwner();
   error StreamCancelable();
   error StreamNotTransferable();
+  error BurnerNotApproved();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {

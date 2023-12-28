@@ -101,8 +101,7 @@ contract USablierLockupLinearTest is Setup {
     sablierLockUp.mint(address(2), 1);
     assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
     
-    vm.startPrank(protocol);
-    sablierLockUp.baseBurn(1, address(2));
+    sablierLockUp.burn(address(2), 1);
     assertEq(sablierLockUp.balanceOf(address(2)), 0, "Balance should be 0");
     assertEq(sablier.balanceOf(address(2)), 1, "Balance should be 1");
     vm.stopPrank();
@@ -203,6 +202,23 @@ contract USablierLockupLinearTest is Setup {
     sablier.setApprovalForAll(address(sablierLockUp), true);
     vm.expectRevert(Errors.StreamNotTransferable.selector);
     sablierLockUp.mint(address(2), 1);
+    vm.stopPrank();
+  }
+
+  function test_Burn_NOT_Aproved() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+
+    mintSablierNFT(false, true);
+    
+    vm.startPrank(address(2)); 
+    sablier.setApprovalForAll(address(sablierLockUp), true);
+    sablierLockUp.mint(address(2), 1);
+    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    
+    vm.startPrank(address(1));
+    vm.expectRevert(Errors.BurnerNotApproved.selector);
+    sablierLockUp.burn(address(2), 1);
     vm.stopPrank();
   }
 
