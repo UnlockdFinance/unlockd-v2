@@ -102,6 +102,12 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
         baseMint(to, tokenId);
     }
 
+    /**
+     * @notice Burns a token.
+     * @dev Burns an ERC721 token representing a Sablier stream and transfers the underlying asset to its owner.
+     * @param to The address to send the NFT to.
+     * @param tokenId The token ID to burn.
+     */
     function burn(address to, uint256 tokenId) external override {
         baseBurn(tokenId, to);
     }
