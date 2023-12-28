@@ -58,6 +58,8 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
      */
     function setERC20AllowedAddress(address asset, bool allowed) external onlyProtocol {
         _ERC20Allowed[asset] = allowed;
+
+        emit AllowedAddress(asset, allowed);
     }
 
     /**
