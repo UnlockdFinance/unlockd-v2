@@ -37,7 +37,6 @@ contract USablierLockupLinearTest is Setup {
         sablierImplementation.initialize.selector, 
         "Unlockd bound Sablier LL", 
         "USABLL",
-        address(sablier), 
         address(_aclManager)
       )
     );

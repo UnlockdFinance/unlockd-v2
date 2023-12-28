@@ -16,7 +16,6 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
     /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
-    ISablierV2LockupLinear private immutable _sablier;
     mapping(address => bool) private _ERC20Allowed;
 
     /*//////////////////////////////////////////////////////////////
@@ -46,7 +45,6 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
      * @param sablierLockUpLinearAddress The address of the Sablier lockup linear contract, 
      */
     constructor(address sablierLockUpLinearAddress) BaseERC721Wrapper(sablierLockUpLinearAddress) {
-        _sablier = ISablierV2LockupLinear(sablierLockUpLinearAddress);
         _disableInitializers();
     }
 
@@ -81,7 +79,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
      * @param to the address to send the funds to
      */
     function withdrawFromStream(uint256 tokenId, address to) external onlyProtocol {
-        _sablier.withdrawMaxAndTransfer(tokenId, to);
+        ISablierV2LockupLinear(address(_erc721)).withdrawMaxAndTransfer(tokenId, to);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -95,10 +93,11 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
      * @param tokenId The token ID to mint.
      */
     function mint(address to, uint256 tokenId) external override {
-        if(!_ERC20Allowed[address(_sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
-        if(_sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
-        if(_sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
-        if(!_sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
+        ISablierV2LockupLinear sablier = ISablierV2LockupLinear(address(_erc721));
+        if(!_ERC20Allowed[address(sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
+        if(sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
+        if(sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
+        if(!sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
 
         baseMint(to, tokenId);
     }
