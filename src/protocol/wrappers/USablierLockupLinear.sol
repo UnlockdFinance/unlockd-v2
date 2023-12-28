@@ -101,7 +101,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
         if(sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
         if(!sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
 
-        baseMint(to, tokenId);
+        _baseMint(to, tokenId);
     }
 
     /**
@@ -111,7 +111,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
      * @param tokenId The token ID to burn.
      */
     function burn(address to, uint256 tokenId) external override {
-        baseBurn(tokenId, to);
+        _baseBurn(tokenId, to);
     }
 
     /*//////////////////////////////////////////////////////////////

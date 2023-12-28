@@ -107,7 +107,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * @param to The address to mint the token to.
      * @param tokenId The token ID to mint.
      */
-    function baseMint(address to, uint256 tokenId) internal {
+    function _baseMint(address to, uint256 tokenId) internal {
         _erc721.safeTransferFrom(msg.sender, address(this), tokenId);
         _mint(to, tokenId);
 
@@ -119,7 +119,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      * @dev Burns an ERC721 token and transfers the underlying asset to its owner.
      * @param tokenId The token ID to burn.
      */
-    function baseBurn(uint256 tokenId, address to) internal {
+    function _baseBurn(uint256 tokenId, address to) internal {
         if(!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
         
         _burn(tokenId);
