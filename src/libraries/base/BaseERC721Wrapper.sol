@@ -52,7 +52,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      */
     modifier onlyProtocol() {
         if (IACLManager(_aclManager).isProtocol(_msgSender()) != true) {
-        revert Errors.ProtocolAccessDenied();
+            revert Errors.ProtocolAccessDenied();
         }
         _;
     }
@@ -62,7 +62,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
      */
     modifier onlyEmergency() {
         if (IACLManager(_aclManager).isEmergencyAdmin(_msgSender()) != true) {
-        revert Errors.EmergencyAccessDenied();
+            revert Errors.EmergencyAccessDenied();
         }
         _;
     }
