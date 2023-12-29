@@ -141,6 +141,7 @@ library Errors {
   error StreamCancelable();
   error StreamNotTransferable();
   error BurnerNotApproved();
+  error ERC721ReceiverNotSupported();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {

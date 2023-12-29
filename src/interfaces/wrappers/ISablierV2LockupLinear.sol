@@ -102,6 +102,7 @@ interface ISablierV2LockupLinear {
     function tokenURI(uint256 tokenId) external view returns (string memory);
     function setApprovalForAll(address operator, bool _approved) external;
     function isApprovedForAll(address owner, address operator) external view returns (bool);
+    function onERC721Received(address, address, uint256 tokenId, bytes calldata data) external returns (bytes4);
 
     /*//////////////////////////////////////////////////////////////
                         ISABLIERV2LOCKUPLINEAR

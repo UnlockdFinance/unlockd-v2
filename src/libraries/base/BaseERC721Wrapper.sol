@@ -101,6 +101,9 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /*//////////////////////////////////////////////////////////////
                             ERC721
     //////////////////////////////////////////////////////////////*/
+
+    function preMintChecks(address, uint256) public virtual {}
+
     /**
      * @notice Mints a new token.
      * @dev Mints a new ERC721 token representing the underlying asset and stores the real asset in this contract.
@@ -155,9 +158,15 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     function onERC721Received(
     address, 
     address, 
-    uint256, 
-    bytes calldata
-    ) external override returns (bytes4) {
+    uint256 tokenId, 
+    bytes calldata data
+    ) external virtual override returns (bytes4) {
+        if(msg.sender != address(_erc721)) revert Errors.ERC721ReceiverNotSupported();
+        
+        (address unlockdWallet) = abi.decode(data, (address));
+        preMintChecks(unlockdWallet, tokenId);
+        _mint(unlockdWallet, tokenId);
+
         return this.onERC721Received.selector;
     }
 
