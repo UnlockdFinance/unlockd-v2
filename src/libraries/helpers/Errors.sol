@@ -64,7 +64,7 @@ library Errors {
   error CollectionNotAllowed();
   error NotAssetOwner();
   error UnsuccessfulExecution();
-  // error TokenAssetsMismatch();
+  error AssetsMismatch();
   error InvalidRecoveredAddress();
   error SenderZeroAddress();
 
