@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import '../mock/asset/MintableERC20.sol';
-import '../mock/yearn/MockYVault.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 import {ReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
