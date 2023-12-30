@@ -107,6 +107,10 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       // If exist we validate if it's correct
       loan = _loans[signAction.loan.loanId];
 
+      if (loan.underlyingAsset != signAction.underlyingAsset) {
+        revert Errors.InvalidUnderlyingAsset();
+      }
+
       if (loan.owner != msgSender) {
         revert Errors.InvalidLoanOwner();
       }

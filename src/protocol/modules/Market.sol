@@ -148,7 +148,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       IProtocolOwner(delegationOwner).setLoanId(signMarket.assetId, loan.loanId);
     } else {
       if (loan.underlyingAsset != underlyingAsset) {
-        revert Errors.InvalidUToken();
+        revert Errors.InvalidUnderlyingAsset();
       }
 
       if (loan.owner != msgSender) {

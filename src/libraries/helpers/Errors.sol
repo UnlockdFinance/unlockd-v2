@@ -45,7 +45,7 @@ library Errors {
   error InvalidOrderBuyer();
 
   error InvalidLoanOwner();
-  error InvalidUToken();
+  error InvalidUnderlyingAsset();
 
   error InvalidEndAmount();
   error InvalidStartAmount();
