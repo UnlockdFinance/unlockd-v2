@@ -2,8 +2,9 @@
 pragma solidity 0.8.19;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-interface ISablierV2LockupLinear {
+interface ISablierV2LockupLinear is IERC721Receiver {
 
     /*//////////////////////////////////////////////////////////////
                            STRUCTS

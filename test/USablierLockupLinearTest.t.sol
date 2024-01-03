@@ -8,6 +8,9 @@ import './test-utils/setups/Setup.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 import {USablierLockupLinear} from '../src/protocol/wrappers/USablierLockupLinear.sol';
 import {ISablierV2LockupLinear} from '../src/interfaces/wrappers/ISablierV2LockupLinear.sol';
+import {ICryptoPunksMarket} from '../src/interfaces/wrappers/ICryptoPunksMarket.sol';
+import {UnlockdBatchTransfers} from '../test/test-utils/UnlockdBatchTransfers.sol';
+import {MockDelegationWalletRegistry} from '../test/test-utils/MockDelegationWalletRegistry.sol';
 
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -18,34 +21,42 @@ contract USablierLockupLinearTest is Setup {
 
   address internal _wethAddress = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
   address internal _usdcAddress = 0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8;
+  address internal delegationRegistry = 0x15cF58144EF33af1e14b5208015d11F9143E27b9;
   address internal protocol = makeAddr('protocol');
   
-  USablierLockupLinear sablierLockUp;
+  USablierLockupLinear uSablierLockUp;
   ISablierV2LockupLinear sablier = ISablierV2LockupLinear(0x7a43F8a888fa15e68C103E18b0439Eb1e98E4301);
-  ERC1967Proxy sablierProxy;
-  USablierLockupLinear sablierImplementation;
+  ERC1967Proxy uSablierProxy;
+  USablierLockupLinear uSablierImplementation;
+  UnlockdBatchTransfers batchTransfers;
+  MockDelegationWalletRegistry _delegationRegistry;
 
   function setUp() public virtual override {
     super.setUpByChain(11155111, 4917297);
     vm.startPrank(_admin);
     _aclManager.setProtocol(protocol);
 
-    sablierImplementation = new USablierLockupLinear(address(sablier));
-    sablierProxy = new ERC1967Proxy(
-      address(sablierImplementation), 
+    uSablierImplementation = new USablierLockupLinear(address(sablier));
+    uSablierProxy = new ERC1967Proxy(
+      address(uSablierImplementation), 
       abi.encodeWithSelector(
-        sablierImplementation.initialize.selector, 
+        uSablierImplementation.initialize.selector, 
         "Unlockd bound Sablier LL", 
         "USABLL",
         address(_aclManager)
       )
     );
 
-    sablierLockUp = USablierLockupLinear(address(sablierProxy));
+    uSablierLockUp = USablierLockupLinear(address(uSablierProxy));
 
     vm.startPrank(protocol);
-    sablierLockUp.setERC20AllowedAddress(_wethAddress, true);
-    sablierLockUp.setERC20AllowedAddress(_usdcAddress, true);
+    ICryptoPunksMarket cryptoPunk = ICryptoPunksMarket(0x987EfDB241fE66275b3594481696f039a82a799e);
+    _delegationRegistry = new MockDelegationWalletRegistry();
+    _delegationRegistry.setWallet(address(22), address(2), address(0), address(0), address(0), address(0));
+    batchTransfers = new UnlockdBatchTransfers(address(cryptoPunk), address(_aclManager), address(_delegationRegistry));
+    batchTransfers.addToBeWrapped(address(sablier), address(uSablierLockUp));
+    uSablierLockUp.setERC20AllowedAddress(_wethAddress, true);
+    uSablierLockUp.setERC20AllowedAddress(_usdcAddress, true);
     vm.stopPrank();
   }
 
@@ -53,15 +64,15 @@ contract USablierLockupLinearTest is Setup {
                             POSITIVES
   //////////////////////////////////////////////////////////////*/
   function test_Initialization() public {
-    assertEq(sablierLockUp.name(), "Unlockd bound Sablier LL", "Token name mismatch");
-    assertEq(sablierLockUp.symbol(), "USABLL", "Token symbol mismatch");
+    assertEq(uSablierLockUp.name(), "Unlockd bound Sablier LL", "Token name mismatch");
+    assertEq(uSablierLockUp.symbol(), "USABLL", "Token symbol mismatch");
   }
 
   function test_Add_ERC20Allowed() public {
     vm.prank(protocol);
     address newToken = makeAddr('newToken');
-    sablierLockUp.setERC20AllowedAddress(newToken, true);
-    assertEq(sablierLockUp.isERC20Allowed(newToken), true, "Should be true");
+    uSablierLockUp.setERC20AllowedAddress(newToken, true);
+    assertEq(uSablierLockUp.isERC20Allowed(newToken), true, "Should be true");
   }
 
   function test_authorizeUpgrade() public {
@@ -69,10 +80,10 @@ contract USablierLockupLinearTest is Setup {
 
     vm.prank(address(1));
     vm.expectRevert(Errors.ProtocolAccessDenied.selector); 
-    sablierLockUp.upgradeTo(address(newImplementation));
+    uSablierLockUp.upgradeTo(address(newImplementation));
 
     vm.prank(protocol);
-    sablierLockUp.upgradeTo(address(newImplementation));
+    uSablierLockUp.upgradeTo(address(newImplementation));
   }
 
   function test_Mint() public {
@@ -82,9 +93,14 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
-    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(batchTransfers), true);
+
+     UnlockdBatchTransfers.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+
+    batchTransfers.batchTransferFrom(transfers, address(22));
+    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
     
     vm.stopPrank();
   }
@@ -96,12 +112,12 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
-    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
+    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
     
-    sablierLockUp.burn(address(2), 1);
-    assertEq(sablierLockUp.balanceOf(address(2)), 0, "Balance should be 0");
+    uSablierLockUp.burn(address(2), 1);
+    assertEq(uSablierLockUp.balanceOf(address(2)), 0, "Balance should be 0");
     assertEq(sablier.balanceOf(address(2)), 1, "Balance should be 1");
     vm.stopPrank();
   }
@@ -113,14 +129,14 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
-    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
+    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
     
     vm.startPrank(protocol); //onlyProtocol
     uint256 balanceBefore = IERC20(_wethAddress).balanceOf(address(2));
     uint256 streamBalance = sablier.withdrawableAmountOf(1);
-    sablierLockUp.withdrawFromStream(1, address(2));
+    uSablierLockUp.withdrawFromStream(1, address(2));
     uint256 balanceAfter = IERC20(_wethAddress).balanceOf(address(2));
     assertEq(balanceAfter, balanceBefore + streamBalance, "Balance after should be balance before + streamBalance");
     vm.stopPrank();
@@ -132,19 +148,19 @@ contract USablierLockupLinearTest is Setup {
   function test_Mint_Reverts() public {
     vm.prank(address(2));
     vm.expectRevert();
-    sablierLockUp.mint(address(0), 1);
+    uSablierLockUp.mint(address(0), 1);
   }
 
   function test_Add_ERC20Allowed_Reverts() public {
     vm.prank(address(2));
     vm.expectRevert(Errors.ProtocolAccessDenied.selector);
-    sablierLockUp.setERC20AllowedAddress(_wethAddress, true);
+    uSablierLockUp.setERC20AllowedAddress(_wethAddress, true);
   }
 
   function test_Withdraw_Not_OnlyProtocol() public {
     vm.prank(address(this)); 
     vm.expectRevert(0x56e40536);
-    sablierLockUp.withdrawFromStream(1, address(1));
+    uSablierLockUp.withdrawFromStream(1, address(1));
   }
 
   function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
@@ -154,13 +170,13 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
-    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
+    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
     
     vm.startPrank(address(this)); //onlyProtocol
     vm.expectRevert(Errors.ProtocolAccessDenied.selector);
-    sablierLockUp.withdrawFromStream(1, address(2));
+    uSablierLockUp.withdrawFromStream(1, address(2));
     vm.stopPrank();
   }
 
@@ -172,9 +188,9 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(3)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
     vm.expectRevert(Errors.CallerNotNFTOwner.selector);
-    sablierLockUp.mint(address(2), 1);
+    uSablierLockUp.mint(address(2), 1);
     vm.stopPrank();
   }
 
@@ -185,9 +201,9 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(true, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
     vm.expectRevert(Errors.StreamCancelable.selector);
-    sablierLockUp.mint(address(2), 1);
+    uSablierLockUp.mint(address(2), 1);
     vm.stopPrank();
   }
 
@@ -198,9 +214,9 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, false);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
     vm.expectRevert(Errors.StreamNotTransferable.selector);
-    sablierLockUp.mint(address(2), 1);
+    uSablierLockUp.mint(address(2), 1);
     vm.stopPrank();
   }
 
@@ -211,13 +227,13 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
-    assertEq(sablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
+    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
     
     vm.startPrank(address(1));
     vm.expectRevert(Errors.BurnerNotApproved.selector);
-    sablierLockUp.burn(address(2), 1);
+    uSablierLockUp.burn(address(2), 1);
     vm.stopPrank();
   }
 
@@ -232,10 +248,10 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
     vm.expectRevert(Errors.ApproveNotSupported.selector);
-    sablierLockUp.approve(address(1), 1); 
+    uSablierLockUp.approve(address(1), 1); 
   }
 
   function test_Set_Approval_For_All_Reverts() public {
@@ -245,10 +261,10 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
     vm.expectRevert(Errors.SetApprovalForAllNotSupported.selector);
-    sablierLockUp.setApprovalForAll(address(1), true);
+    uSablierLockUp.setApprovalForAll(address(1), true);
   }  
 
   function test_Transfer_Reverts() public {
@@ -258,10 +274,10 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
     vm.expectRevert(Errors.TransferNotSupported.selector);
-    sablierLockUp.transferFrom(address(2), address(1), 1);
+    uSablierLockUp.transferFrom(address(2), address(1), 1);
   }
 
   function test_Safe_Transfer_From_Reverts() public {
@@ -271,10 +287,10 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(sablierLockUp), true);
-    sablierLockUp.mint(address(2), 1);
+    sablier.setApprovalForAll(address(uSablierLockUp), true);
+    uSablierLockUp.mint(address(2), 1);
     vm.expectRevert(Errors.TransferNotSupported.selector);
-    sablierLockUp.safeTransferFrom(address(2), address(1), 1); 
+    uSablierLockUp.safeTransferFrom(address(2), address(1), 1); 
   }
 
   /*//////////////////////////////////////////////////////////////
