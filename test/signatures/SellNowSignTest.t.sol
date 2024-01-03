@@ -220,14 +220,6 @@ contract SellNowSignTest is Setup {
           nonce: nonce,
           deadline: deadline
         }),
-        // asset: DataTypes.SignAsset({
-        //   assetId: AssetLogic.assetId(_nft, 1),
-        //   collection: _nft,
-        //   tokenId: 1,
-        //   price: 0.5 ether,
-        //   nonce: nonce,
-        //   deadline: deadline
-        // }),
         assetId: '',
         marketAdapter: address(0),
         marketApproval: address(0),

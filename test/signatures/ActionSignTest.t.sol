@@ -234,7 +234,7 @@ contract ActionSignTest is Setup {
           deadline: deadline
         }),
         assets: assets,
-        underlyingAsset: address(0),
+        underlyingAsset: makeAsset('WETH'),
         nonce: nonce,
         deadline: deadline
       });

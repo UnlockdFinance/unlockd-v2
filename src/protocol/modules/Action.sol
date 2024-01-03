@@ -51,6 +51,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
    *  - If the amount is 0 and you pass the array of assets you can add colaterall to a especific loanId
    *  - If the amount is > 0 and the loanId exist
    *  @param amount Amount asked for the user to perform the borrow
+   *  @param assets Array of assets for interaction should maintain the same order as the signature action.
    *  @param signAction struct with all the parameter needed to perform the borrow
    *  @param sig validation of the signature
    *

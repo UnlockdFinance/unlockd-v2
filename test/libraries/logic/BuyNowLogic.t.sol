@@ -28,7 +28,7 @@ contract BuyNowLogicTest is Setup {
     test = new TestLib();
   }
 
-  function test_buyNow_calculations_wrong_uToken() external {
+  function test_buyNow_calculations_wrong_UnderlyingAsset() external {
     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualUnderlyingAsset.selector));
     test.calculations(
       uTokenWrong,
@@ -41,7 +41,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
-        marketAdapter: address(0),
+        marketAdapter: makeAddr('market_adapter'),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),
@@ -69,7 +69,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
-        marketAdapter: address(0),
+        marketAdapter: makeAddr('market_adapter'),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),
@@ -100,7 +100,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
-        marketAdapter: address(0),
+        marketAdapter: makeAddr('market_adapter'),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),
@@ -131,7 +131,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
-        marketAdapter: address(0),
+        marketAdapter: makeAddr('market_adapter'),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),

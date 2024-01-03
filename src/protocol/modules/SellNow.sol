@@ -33,16 +33,6 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
   using OrderLogic for DataTypes.Order;
   using LoanLogic for DataTypes.Loan;
 
-  // /**
-  //  * @dev check if the market is allowed on the protocol
-  //  * @param adapter Address of the Adapter
-  //  *
-  //  */
-  // modifier isMarketAdapterAllowed(address adapter) {
-  //   if (_allowedMarketAdapter[adapter] == 0) revert Errors.AdapterNotAllowed();
-  //   _;
-  // }
-
   /**
    * @dev Modifier that checks if the sender has Auction Admin ROLE
    */
