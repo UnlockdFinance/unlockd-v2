@@ -57,6 +57,7 @@ contract BuyNowSign is BaseSignature {
         abi.encode(
           TYPEHASH,
           AssetLogic.getAssetStructHash(nonce, buyNowSign.asset),
+          buyNowSign.marketAdapter,
           buyNowSign.assetLtv,
           buyNowSign.assetLiquidationThreshold,
           buyNowSign.from,

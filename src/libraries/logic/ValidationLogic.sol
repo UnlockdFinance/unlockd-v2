@@ -34,7 +34,6 @@ library ValidationLogic {
   function validateLockAsset(
     bytes32 assetId,
     address owner,
-    address allowedController,
     address protocolOwner,
     DataTypes.Asset memory asset
   ) internal view {
@@ -42,9 +41,9 @@ library ValidationLogic {
       revert Errors.NotAssetOwner();
     }
 
-    if (IAllowedControllers(allowedController).isAllowedCollection(asset.collection) == false) {
-      revert Errors.CollectionNotAllowed();
-    }
+    // if (IAllowedControllers(allowedController).isAllowedCollection(asset.collection) == false) {
+    //   revert Errors.CollectionNotAllowed();
+    // }
     // Check if is not already locked
     if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
       revert Errors.AssetLocked();
@@ -58,7 +57,6 @@ library ValidationLogic {
   }
 
   struct ValidateLoanStateParams {
-    address user;
     uint256 amount;
     uint256 price;
     address reserveOracle;
@@ -85,7 +83,6 @@ library ValidationLogic {
         params.loanConfig.loanId,
         params.amount,
         params.price,
-        params.user,
         params.reserveOracle,
         params.uTokenFactory,
         params.reserve,
@@ -129,7 +126,6 @@ library ValidationLogic {
         params.loanConfig.loanId,
         params.amount,
         params.price,
-        params.user,
         params.reserveOracle,
         params.uTokenFactory,
         params.reserve,
@@ -160,7 +156,6 @@ library ValidationLogic {
     bytes32 loanId,
     address uTokenFactory,
     uint256 amount,
-    address reserveOracle,
     DataTypes.ReserveData memory reserve
   ) internal view {
     // Check allowance to perform the payment to the UToken

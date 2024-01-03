@@ -200,8 +200,6 @@ library OrderLogic {
 
   function getMaxDebtOrDefault(
     bytes32 loanId,
-    address user,
-    address reserveOracle,
     address uTokenFactory,
     uint256 defaultAmount,
     uint256 totalCollateral,
@@ -226,8 +224,6 @@ library OrderLogic {
 
   function getMinDebtOrDefault(
     bytes32 loanId,
-    address user,
-    address reserveOracle,
     address uTokenFactory,
     uint256 defaultAmount,
     uint256 totalCollateral,
@@ -257,7 +253,6 @@ library OrderLogic {
    * */
   function getMinBid(
     DataTypes.Order memory order,
-    address reserveOracle,
     address uTokenFactory,
     uint256 totalCollateral,
     uint256 ltv,
@@ -267,8 +262,6 @@ library OrderLogic {
       return
         getMaxDebtOrDefault(
           order.offer.loanId,
-          order.owner,
-          reserveOracle,
           uTokenFactory,
           order.offer.startAmount,
           totalCollateral,
@@ -281,8 +274,6 @@ library OrderLogic {
     return
       getMaxDebtOrDefault(
         order.offer.loanId,
-        order.owner,
-        reserveOracle,
         uTokenFactory,
         calculateMinBid(lastBid, order.countBids),
         totalCollateral,
@@ -317,8 +308,6 @@ library OrderLogic {
   ) internal returns (uint256 totalAmount) {
     uint256 debtAmount = getMaxDebtOrDefault(
       order.offer.loanId,
-      order.owner,
-      params.reserveOracle,
       params.uTokenFactory,
       // Calculate the % of the owner want to repay the debt
       order.offer.debtToSell > 0 ? params.totalAmount.percentMul(order.offer.debtToSell) : 0,

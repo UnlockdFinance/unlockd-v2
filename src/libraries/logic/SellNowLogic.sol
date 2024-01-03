@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
 import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {GenericLogic, Errors, DataTypes} from './GenericLogic.sol';
@@ -37,7 +37,13 @@ library SellNowLogic {
       // Repay Owner debt to arrive ltv
       // TODO : Add repay
       IERC20(params.underlyingAsset).safeApprove(params.uTokenFactory, minRepay);
-      // IUToken(params.uToken).repayOnBelhalf(params.loanId, minRepay, address(this), params.owner);
+      IUTokenFactory(params.uTokenFactory).repay(
+        params.underlyingAsset,
+        params.loanId,
+        minRepay,
+        address(this),
+        params.owner
+      );
     }
     // Send benefits to the owner
     uint256 amountLeft = params.marketPrice - minRepay;

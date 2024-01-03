@@ -53,6 +53,8 @@ contract SellNowSign is BaseSignature {
       abi.encode(
         TYPEHASH,
         LoanLogic.getLoanStructHash(nonce, sellNowSign.loan),
+        sellNowSign.assetId,
+        sellNowSign.marketAdapter,
         sellNowSign.marketApproval,
         sellNowSign.marketPrice,
         sellNowSign.underlyingAsset,

@@ -230,7 +230,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -258,7 +258,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -289,7 +289,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -317,7 +317,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -342,13 +342,13 @@ contract BorrowTest is Setup {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
     assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
-    vm.recordLogs();
+
     {
       // BORROW first time
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -366,8 +366,6 @@ contract BorrowTest is Setup {
       hoax(_actor);
       Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     }
-    Vm.Log[] memory entries = vm.getRecordedLogs();
-    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
     {
       assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
@@ -376,7 +374,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -408,7 +406,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -437,7 +435,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -470,7 +468,7 @@ contract BorrowTest is Setup {
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
+      ,
 
     ) = action_signature(
         _action,
@@ -493,7 +491,7 @@ contract BorrowTest is Setup {
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
+      ,
       DataTypes.Asset[] memory assets
     ) = action_signature(
         _action,
@@ -520,7 +518,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -548,7 +546,7 @@ contract BorrowTest is Setup {
       (
         DataTypes.SignAction memory signAction,
         DataTypes.EIP712Signature memory sig,
-        bytes32[] memory assetsIds,
+        ,
         DataTypes.Asset[] memory assets
       ) = action_signature(
           _action,
@@ -648,7 +646,7 @@ contract BorrowTest is Setup {
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
+      ,
       DataTypes.Asset[] memory assets
     ) = action_signature(
         _action,

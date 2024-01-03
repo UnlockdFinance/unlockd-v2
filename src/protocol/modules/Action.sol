@@ -141,13 +141,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           revert Errors.NotValidReserve();
         }
 
-        ValidationLogic.validateLockAsset(
-          assetId,
-          wallet,
-          _allowedControllers,
-          protocolOwner,
-          asset
-        );
+        ValidationLogic.validateLockAsset(assetId, wallet, protocolOwner, asset);
 
         IProtocolOwner(protocolOwner).setLoanId(assetId, loan.loanId);
         unchecked {
@@ -163,7 +157,6 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       // We validate if the user can borrow
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
-          user: msgSender,
           amount: amount,
           price: 0,
           reserveOracle: _reserveOracle,
@@ -176,6 +169,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       if (loan.state != Constants.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
+
       // We have to update the index BEFORE obtaining the borrowed amount.
       UTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
 
@@ -215,21 +209,18 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     if (loan.owner != msgSender) {
       revert Errors.NotEqualSender();
     }
+
+    if (loan.underlyingAsset != signAction.underlyingAsset) {
+      revert Errors.InvalidUnderlyingAsset();
+    }
+
     UTokenFactory uTokenFactory = UTokenFactory(_uTokenFactory);
 
     DataTypes.ReserveData memory reserve = uTokenFactory.getReserveData(loan.underlyingAsset);
     uTokenFactory.updateState(loan.underlyingAsset);
 
-    address reserveOracle = _reserveOracle;
-
     if (amount != 0) {
-      ValidationLogic.validateRepay(
-        signAction.loan.loanId,
-        msgSender,
-        amount,
-        reserveOracle,
-        reserve
-      );
+      ValidationLogic.validateRepay(signAction.loan.loanId, msgSender, amount, reserve);
 
       uTokenFactory.repay(loan.underlyingAsset, loan.loanId, amount, msgSender, msgSender);
     }
@@ -241,7 +232,6 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       */
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
-          user: msgSender,
           amount: amount,
           price: 0,
           reserveOracle: _reserveOracle,

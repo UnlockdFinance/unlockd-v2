@@ -63,7 +63,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
   ) external view returns (uint256 minBid) {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
-      _reserveOracle,
       _uTokenFactory,
       aggLoanPrice,
       aggLTV,
@@ -87,8 +86,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     DataTypes.Order memory order = _orders[orderId];
     amount = OrderLogic.getMaxDebtOrDefault(
       order.offer.loanId,
-      order.owner,
-      _reserveOracle,
       _uTokenFactory,
       order.offer.endAmount,
       aggLoanPrice,
@@ -119,6 +116,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
 
     DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      underlyingAsset
+    );
 
     // In case we want to create a auction with a nft that are not in a loan
     if (loan.loanId == 0) {
@@ -137,10 +137,18 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         _walletRegistry,
         msgSender
       );
+
+      if (
+        IUTokenFactory(_uTokenFactory).validateReserveType(
+          reserve.reserveType,
+          _allowedCollections[signMarket.collection]
+        ) == false
+      ) {
+        revert Errors.NotValidReserve();
+      }
       ValidationLogic.validateLockAsset(
         signMarket.assetId,
         wallet,
-        _allowedControllers,
         delegationOwner,
         DataTypes.Asset({collection: signMarket.collection, tokenId: signMarket.tokenId})
       );
@@ -163,12 +171,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
-          user: msgSender,
           amount: config.startAmount,
           price: signMarket.assetPrice,
           reserveOracle: _reserveOracle,
           uTokenFactory: _uTokenFactory,
-          reserve: IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset),
+          reserve: reserve,
           loanConfig: signMarket.loan
         })
       );
@@ -292,6 +299,10 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     DataTypes.Order storage order = _orders[orderId];
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
+
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
     // Check if the loan is updated
     // The loan need to be the final result of the modification once the auction is ended
     if (signMarket.loan.totalAssets == loan.totalAssets) {
@@ -319,7 +330,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       uint256 nextBid = OrderLogic.getMinBid(
         order,
-        _reserveOracle,
         _uTokenFactory,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
@@ -422,6 +432,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     // Get the loan asigned to the Order
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
 
     {
       // Avoid stack too deep
@@ -452,7 +465,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     ValidationLogic.validateFutureLoanState(
       ValidationLogic.ValidateLoanStateParams({
-        user: order.owner,
         amount: totalAmount,
         price: signMarket.assetPrice,
         reserveOracle: _reserveOracle,
@@ -558,7 +570,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     DataTypes.Order memory order = _orders[orderId];
 
     // Get the loan asigned to the Order
-    DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
 
     {
       // Avoid stack too deep
@@ -574,7 +590,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
 
     // Cache uToken and underlying asset addresses
-
     address underlyingAsset = loan.underlyingAsset;
 
     IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
@@ -587,8 +602,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       uint256 minBid = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
-        order.owner,
-        _reserveOracle,
         _uTokenFactory,
         totalAmount,
         signMarket.loan.aggLoanPrice,
@@ -656,7 +669,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
 
     DataTypes.Order memory order = _orders[orderId];
-    DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
 
     {
       // Avoid stack too deep
@@ -686,8 +703,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       // Check what is the correct pricing for this asset
       uint256 assetPrice = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
-        order.owner,
-        _reserveOracle,
         _uTokenFactory,
         order.offer.endAmount,
         signMarket.loan.aggLoanPrice,

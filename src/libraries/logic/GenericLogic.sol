@@ -44,7 +44,6 @@ library GenericLogic {
     bytes32 loanId,
     uint256 amount,
     uint256 price,
-    address user,
     address reserveOracle,
     address uTokenFactory,
     DataTypes.ReserveData memory reserveData,

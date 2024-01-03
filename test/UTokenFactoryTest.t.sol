@@ -29,7 +29,7 @@ contract UTokenFactoryTest is Setup {
     _uTokenFactory.supply(_WETH, 1 ether, _actor);
     vm.stopPrank();
     // Get DATA
-    DataTypes.MarketBalance memory balance = _uTokenFactory.getBalances(_WETH);
+    // DataTypes.MarketBalance memory balance = _uTokenFactory.getBalances(_WETH);
   }
 
   function test_basic_withdraw() public {

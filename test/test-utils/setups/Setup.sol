@@ -310,6 +310,8 @@ contract Setup is Base, ActorsBase, NFTBase {
       })
     );
     vm.stopPrank();
+
+    return address(_uTokenFactory);
   }
 
   function deploy_protocol() public {
@@ -490,7 +492,7 @@ contract Setup is Base, ActorsBase, NFTBase {
   ///////////////////////////////////////////////////////////////
   // ASSETS
   ///////////////////////////////////////////////////////////////
-  function _assetsAddress(string memory asset) internal returns (address) {
+  function _assetsAddress(string memory asset) internal view returns (address) {
     if (keccak256(abi.encodePacked(asset)) == keccak256(abi.encodePacked('WETH')))
       return config.weth;
     if (keccak256(abi.encodePacked(asset)) == keccak256(abi.encodePacked('DAI'))) return config.dai;
@@ -503,7 +505,7 @@ contract Setup is Base, ActorsBase, NFTBase {
     return address(0);
   }
 
-  function makeAsset(string memory asset) internal returns (address) {
+  function makeAsset(string memory asset) internal view returns (address) {
     return _assetsAddress(asset);
   }
 

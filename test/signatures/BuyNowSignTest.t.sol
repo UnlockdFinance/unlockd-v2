@@ -227,6 +227,7 @@ contract BuyNowSignTest is Setup {
           nonce: nonce,
           deadline: deadline
         }),
+        marketAdapter: address(0),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         data: dataETHCurrency.data,

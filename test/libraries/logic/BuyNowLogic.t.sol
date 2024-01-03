@@ -41,6 +41,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
+        marketAdapter: address(0),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),
@@ -68,6 +69,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
+        marketAdapter: address(0),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),
@@ -98,6 +100,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
+        marketAdapter: address(0),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),
@@ -128,6 +131,7 @@ contract BuyNowLogicTest is Setup {
           nonce: 1,
           deadline: block.number + 1000
         }),
+        marketAdapter: address(0),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         from: makeAddr('pilipe'),

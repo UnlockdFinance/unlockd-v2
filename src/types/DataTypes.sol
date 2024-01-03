@@ -166,17 +166,19 @@ library DataTypes {
     bytes data;
     uint256 value;
     // Configuration
+    address marketAdapter;
     address marketApproval; // Approval needed to make the buy
     uint256 marketPrice; // Market Adapter Price (Reservoir, Opensea ...)
     address underlyingAsset; // asset needed to buy
-   
     uint256 nonce;
     uint256 deadline;
   }
 
   struct SignSellNow {
     SignLoanConfig loan;
+    bytes32 assetId;
     // approval
+    address marketAdapter;
     address marketApproval;
     uint256 marketPrice;
     address underlyingAsset;

@@ -91,7 +91,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   ) external view returns (uint256 minBid) {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
-      _reserveOracle,
       _uTokenFactory,
       aggLoanPrice,
       aggLTV,
@@ -145,8 +144,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // we need to continue the auction with the rest of the elements in the loan.
         minBid = OrderLogic.getMinDebtOrDefault(
           loan.loanId,
-          loan.owner,
-          _reserveOracle,
           _uTokenFactory,
           signAuction.assetPrice,
           signAuction.loan.aggLoanPrice,
@@ -159,7 +156,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
         ValidationLogic.validateFutureUnhealtyLoanState(
           ValidationLogic.ValidateLoanStateParams({
-            user: loan.owner,
             amount: 0,
             price: signAuction.assetPrice,
             reserveOracle: _reserveOracle,
@@ -190,7 +186,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       {
         minBid = OrderLogic.getMinBid(
           order,
-          _reserveOracle,
           _uTokenFactory,
           signAuction.loan.aggLoanPrice,
           signAuction.loan.aggLtv,
@@ -201,7 +196,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
           ValidationLogic.validateFutureUnhealtyLoanState(
             ValidationLogic.ValidateLoanStateParams({
-              user: order.owner,
               amount: order.bid.amountOfDebt + order.bid.amountToPay,
               price: signAuction.assetPrice,
               reserveOracle: _reserveOracle,
@@ -351,7 +345,9 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     if (order.owner != msgSender) {
       revert Errors.InvalidOrderOwner();
     }
-
+    if (order.offer.loanId != signAuction.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
     // Validate signature
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
     address underlyingAsset = loan.underlyingAsset;
@@ -436,7 +432,9 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
-
+    if (order.offer.loanId != signAuction.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
     bytes32 offerLoanId = order.offer.loanId;
 
     DataTypes.Loan storage loan = _loans[offerLoanId];

@@ -228,6 +228,8 @@ contract SellNowSignTest is Setup {
         //   nonce: nonce,
         //   deadline: deadline
         // }),
+        assetId: '',
+        marketAdapter: address(0),
         marketApproval: address(0),
         marketPrice: 1 ether,
         underlyingAsset: address(0),

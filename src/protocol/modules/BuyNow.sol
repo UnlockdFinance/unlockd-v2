@@ -33,16 +33,6 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
   }
 
   /**
-   * @dev check if the market is allowed on the protocol
-   * @param adapter Address of the Adapter
-   *
-   */
-  modifier isMarketAdapterAllowed(address adapter) {
-    if (_allowedMarketAdapter[adapter] == 0) revert Errors.AdapterNotAllowed();
-    _;
-  }
-
-  /**
    *  @dev WARNING : Get the calculation without validation
    *  @param underlyingAsset address of the Utoken to calculate the payment
    *  @param signBuyMarket struct with the information needed about the asset to realize the buy
@@ -58,19 +48,15 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
   /**
    * @dev BuyNowPayLater functionality, allow the user to buy a asset throw the adapter implementation
    * and create a loan on belhalf of this new NFT to pay part of the final price.
-   * @param marketAdapter Address of the adapter to buy the asset
-   * @param underlyingAsset address of the underlyingAsset coin to proceed with the buy
    * @param amount Amount that the user wan't to use to buy the asset
    * @param signBuyMarket signed struct with the information needed to proceed the process
    * @param sig validation of the signature
    */
   function buy(
-    address marketAdapter,
-    address underlyingAsset,
     uint256 amount,
     DataTypes.SignBuyNow calldata signBuyMarket,
     DataTypes.EIP712Signature calldata sig
-  ) external isMarketAdapterAllowed(marketAdapter) {
+  ) external {
     address msgSender = unpackTrailingParamMsgSender();
     _checkHasUnlockdWallet(msgSender);
 
@@ -83,15 +69,23 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
       msgSender
     );
     // Update pool liquidity
-    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
+    IUTokenFactory(_uTokenFactory).updateState(signBuyMarket.underlyingAsset);
     DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
-      underlyingAsset
+      signBuyMarket.underlyingAsset
     );
     // We move the funds from user to the Adapter
-    reserve.underlyingAsset.safeTransferFrom(msgSender, marketAdapter, amount);
+    reserve.underlyingAsset.safeTransferFrom(msgSender, signBuyMarket.marketAdapter, amount);
 
     // If the user don't pay the full amount we create a loan
     if (amount < signBuyMarket.marketPrice) {
+      if (
+        IUTokenFactory(_uTokenFactory).validateReserveType(
+          reserve.reserveType,
+          _allowedCollections[signBuyMarket.asset.collection]
+        ) == false
+      ) {
+        revert Errors.NotValidReserve();
+      }
       vars.loanId = _borrowLoan(
         msgSender,
         amount,
@@ -105,7 +99,7 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
       Errors.verifyAreEquals(wallet, signBuyMarket.from);
 
       // Buy the asset
-      vars.realCost = IMarketAdapter(marketAdapter).buy(
+      vars.realCost = IMarketAdapter(signBuyMarket.marketAdapter).buy(
         IMarketAdapter.BuyParams({
           wallet: wallet,
           underlyingAsset: signBuyMarket.underlyingAsset,
