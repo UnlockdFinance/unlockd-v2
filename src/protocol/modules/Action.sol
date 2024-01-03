@@ -21,6 +21,8 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
+import {console} from 'forge-std/console.sol';
+
 contract Action is BaseCoreModule, ActionSign, IActionModule {
   using LoanLogic for DataTypes.Loan;
 
@@ -221,7 +223,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     uTokenFactory.updateState(loan.underlyingAsset);
 
     if (amount != 0) {
-      ValidationLogic.validateRepay(signAction.loan.loanId, msgSender, amount, reserve);
+      ValidationLogic.validateRepay(signAction.loan.loanId, _uTokenFactory, amount, reserve);
 
       uTokenFactory.repay(loan.underlyingAsset, loan.loanId, amount, msgSender, msgSender);
     }
