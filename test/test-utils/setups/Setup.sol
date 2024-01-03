@@ -853,6 +853,14 @@ contract Setup is Base, ActorsBase, NFTBase {
     uint256 totalAssets
   ) internal {
     vm.startPrank(actor);
+
+    ActionSignParams memory data = ActionSignParams({
+      user: actor,
+      loanId: loanId,
+      price: price,
+      totalAssets: totalAssets,
+      totalArray: 0
+    });
     // Get data signed
     DataTypes.Asset[] memory assets;
     (
@@ -860,18 +868,7 @@ contract Setup is Base, ActorsBase, NFTBase {
       DataTypes.EIP712Signature memory sig,
       ,
 
-    ) = action_signature(
-        action,
-        nft,
-        underlyingAsset,
-        ActionSignParams({
-          user: actor,
-          loanId: loanId,
-          price: price,
-          totalAssets: totalAssets,
-          totalArray: 0
-        })
-      );
+    ) = action_signature(action, nft, underlyingAsset, data);
 
     // Borrow amount
     Action(action).borrow(amountToBorrow, assets, signAction, sig);
