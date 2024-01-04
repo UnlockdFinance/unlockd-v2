@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import {ICryptoPunksMarket} from "../../../src/interfaces/wrappers/ICryptoPunksMarket.sol";
-import {IUSablierLockupLinear} from "../../../src/interfaces/wrappers/IUSablierLockupLinear.sol";
-import {IACLManager} from '../../../src/interfaces/IACLManager.sol';
+import {ICryptoPunksMarket} from '../../../../src/interfaces/wrappers/ICryptoPunksMarket.sol';
+import {IUSablierLockupLinear} from '../../../../src/interfaces/wrappers/IUSablierLockupLinear.sol';
+import {IACLManager} from '../../../../src/interfaces/IACLManager.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 
 /**
@@ -14,7 +14,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
  * It is also designed to work with the Unlockd protocol, and the USablierLockupLinear contract.
  * We will be adding the functionality to add wrappers to the contract.
  */
-contract UnlockdBatchTransfers {
+contract UnlockdBatchTransfer {
 
     /*//////////////////////////////////////////////////////////////
                              ERRORS

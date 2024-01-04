@@ -9,8 +9,8 @@ import {Unlockd} from '../src/protocol/Unlockd.sol';
 import {USablierLockupLinear} from '../src/protocol/wrappers/USablierLockupLinear.sol';
 import {ISablierV2LockupLinear} from '../src/interfaces/wrappers/ISablierV2LockupLinear.sol';
 import {ICryptoPunksMarket} from '../src/interfaces/wrappers/ICryptoPunksMarket.sol';
-import {UnlockdBatchTransfers} from '../test/test-utils/UnlockdBatchTransfers.sol';
-import {MockDelegationWalletRegistry} from '../test/test-utils/MockDelegationWalletRegistry.sol';
+import {UnlockdBatchTransfer} from './test-utils/mock/wrapper/UnlockdBatchTransfer.sol';
+import {MockDelegationWalletRegistry} from './test-utils/mock/wrapper/MockDelegationWalletRegistry.sol';
 
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -28,7 +28,7 @@ contract USablierLockupLinearTest is Setup {
   ISablierV2LockupLinear sablier = ISablierV2LockupLinear(0x7a43F8a888fa15e68C103E18b0439Eb1e98E4301);
   ERC1967Proxy uSablierProxy;
   USablierLockupLinear uSablierImplementation;
-  UnlockdBatchTransfers batchTransfers;
+  UnlockdBatchTransfer batchTransfers;
   MockDelegationWalletRegistry _delegationRegistry;
 
   function setUp() public virtual override {
@@ -53,7 +53,7 @@ contract USablierLockupLinearTest is Setup {
     ICryptoPunksMarket cryptoPunk = ICryptoPunksMarket(0x987EfDB241fE66275b3594481696f039a82a799e);
     _delegationRegistry = new MockDelegationWalletRegistry();
     _delegationRegistry.setWallet(address(22), address(2), address(0), address(0), address(0), address(0));
-    batchTransfers = new UnlockdBatchTransfers(address(cryptoPunk), address(_aclManager), address(_delegationRegistry));
+    batchTransfers = new UnlockdBatchTransfer(address(cryptoPunk), address(_aclManager), address(_delegationRegistry));
     batchTransfers.addToBeWrapped(address(sablier), address(uSablierLockUp));
     uSablierLockUp.setERC20AllowedAddress(_wethAddress, true);
     uSablierLockUp.setERC20AllowedAddress(_usdcAddress, true);
@@ -107,9 +107,9 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(batchTransfers), true);
 
-     UnlockdBatchTransfers.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+     UnlockdBatchTransfer.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
 
     batchTransfers.batchTransferFrom(transfers, address(22));
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
@@ -131,9 +131,9 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(batchTransfers), true);
 
-     UnlockdBatchTransfers.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+     UnlockdBatchTransfer.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
 
     batchTransfers.batchTransferFrom(transfers, address(22));
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
@@ -180,9 +180,9 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(batchTransfers), true);
 
-     UnlockdBatchTransfers.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+     UnlockdBatchTransfer.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
 
     batchTransfers.batchTransferFrom(transfers, address(22));
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
@@ -242,9 +242,9 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(batchTransfers), true);
 
-     UnlockdBatchTransfers.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+     UnlockdBatchTransfer.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
 
     batchTransfers.batchTransferFrom(transfers, address(22));
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
@@ -347,9 +347,9 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(2)); 
     sablier.setApprovalForAll(address(batchTransfers), true);
 
-     UnlockdBatchTransfers.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+     UnlockdBatchTransfer.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
 
     batchTransfers.batchTransferFrom(transfers, address(22));
     assertEq(uSablierLockUp.ownerOf(1), address(22), "Address NOT Owner. Should be address(22)");
