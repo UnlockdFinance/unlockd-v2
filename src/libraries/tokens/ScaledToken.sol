@@ -23,11 +23,12 @@ contract ScaledToken is BaseToken, UUPSUpgradeable {
    */
   function initialize(
     address aclManager,
+    address uTokenFactory,
     uint8 tokenDecimals,
     string calldata tokenName,
     string calldata tokenSymbol
   ) public initializer {
-    __BaseToken_init(aclManager, tokenDecimals, tokenName, tokenSymbol);
+    __BaseToken_init(aclManager, uTokenFactory, tokenDecimals, tokenName, tokenSymbol);
   }
 
   /**
@@ -38,7 +39,11 @@ contract ScaledToken is BaseToken, UUPSUpgradeable {
    * @return scaledAmount amount scaled
    *
    */
-  function mint(address user, uint256 amount, uint256 index) external onlyUToken returns (uint256) {
+  function mint(
+    address user,
+    uint256 amount,
+    uint256 index
+  ) external onlyUTokenFactory returns (uint256) {
     // index is expressed in Ray, so:
     uint256 amountScaled = amount.rayDiv(index);
     if (amountScaled == 0) {
@@ -57,7 +62,11 @@ contract ScaledToken is BaseToken, UUPSUpgradeable {
    * @return scaledAmount amount scaled
    *
    */
-  function burn(address user, uint256 amount, uint256 index) external onlyUToken returns (uint256) {
+  function burn(
+    address user,
+    uint256 amount,
+    uint256 index
+  ) external onlyUTokenFactory returns (uint256) {
     uint256 amountScaled = amount.rayDiv(index);
     if (amountScaled == 0) {
       revert Errors.InvalidAmount();

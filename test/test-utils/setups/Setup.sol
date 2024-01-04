@@ -342,7 +342,6 @@ contract Setup is Base, ActorsBase, NFTBase {
     _aclManager.addGovernanceAdmin(address(deployerProtocol));
 
     _aclManager.setProtocol(address(_unlock));
-    _aclManager.setUTokenFactory(address(_uTokenFactory));
 
     address[] memory listMarketAdapters = new address[](2);
     listMarketAdapters[0] = _reservoirAdapter;

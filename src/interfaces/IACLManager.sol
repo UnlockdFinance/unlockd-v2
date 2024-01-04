@@ -59,10 +59,6 @@ interface IACLManager is IAccessControl {
    */
   function isProtocol(address protocol) external view returns (bool);
 
-  function setUTokenFactory(address uToken) external;
-
-  function isUTokenFactory(address uToken) external view returns (bool);
-
   /**
    * @notice Set the role as admin of a specific role.
    * @dev By default the admin role for all roles is `DEFAULT_ADMIN_ROLE`.

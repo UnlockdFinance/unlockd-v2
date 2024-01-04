@@ -317,6 +317,7 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     bytes memory data = abi.encodeWithSelector(
       ScaledToken.initialize.selector,
       _aclManager,
+      address(this),
       decimals,
       name,
       symbol
