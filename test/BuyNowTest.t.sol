@@ -28,8 +28,6 @@ contract BuyNowTest is Setup {
   NFTMarket internal _market;
   uint256 internal _tokenId;
 
-  uint256 internal deadlineIncrement;
-
   function setUp() public virtual override {
     super.setUp();
     _market = new NFTMarket();
