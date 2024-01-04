@@ -57,6 +57,7 @@ contract USablierLockupLinearTest is Setup {
     batchTransfers.addToBeWrapped(address(sablier), address(uSablierLockUp));
     uSablierLockUp.setERC20AllowedAddress(_wethAddress, true);
     uSablierLockUp.setERC20AllowedAddress(_usdcAddress, true);
+
     vm.stopPrank();
   }
 
@@ -73,6 +74,7 @@ contract USablierLockupLinearTest is Setup {
     address newToken = makeAddr('newToken');
     uSablierLockUp.setERC20AllowedAddress(newToken, true);
     assertEq(uSablierLockUp.isERC20Allowed(newToken), true, "Should be true");
+    vm.stopPrank();
   }
 
   function test_authorizeUpgrade() public {
@@ -84,9 +86,19 @@ contract USablierLockupLinearTest is Setup {
 
     vm.prank(protocol);
     uSablierLockUp.upgradeTo(address(newImplementation));
+    vm.stopPrank();
   }
 
   function test_Mint() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+     
+    Approval_and_BatchTransfer_To_UWALLET();
+    
+    vm.stopPrank();
+  }
+
+  function test_Burn() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
@@ -101,24 +113,12 @@ contract USablierLockupLinearTest is Setup {
 
     batchTransfers.batchTransferFrom(transfers, address(22));
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
-    
-    vm.stopPrank();
-  }
 
-  function test_Burn() public {
-    vm.startPrank(address(1));
-    deal(_wethAddress, address(1), 2 ether);
-
-    mintSablierNFT(false, true);
+    vm.startPrank(address(22));
+    uSablierLockUp.burn(address(22), 1);
+    assertEq(uSablierLockUp.balanceOf(address(22)), 0, "Balance should be 0");
+    assertEq(sablier.balanceOf(address(22)), 1, "Balance should be 1");
     
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
-    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
-    
-    uSablierLockUp.burn(address(2), 1);
-    assertEq(uSablierLockUp.balanceOf(address(2)), 0, "Balance should be 0");
-    assertEq(sablier.balanceOf(address(2)), 1, "Balance should be 1");
     vm.stopPrank();
   }
   
@@ -129,9 +129,14 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
-    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(batchTransfers), true);
+
+     UnlockdBatchTransfers.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+
+    batchTransfers.batchTransferFrom(transfers, address(22));
+    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
     
     vm.startPrank(protocol); //onlyProtocol
     uint256 balanceBefore = IERC20(_wethAddress).balanceOf(address(2));
@@ -149,18 +154,21 @@ contract USablierLockupLinearTest is Setup {
     vm.prank(address(2));
     vm.expectRevert();
     uSablierLockUp.mint(address(0), 1);
+    vm.stopPrank();
   }
 
   function test_Add_ERC20Allowed_Reverts() public {
     vm.prank(address(2));
     vm.expectRevert(Errors.ProtocolAccessDenied.selector);
     uSablierLockUp.setERC20AllowedAddress(_wethAddress, true);
+    vm.stopPrank();
   }
 
   function test_Withdraw_Not_OnlyProtocol() public {
     vm.prank(address(this)); 
     vm.expectRevert(0x56e40536);
     uSablierLockUp.withdrawFromStream(1, address(1));
+    vm.stopPrank();
   }
 
   function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
@@ -170,9 +178,14 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
-    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(batchTransfers), true);
+
+     UnlockdBatchTransfers.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+
+    batchTransfers.batchTransferFrom(transfers, address(22));
+    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
     
     vm.startPrank(address(this)); //onlyProtocol
     vm.expectRevert(Errors.ProtocolAccessDenied.selector);
@@ -227,13 +240,18 @@ contract USablierLockupLinearTest is Setup {
     mintSablierNFT(false, true);
     
     vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
-    assertEq(uSablierLockUp.balanceOf(address(2)), 1, "Balance should be 1");
+    sablier.setApprovalForAll(address(batchTransfers), true);
+
+     UnlockdBatchTransfers.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+
+    batchTransfers.batchTransferFrom(transfers, address(22));
+    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
     
     vm.startPrank(address(1));
     vm.expectRevert(Errors.BurnerNotApproved.selector);
-    uSablierLockUp.burn(address(2), 1);
+    uSablierLockUp.burn(address(22), 1);
     vm.stopPrank();
   }
 
@@ -244,53 +262,47 @@ contract USablierLockupLinearTest is Setup {
   function test_Approve_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-
-    mintSablierNFT(false, true);
     
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
+    Approval_and_BatchTransfer_To_UWALLET();
+
     vm.expectRevert(Errors.ApproveNotSupported.selector);
     uSablierLockUp.approve(address(1), 1); 
+    vm.stopPrank();
   }
 
   function test_Set_Approval_For_All_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-
-    mintSablierNFT(false, true);
     
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
+    Approval_and_BatchTransfer_To_UWALLET();
+
     vm.expectRevert(Errors.SetApprovalForAllNotSupported.selector);
     uSablierLockUp.setApprovalForAll(address(1), true);
+    vm.stopPrank();
   }  
 
   function test_Transfer_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-
-    mintSablierNFT(false, true);
     
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
+    Approval_and_BatchTransfer_To_UWALLET();
+
+    vm.startPrank(address(22));
     vm.expectRevert(Errors.TransferNotSupported.selector);
-    uSablierLockUp.transferFrom(address(2), address(1), 1);
+    uSablierLockUp.transferFrom(address(22), address(1), 1);
+    vm.stopPrank();
   }
 
   function test_Safe_Transfer_From_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(uSablierLockUp), true);
-    uSablierLockUp.mint(address(2), 1);
+    Approval_and_BatchTransfer_To_UWALLET();
+
+    vm.startPrank(address(22));
     vm.expectRevert(Errors.TransferNotSupported.selector);
-    uSablierLockUp.safeTransferFrom(address(2), address(1), 1); 
+    uSablierLockUp.safeTransferFrom(address(22), address(1), 1);
+    vm.stopPrank();
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -324,5 +336,22 @@ contract USablierLockupLinearTest is Setup {
     uint256 streamId = sablier.createWithDurations(create);
     assertEq(streamId, 1, "StreamId should be 1");
     assertEq(sablier.ownerOf(1), address(2), "The owner should be address(2)");
+  }
+
+  function Approval_and_BatchTransfer_To_UWALLET() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+
+    mintSablierNFT(false, true);
+    
+    vm.startPrank(address(2)); 
+    sablier.setApprovalForAll(address(batchTransfers), true);
+
+     UnlockdBatchTransfers.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfers.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfers.NftTransfer(address(sablier), 1);
+
+    batchTransfers.batchTransferFrom(transfers, address(22));
+    assertEq(uSablierLockUp.ownerOf(1), address(22), "Address NOT Owner. Should be address(22)");
   }
 }

@@ -102,7 +102,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
     function preMintChecks(address, uint256 tokenId) public view override {
         ISablierV2LockupLinear sablier = ISablierV2LockupLinear(address(_erc721));
         if(!_ERC20Allowed[address(sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
-        if(sablier.ownerOf(tokenId) != msg.sender) revert Errors.CallerNotNFTOwner();
+        if(sablier.ownerOf(tokenId) != msg.sender && sablier.ownerOf(tokenId) != address(this)) revert Errors.CallerNotNFTOwner();
         if(sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
         if(!sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
     }
