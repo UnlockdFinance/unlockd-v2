@@ -34,15 +34,13 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
 
   /**
    *  @dev WARNING : Get the calculation without validation
-   *  @param underlyingAsset address of the Utoken to calculate the payment
    *  @param signBuyMarket struct with the information needed about the asset to realize the buy
    *
    */
   function getCalculations(
-    address underlyingAsset,
     DataTypes.SignBuyNow calldata signBuyMarket
   ) external pure returns (uint256, uint256) {
-    return BuyNowLogic.calculations(underlyingAsset, signBuyMarket);
+    return BuyNowLogic.calculations(signBuyMarket);
   }
 
   /**
@@ -86,13 +84,7 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
       ) {
         revert Errors.NotValidReserve();
       }
-      vars.loanId = _borrowLoan(
-        msgSender,
-        amount,
-        protocolOwner,
-        reserve.underlyingAsset,
-        signBuyMarket
-      );
+      vars.loanId = _borrowLoan(msgSender, amount, protocolOwner, signBuyMarket);
     }
 
     {
@@ -131,10 +123,9 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
     address msgSender,
     uint256 amount,
     address protocolOwner,
-    address underlyingAsset,
     DataTypes.SignBuyNow calldata signBuyMarket
   ) internal returns (bytes32 loanId) {
-    (uint256 minAmount, ) = BuyNowLogic.calculations(underlyingAsset, signBuyMarket);
+    (uint256 minAmount, ) = BuyNowLogic.calculations(signBuyMarket);
 
     // We check that the amount is bigger or equal than the minimum
     if (minAmount > amount) {
@@ -147,17 +138,17 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
     _loans[loanId].createLoan(
       LoanLogic.ParamsCreateLoan({
         msgSender: msgSender,
-        underlyingAsset: underlyingAsset,
+        underlyingAsset: signBuyMarket.underlyingAsset,
         totalAssets: 1,
         loanId: loanId
       })
     );
     // We borrow on belhalf of the user and sent the money to the Adapter.
     IUTokenFactory(_uTokenFactory).borrow(
-      underlyingAsset,
+      signBuyMarket.underlyingAsset,
       loanId,
       amountNeeded,
-      msgSender,
+      signBuyMarket.marketAdapter,
       msgSender
     );
     // Set the new NFT assigned to the LoanId

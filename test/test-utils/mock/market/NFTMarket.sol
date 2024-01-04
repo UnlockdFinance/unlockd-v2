@@ -30,9 +30,9 @@ contract NFTMarket {
     if (IERC20(underliyingAsset).allowance(msg.sender, address(this)) < price) {
       revert LowAllowance();
     }
-    // console.log('TRANSFER MONEY > ', IERC20(underliyingAsset).balanceOf(msg.sender));
+
     IERC20(underliyingAsset).safeTransferFrom(msg.sender, address(this), price);
-    // console.log('TRANSFER ASSET');
+
     IERC721(nftAddress).transferFrom(address(this), taker, tokenId);
   }
 }

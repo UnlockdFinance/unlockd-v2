@@ -9,20 +9,13 @@ library BuyNowLogic {
   /**
    *  @dev In charge of the calculation to buy the asset to get the max Amount needed contributed by
    *  the user and the max amount to borrow by the protocol to buy the asset.
-   *  @param underlyingAsset address of the token to buy the asset
    *  @param buyData struct with the information needed to buy the asset
    */
   function calculations(
-    address underlyingAsset,
     DataTypes.SignBuyNow calldata buyData
   ) internal pure returns (uint256, uint256) {
-    if (underlyingAsset != buyData.underlyingAsset) {
-      revert Errors.NotEqualUnderlyingAsset();
-    }
-
     uint256 maxAmountToBorrow;
     // We calculate the max amount that the user can borrow based on the min price.
-    // WARNING : Calculate borrow amount needed the price from the ORACLE
     maxAmountToBorrow = GenericLogic.calculateAvailableBorrows(
       buyData.marketPrice > buyData.asset.price ? buyData.asset.price : buyData.marketPrice,
       0,

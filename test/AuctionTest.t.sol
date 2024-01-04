@@ -33,8 +33,6 @@ contract AuctionTest is Setup {
 
   address internal _WETH;
 
-  uint256 internal deadlineIncrement;
-
   function setUp() public virtual override {
     super.setUp();
 

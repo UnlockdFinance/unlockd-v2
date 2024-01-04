@@ -150,6 +150,7 @@ contract ReservoidAdapterTest is Setup {
   }
 
   function test_reservoirAdapter_emergency_withdraw() public {
+    // TODO: Pending
     // PREPARE
     // hoax(_actor);
     // payable(_reservoirAdapter).call{value: 1 ether}('');

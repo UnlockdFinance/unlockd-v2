@@ -9,7 +9,7 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {IUTokenFactory} from '../interfaces/IUTokenFactory.sol';
-
+import {UFactoryStorage} from '../libraries/storage/UFactoryStorage.sol';
 import {BaseEmergency} from '../libraries/base/BaseEmergency.sol';
 import {MathUtils} from '../libraries/math/MathUtils.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
@@ -23,23 +23,14 @@ import {DataTypes} from '../types/DataTypes.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
-contract UTokenFactory is BaseEmergency, IUTokenFactory {
+contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
   using WadRayMath for uint256;
   using WadRayMath for uint128;
   using SafeCast for uint256;
-
-  address internal _sharesTokenImp;
-  // UnderlyingAsset -> Reserve
-  mapping(address => DataTypes.ReserveData) public reserves;
-  // UnderlyingAsset -> Reserve
-  mapping(address => DataTypes.MarketBalance) public balances;
-  // Scaled balances by loan and user
-  mapping(bytes32 => uint256) internal borrowScaledBalanceByLoanId;
-  mapping(address => uint256) internal borrowScaledBalanceByUser;
 
   //////////////////////////////////////////////////////
 
@@ -115,7 +106,7 @@ contract UTokenFactory is BaseEmergency, IUTokenFactory {
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
-    if (reserve.reserveState == Constants.ReserveState.FREEZE) {
+    if (reserve.reserveState == Constants.ReserveState.FREEZED) {
       revert Errors.ReserveNotActive();
     }
 
@@ -200,7 +191,7 @@ contract UTokenFactory is BaseEmergency, IUTokenFactory {
       revert Errors.UnderlyingMarketNotExist();
     }
 
-    if (reserve.reserveState == Constants.ReserveState.FREEZE) {
+    if (reserve.reserveState == Constants.ReserveState.FREEZED) {
       revert Errors.ReserveNotActive();
     }
 

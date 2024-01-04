@@ -75,9 +75,13 @@ contract Manager is BaseCoreModule, IManagerModule {
   function allowCollectiononReserveType(
     address collection,
     Constants.ReserveType reserveType
-  ) external {
+  ) external onlyAdmin {
     if (collection == address(0)) revert Errors.ZeroAddress();
     _allowedCollections[collection] = reserveType;
+  }
+
+  function getCollectiononReserveType(address collection) external returns (Constants.ReserveType) {
+    return _allowedCollections[collection];
   }
 
   function setUTokenFactory(address uTokenFactory) external onlyAdmin {

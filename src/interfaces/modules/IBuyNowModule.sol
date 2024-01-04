@@ -29,7 +29,6 @@ interface IBuyNowModule is ILoan {
   ) external;
 
   function getCalculations(
-    address underlyingAsset,
     DataTypes.SignBuyNow calldata signBuyNow
   ) external view returns (uint256, uint256);
 }
