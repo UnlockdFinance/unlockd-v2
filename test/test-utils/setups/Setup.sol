@@ -309,6 +309,13 @@ contract Setup is Base, ActorsBase, NFTBase {
         tokenSymbol: 'USPECIAL'
       })
     );
+
+    // Activate Pools
+    _uTokenFactory.updateReserveState(makeAsset('WETH'), Constants.ReserveState.ACTIVE);
+    _uTokenFactory.updateReserveState(makeAsset('DAI'), Constants.ReserveState.ACTIVE);
+    _uTokenFactory.updateReserveState(makeAsset('USDC'), Constants.ReserveState.ACTIVE);
+    _uTokenFactory.updateReserveState(makeAsset('SPECIAL'), Constants.ReserveState.ACTIVE);
+
     vm.stopPrank();
 
     return address(_uTokenFactory);

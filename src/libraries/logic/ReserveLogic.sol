@@ -167,7 +167,7 @@ library ReserveLogic {
     reserve.underlyingAsset = underlyingAsset;
     reserve.decimals = ScaledToken(scaledTokenAddress).decimals();
     reserve.reserveType = reserveType;
-    reserve.reserveState = Constants.ReserveState.ACTIVE;
+    reserve.reserveState = Constants.ReserveState.STOPPED;
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
   }
 

@@ -33,8 +33,8 @@ library Constants {
   ////////////////////////////////////////////
 
   enum ReserveState {
-    STOPED, // No supply, No borrow
-    FREEZE, // No supply, No withdraw , No borrow, No repay
+    STOPPED, // No supply, No borrow
+    FREEZED, // No supply, No withdraw , No borrow, No repay
     ACTIVE // All OK
   }
 
