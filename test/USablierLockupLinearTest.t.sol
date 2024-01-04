@@ -37,6 +37,7 @@ contract USablierLockupLinearTest is Setup {
     _aclManager.setProtocol(protocol);
 
     uSablierImplementation = new USablierLockupLinear(address(sablier));
+    // UUPS Upgradeable Proxy
     uSablierProxy = new ERC1967Proxy(
       address(uSablierImplementation), 
       abi.encodeWithSelector(
@@ -47,18 +48,79 @@ contract USablierLockupLinearTest is Setup {
       )
     );
 
+    // Creates the wrapper version of the sablier contract
     uSablierLockUp = USablierLockupLinear(address(uSablierProxy));
 
     vm.startPrank(protocol);
+    // deploy fake punk contract
     ICryptoPunksMarket cryptoPunk = ICryptoPunksMarket(0x987EfDB241fE66275b3594481696f039a82a799e);
+    // deploy fake Delegation Wallet Registry - if condition onERC721Received
     _delegationRegistry = new MockDelegationWalletRegistry();
+    // sets 2 fake wallet addresses: address(22) DelegationWallet and address(2) "Metamask"
     _delegationRegistry.setWallet(address(22), address(2), address(0), address(0), address(0), address(0));
+    // deploys a fake unlockd batch transfer
     batchTransfers = new UnlockdBatchTransfer(address(cryptoPunk), address(_aclManager), address(_delegationRegistry));
+    // sets the sablier and uSablierLockUp addresses to be wrapped
     batchTransfers.addToBeWrapped(address(sablier), address(uSablierLockUp));
+    // sets the allowed uTokens
     uSablierLockUp.setERC20AllowedAddress(_wethAddress, true);
     uSablierLockUp.setERC20AllowedAddress(_usdcAddress, true);
 
+    // after setting everythig up, we basically mint a sablier NFT and transfer it using the UnlockdBatchTransfer
+    // to the DelegationWallet address, which is address(22), on the onERC721Received function we wrap the sablier NFT into uSablier.
+    // almost all of the tests follow this logic, our frontend logic, in order to improve UX and avoid the user of having to wrap the NFT
+    // after transfering to the Delegation Wallet.
     vm.stopPrank();
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                              UTILS
+  //////////////////////////////////////////////////////////////*/
+  function mintSablierNFT(bool isCancelable, bool isTransferable) public {
+
+    IERC20(_wethAddress).approve(address(sablier), 2 ether);
+    
+    ISablierV2LockupLinear.Durations memory duration = ISablierV2LockupLinear.Durations({
+      cliff: 1701375965,
+      total: 1701529208
+    });
+
+    ISablierV2LockupLinear.Broker memory broker = ISablierV2LockupLinear.Broker({
+      fee: 0,
+      account: address(0)
+    });
+
+    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear.CreateWithDurations({
+        sender: address(1),
+        recipient: address(2),
+        totalAmount: 1 ether,
+        asset: ERC20(_wethAddress),
+        cancelable: isCancelable,
+        transferable: isTransferable,
+        durations: duration,
+        broker: broker
+    });
+
+    uint256 streamId = sablier.createWithDurations(create);
+    assertEq(streamId, 1, "StreamId should be 1");
+    assertEq(sablier.ownerOf(1), address(2), "The owner should be address(2)");
+  }
+
+  function approveNTransferToUWallet() public {
+    vm.startPrank(address(1));
+    deal(_wethAddress, address(1), 2 ether);
+
+    mintSablierNFT(false, true);
+    
+    vm.startPrank(address(2)); 
+    sablier.setApprovalForAll(address(batchTransfers), true);
+
+     UnlockdBatchTransfer.NftTransfer[]
+            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
+
+    batchTransfers.batchTransferFrom(transfers, address(22));
+    assertEq(uSablierLockUp.ownerOf(1), address(22), "Address NOT Owner. Should be address(22)");
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -93,7 +155,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
      
-    Approval_and_BatchTransfer_To_UWALLET();
+    approveNTransferToUWallet();
     
     vm.stopPrank();
   }
@@ -102,22 +164,13 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(batchTransfers), true);
-
-     UnlockdBatchTransfer.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
-
-    batchTransfers.batchTransferFrom(transfers, address(22));
+    approveNTransferToUWallet();
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
 
     vm.startPrank(address(22));
-    uSablierLockUp.burn(address(22), 1);
+    uSablierLockUp.burn(address(2), 1);
     assertEq(uSablierLockUp.balanceOf(address(22)), 0, "Balance should be 0");
-    assertEq(sablier.balanceOf(address(22)), 1, "Balance should be 1");
+    assertEq(sablier.balanceOf(address(2)), 1, "Balance should be 1");
     
     vm.stopPrank();
   }
@@ -126,16 +179,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(batchTransfers), true);
-
-     UnlockdBatchTransfer.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
-
-    batchTransfers.batchTransferFrom(transfers, address(22));
+    approveNTransferToUWallet();
     assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
     
     vm.startPrank(protocol); //onlyProtocol
@@ -175,17 +219,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(batchTransfers), true);
-
-     UnlockdBatchTransfer.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
-
-    batchTransfers.batchTransferFrom(transfers, address(22));
-    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
+    approveNTransferToUWallet();
     
     vm.startPrank(address(this)); //onlyProtocol
     vm.expectRevert(Errors.ProtocolAccessDenied.selector);
@@ -237,17 +271,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(batchTransfers), true);
-
-     UnlockdBatchTransfer.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
-
-    batchTransfers.batchTransferFrom(transfers, address(22));
-    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
+    approveNTransferToUWallet();
     
     vm.startPrank(address(1));
     vm.expectRevert(Errors.BurnerNotApproved.selector);
@@ -263,7 +287,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
     
-    Approval_and_BatchTransfer_To_UWALLET();
+    approveNTransferToUWallet();
 
     vm.expectRevert(Errors.ApproveNotSupported.selector);
     uSablierLockUp.approve(address(1), 1); 
@@ -274,7 +298,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
     
-    Approval_and_BatchTransfer_To_UWALLET();
+    approveNTransferToUWallet();
 
     vm.expectRevert(Errors.SetApprovalForAllNotSupported.selector);
     uSablierLockUp.setApprovalForAll(address(1), true);
@@ -285,7 +309,7 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
     
-    Approval_and_BatchTransfer_To_UWALLET();
+    approveNTransferToUWallet();
 
     vm.startPrank(address(22));
     vm.expectRevert(Errors.TransferNotSupported.selector);
@@ -297,61 +321,11 @@ contract USablierLockupLinearTest is Setup {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
-    Approval_and_BatchTransfer_To_UWALLET();
+    approveNTransferToUWallet();
 
     vm.startPrank(address(22));
     vm.expectRevert(Errors.TransferNotSupported.selector);
     uSablierLockUp.safeTransferFrom(address(22), address(1), 1);
     vm.stopPrank();
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                              UTILS
-  //////////////////////////////////////////////////////////////*/
-  function mintSablierNFT(bool isCancelable, bool isTransferable) public {
-
-    IERC20(_wethAddress).approve(address(sablier), 2 ether);
-    
-    ISablierV2LockupLinear.Durations memory duration = ISablierV2LockupLinear.Durations({
-      cliff: 1701375965,
-      total: 1701529208
-    });
-
-    ISablierV2LockupLinear.Broker memory broker = ISablierV2LockupLinear.Broker({
-      fee: 0,
-      account: address(0)
-    });
-
-    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear.CreateWithDurations({
-        sender: address(1),
-        recipient: address(2),
-        totalAmount: 1 ether,
-        asset: ERC20(_wethAddress),
-        cancelable: isCancelable,
-        transferable: isTransferable,
-        durations: duration,
-        broker: broker
-    });
-
-    uint256 streamId = sablier.createWithDurations(create);
-    assertEq(streamId, 1, "StreamId should be 1");
-    assertEq(sablier.ownerOf(1), address(2), "The owner should be address(2)");
-  }
-
-  function Approval_and_BatchTransfer_To_UWALLET() public {
-    vm.startPrank(address(1));
-    deal(_wethAddress, address(1), 2 ether);
-
-    mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
-    sablier.setApprovalForAll(address(batchTransfers), true);
-
-     UnlockdBatchTransfer.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
-
-    batchTransfers.batchTransferFrom(transfers, address(22));
-    assertEq(uSablierLockUp.ownerOf(1), address(22), "Address NOT Owner. Should be address(22)");
   }
 }
