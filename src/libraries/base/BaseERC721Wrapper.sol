@@ -101,7 +101,10 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     /*//////////////////////////////////////////////////////////////
                             ERC721
     //////////////////////////////////////////////////////////////*/
-
+    /**
+     * @notice in case the underlying asset needs some specific checks before minting.
+     * the params are supposed to be collection:tokenId. 
+     */
     function preMintChecks(address, uint256) public virtual {}
 
     /**
