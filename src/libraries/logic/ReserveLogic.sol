@@ -16,7 +16,7 @@ import {DataTypes, Constants} from '../../types/DataTypes.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {ScaledToken} from '../tokens/ScaledToken.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title ReserveLogic library
@@ -113,9 +113,18 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balance
   ) internal {
+    ////////////////////7
+    // ESTA MAAAAAAAAAAAAAAAAAAAAAAAL
+    ////
+    // totalSupplyScaledNotInvested -> Parte no invertida que tendria que tener en cuenta el borrow
+    // BORROWED
+
     // We calculate the current value based on the current scaled
-    uint256 totalBalance = balance.totalSupplyScaledNotInvested;
-    balance.totalSupplyAssets = totalBalance.rayMul(reserve.getNormalizedIncome()).toUint128();
+    uint256 totalBalance = balance.totalSupplyScaledNotInvested; // + balance.borrow
+    uint256 totalBorrow = balance.totalBorrowScaled;
+    balance.totalSupplyAssets =
+      totalBalance.rayMul(reserve.getNormalizedIncome()).toUint128() +
+      totalBorrow.rayMul(reserve.getNormalizedDebt()).toUint128();
 
     if (reserve.strategyAddress != address(0)) {
       balance.totalSupplyAssets += IStrategy(reserve.strategyAddress)
@@ -273,6 +282,7 @@ library ReserveLogic {
       revert Errors.InvalidAmount();
     }
     balances.totalBorrowScaled += amountScaled.toUint128();
+    balances.totalSupplyScaledNotInvested -= amountScaled.toUint128();
     // Updates general balances
     return amountScaled;
   }
@@ -288,6 +298,7 @@ library ReserveLogic {
     }
     // Updates general balances
     balances.totalBorrowScaled -= amountScaled.toUint128();
+    balances.totalSupplyScaledNotInvested += amountScaled.toUint128();
 
     return amountScaled;
   }
@@ -358,20 +369,32 @@ library ReserveLogic {
 
     if (amountToInvest > 0) {
       IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
+      console.log(' ======================= INVEST ========================');
+      console.log('totalSupplyNotInvested  :', totalSupplyNotInvested);
+      console.log('amount repayed          :', amount);
+      console.log('amountToInvest          :', amountToInvest);
+      console.log(' ================== ================== ==================');
+
       reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.supply.selector,
           config.vault,
           config.asset,
           address(this),
-          amountToInvest,
-          IStrategy(reserve.strategyAddress).getConfig()
+          amountToInvest
         )
       );
+      uint128 amountInvestedScaled = amountToInvest.rayDiv(reserve.liquidityIndex).toUint128();
+      balances.totalSupplyScaledNotInvested -= amountInvestedScaled;
 
-      balances.totalSupplyScaledNotInvested -= amountToInvest
-        .rayDiv(reserve.liquidityIndex)
-        .toUint128();
+      uint256 totalSupplyScaledNotInvestedAfter = balances.totalSupplyScaledNotInvested;
+      uint256 totalSupplyNotInvestedAfter = totalSupplyScaledNotInvestedAfter.rayMul(
+        reserve.getNormalizedIncome()
+      );
+      console.log(' ======================= DESPUES ========================');
+      console.log('balanceNotInvested ', balances.totalSupplyScaledNotInvested);
+      console.log('totalSupplyNotInvestedAfter', totalSupplyNotInvestedAfter);
+      console.log(' ================== ================== ==================');
     }
   }
 
@@ -394,6 +417,7 @@ library ReserveLogic {
 
     if (amountNeed > 0) {
       IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
+
       bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
       );

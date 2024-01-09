@@ -23,6 +23,8 @@ import {DataTypes} from '../types/DataTypes.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 
+import {console} from 'forge-std/console.sol';
+
 // import {console} from 'forge-std/console.sol';
 
 contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
@@ -86,15 +88,21 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
       revert Errors.UnderlyingMarketNotExist();
     }
 
+    console.log('------------- SUPPLY -------------');
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
+    console.log('1 - balanceNotInvested ', balance.totalSupplyScaledNotInvested);
 
     reserve.updateState(balance);
 
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
 
     reserve.mintScaled(balance, onBehalf, amount);
+    console.log('2 - balanceNotInvested ', balance.totalSupplyScaledNotInvested);
 
     reserve.strategyInvest(balance, amount);
+
+    console.log('3 - balanceNotInvested ', balance.totalSupplyScaledNotInvested);
+    console.log('------------- ------ -------------');
 
     // emit Deposit(_msgSender(), _reserve.underlyingAsset, amount, onBehalf, '');
   }
@@ -158,6 +166,13 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     if (amount > availableLiquidity) {
       revert Errors.NotEnoughLiquidity();
     }
+
+    console.log('------------- BORROW -----------------');
+    console.log('1 -balanceNotInvested :', balance.totalSupplyScaledNotInvested);
+    console.log('1 -availableLiquidity :', availableLiquidity);
+
+    console.log('---------------------------------------');
+
     // Check if we have enought to withdraw
     reserve.strategyWithdraw(balance, amount);
 
@@ -170,6 +185,10 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     borrowScaledBalanceByUser[onBehalfOf] += scaledAmount;
 
     IERC20(underlyingAsset).safeTransfer(to, amount);
+    console.log('------------- BORROW -----------------');
+    console.log('2 -balanceNotInvested :', balance.totalSupplyScaledNotInvested);
+    console.log('---------------------------------------');
+
     // Remove funds from the interest rate
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
   }
@@ -194,10 +213,14 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     if (reserve.reserveState == Constants.ReserveState.FREEZED) {
       revert Errors.ReserveNotActive();
     }
-
+    console.log('------------- REPAY -------------');
     // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
-
+    console.log('****** PRE CALC *******');
+    console.log('amount repayed     :', amount);
+    console.log('total balance      :', balance.totalSupplyAssets);
+    console.log('balanceNotInvested :', balance.totalSupplyScaledNotInvested);
+    console.log('***********************');
     uint256 scaledAmount = reserve.decreaseDebt(balance, amount);
     uint256 currentDebt = borrowScaledBalanceByLoanId[loanId];
 
@@ -209,7 +232,11 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
 
     IERC20(underlyingAsset).safeTransferFrom(from, address(this), amount);
     reserve.updateState(balance);
+    console.log('2 -balanceNotInvested :', balance.totalSupplyScaledNotInvested);
+
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
+    console.log('3 -balanceNotInvested :', balance.totalSupplyScaledNotInvested);
+
     reserve.strategyInvest(balance, amount);
   }
 

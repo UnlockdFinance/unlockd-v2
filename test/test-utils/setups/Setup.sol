@@ -517,11 +517,11 @@ contract Setup is Base, ActorsBase, NFTBase {
 
   function addFundToUToken(string memory asset, uint256 amount) public {
     address underlyingAsset = makeAsset(asset);
-    vm.startPrank(makeAddr('funder'));
+    vm.startPrank(makeAddr('founder'));
     // DEPOSIT
-    writeTokenBalance(makeAddr('funder'), underlyingAsset, amount);
+    writeTokenBalance(makeAddr('founder'), underlyingAsset, amount);
     IERC20(underlyingAsset).approve(address(_uTokenFactory), amount);
-    _uTokenFactory.supply(underlyingAsset, amount, makeAddr('funder'));
+    _uTokenFactory.supply(underlyingAsset, amount, makeAddr('founder'));
 
     vm.stopPrank();
   }
