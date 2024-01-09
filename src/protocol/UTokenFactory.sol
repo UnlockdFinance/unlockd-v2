@@ -62,20 +62,28 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     if (reserves[params.underlyingAsset].lastUpdateTimestamp != 0) {
       revert Errors.UnderlyingMarketAlreadyExist();
     }
+    address sharesToken = _sharesToken(params.decimals, params.tokenName, params.tokenSymbol);
     // Create Reserve Asset
     reserves[params.underlyingAsset].init(
       params.underlyingAsset,
       params.reserveType,
-      _sharesToken(params.decimals, params.tokenName, params.tokenSymbol),
+      sharesToken,
       params.interestRateAddress,
       params.strategyAddress,
       params.reserveFactor
     );
+
+    emit MarketCreated(
+      params.underlyingAsset,
+      params.interestRateAddress,
+      params.strategyAddress,
+      sharesToken
+    );
   }
 
-  function supply(address underlyingAsset, uint256 amount, address onBehalf) external {
+  function supply(address underlyingAsset, uint256 amount, address onBehalfOf) external {
     Errors.verifyNotZero(underlyingAsset);
-    Errors.verifyNotZero(onBehalf);
+    Errors.verifyNotZero(onBehalfOf);
     Errors.verifyNotZero(amount);
     // Move amount to the pool
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
@@ -94,16 +102,16 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
 
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
 
-    reserve.mintScaled(balance, onBehalf, amount);
+    reserve.mintScaled(balance, onBehalfOf, amount);
 
     reserve.strategyInvest(balance, amount);
 
-    // emit Deposit(_msgSender(), _reserve.underlyingAsset, amount, onBehalf, '');
+    emit Supply(msg.sender, onBehalfOf, reserve.underlyingAsset, amount);
   }
 
-  function withdraw(address underlyingAsset, uint256 amount, address onBehalf) external {
+  function withdraw(address underlyingAsset, uint256 amount, address to) external {
     Errors.verifyNotZero(underlyingAsset);
-    Errors.verifyNotZero(onBehalf);
+    Errors.verifyNotZero(to);
     Errors.verifyNotZero(amount);
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
@@ -118,7 +126,7 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
       revert Errors.UnderlyingMarketNotExist();
     }
 
-    Errors.verifyNotZero(onBehalf);
+    Errors.verifyNotZero(to);
     Errors.verifyNotZero(amount);
 
     // Check if we have enought to withdraw
@@ -129,7 +137,9 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
 
     // Burn scaled tokens
-    reserve.burnScaled(balance, onBehalf, amount);
+    reserve.burnScaled(balance, msg.sender, to, amount);
+
+    emit Withdraw(msg.sender, to, reserve.underlyingAsset, amount);
   }
 
   function borrow(
@@ -176,6 +186,15 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
 
     // Remove funds from the interest rate
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
+
+    emit Borrow(
+      msg.sender,
+      onBehalfOf,
+      underlyingAsset,
+      amount,
+      loanId,
+      reserve.currentVariableBorrowRate
+    );
   }
 
   function repay(
@@ -217,6 +236,15 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
 
     reserve.strategyInvest(balance, amount);
+
+    emit Repay(
+      msg.sender,
+      onBehalfOf,
+      underlyingAsset,
+      amount,
+      loanId,
+      reserve.currentVariableBorrowRate
+    );
   }
 
   /////////////////////////////////////////////////////////

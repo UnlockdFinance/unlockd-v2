@@ -5,6 +5,68 @@ import {DataTypes} from '../types/DataTypes.sol';
 import {Constants} from '../libraries/helpers/Constants.sol';
 
 interface IUTokenFactory {
+  //////////////////////////////////
+  // EVENS
+
+  event MarketCreated(
+    address indexed underlyingAsset,
+    address indexed interestRate,
+    address indexed strategy,
+    address sharesToken
+  );
+
+  event ReserveDataUpdated(
+    address indexed reserve,
+    uint256 liquidityRate,
+    uint256 variableBorrowRate,
+    uint256 liquidityIndex,
+    uint256 variableBorrowIndex
+  );
+
+  event Supply(
+    address indexed user,
+    address indexed onBehalfOf,
+    address indexed underlyingAsset,
+    uint256 amount
+  );
+  event Withdraw(
+    address indexed user,
+    address indexed to,
+    address indexed underlyingAsset,
+    uint256 amount
+  );
+
+  event Borrow(
+    address indexed iniciator,
+    address indexed onBehalfOf,
+    address indexed underlyingAsset,
+    uint256 amount,
+    bytes32 loanId,
+    uint256 borrowRate
+  );
+
+  event Repay(
+    address indexed iniciator,
+    address indexed onBehalfOf,
+    address indexed underlyingAsset,
+    uint256 amount,
+    bytes32 loanId,
+    uint256 borrowRate
+  );
+
+  /**
+   * @dev Emitted when the pause is triggered.
+   */
+  event Paused();
+
+  /**
+   * @dev Emitted when the pause is lifted.
+   */
+  event Unpaused();
+
+  //////////////////////////////////
+  // STRUCTS
+
   struct CreateMarketParams {
     address interestRateAddress;
     address strategyAddress;

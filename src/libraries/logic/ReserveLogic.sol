@@ -330,6 +330,7 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balances,
     address user,
+    address to,
     uint256 amount
   ) internal {
     // Check shares
@@ -343,7 +344,7 @@ library ReserveLogic {
     balances.totalSupplyScaled -= scaledAmount.toUint128();
     balances.totalSupplyScaledNotInvested -= scaledAmount.toUint128();
     // Transfer the amount to the user
-    IERC20(reserve.underlyingAsset).safeTransfer(user, amount);
+    IERC20(reserve.underlyingAsset).safeTransfer(to, amount);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
