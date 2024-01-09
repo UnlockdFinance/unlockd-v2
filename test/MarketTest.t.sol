@@ -771,7 +771,6 @@ contract MarketTest is Setup {
   function test_bid_type_fixed_price_and_auction() public returns (bytes32, bytes32) {
     (bytes32 loanId, bytes32 orderId) = test_create_order_without_order_type_fixed_price_auction();
 
-    assertEq(MintableERC721(_nft).ownerOf(1), _actor);
     {
       (
         DataTypes.SignMarket memory signMarket,

@@ -13,6 +13,7 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
 sepolia = "${RPC_SEPOLIA}"
+
 [etherscan]
 mainnet={key="${ETHERSCAN_API_KEY_MAINNET}",chainId=1} 
 sepolia={key="${ETHERSCAN_API_KEY_SEPOLIA}",chainId=11155111}

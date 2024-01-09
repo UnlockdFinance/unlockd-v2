@@ -79,6 +79,7 @@ contract Setup is Base, ActorsBase, NFTBase {
       config.chainName,
       blockNumber == 0 ? config.blockNumber : blockNumber
     );
+
     vm.selectFork(chainFork);
     // Set timestamp to March 31, 2023 at 00:00 GMT
     vm.warp(1_680_220_800);
