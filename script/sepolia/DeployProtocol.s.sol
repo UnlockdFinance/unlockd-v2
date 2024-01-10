@@ -38,6 +38,10 @@ contract DeployProtocolScript is DeployerHelper {
     UTokenFactory _uTokenFactory;
     /******************** DeployUTokenConfig ********************/
     {
+      ACLManager(addresses.aclManager).addUTokenAdmin(msg.sender);
+      ACLManager(addresses.aclManager).addEmergencyAdmin(msg.sender);
+      ACLManager(addresses.aclManager).addPriceUpdater(msg.sender);
+
       uint256 percentageToInvest = 10000; // 100%
       address _maxApyStrategy = address(
         new MaxApyStrategy(DeployConfig.WETH, DeployConfig.MAXAPY, 1 ether, percentageToInvest)

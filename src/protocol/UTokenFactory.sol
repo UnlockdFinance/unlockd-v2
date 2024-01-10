@@ -23,8 +23,6 @@ import {DataTypes} from '../types/DataTypes.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 
-import {console} from 'forge-std/console.sol';
-
 // import {console} from 'forge-std/console.sol';
 
 contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
