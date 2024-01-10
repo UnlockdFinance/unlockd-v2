@@ -191,6 +191,99 @@ contract AuctionTest is Setup {
     return loanId;
   }
 
+  // function test_auction_bid_liquidation_auction_with_bid_bigget_than_debt()
+  //   public
+  //   returns (bytes32)
+  // {
+  //   bytes32 loanId = borrow_action(_action, _nft, ACTOR, 3 ether, 20 ether, 2, 2);
+
+  //   address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 12 ether);
+  //   (
+  //     DataTypes.SignAuction memory signAuction,
+  //     DataTypes.EIP712Signature memory sig
+  //   ) = auction_signature(
+  //       _auction,
+  //       AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+  //       AssetParams({
+  //         assetId: AssetLogic.assetId(_nft, 1),
+  //         collection: _nft,
+  //         tokenId: 1,
+  //         assetPrice: 3 ether,
+  //         assetLtv: 6000
+  //       })
+  //     );
+  //   // Add funds to the actor two
+
+  //   uint128 bidAmount = 5 ether;
+  //   hoax(actorTwo);
+  //   approveAsset('WETH', address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+
+  //   hoax(actorTwo);
+  //   Auction(_auction).bid(bidAmount, 0.5 ether, signAuction, sig); // BID ON THE ASSET
+
+  //   return loanId;
+  // }
+
+  // function test_auction_bid_liquidation_auction() public returns (bytes32) {
+  //   bytes32 loanId = borrow_action(_action, _nft, ACTOR, 1.2 ether, 2 ether, 2, 2);
+
+  //   address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+  //   (
+  //     DataTypes.SignAuction memory signAuction,
+  //     DataTypes.EIP712Signature memory sig
+  //   ) = auction_signature(
+  //       _auction,
+  //       AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+  //       AssetParams({
+  //         assetId: AssetLogic.assetId(_nft, 1),
+  //         collection: _nft,
+  //         tokenId: 1,
+  //         assetPrice: 1 ether,
+  //         assetLtv: 6000
+  //       })
+  //     );
+  //   // Add funds to the actor two
+
+  //   uint128 bidAmount = 1.5 ether;
+  //   hoax(actorTwo);
+  //   approveAsset('WETH', address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+
+  //   hoax(actorTwo);
+  //   Auction(_auction).bid(bidAmount, 0, signAuction, sig); // BID ON THE ASSET
+
+  //   return loanId;
+  // }
+
+  // function test_auction_bid_liquidation_auction_bigger_than_debt() public returns (bytes32) {
+  //   bytes32 loanId = borrow_action(_action, _nft, ACTOR, 2 ether, 4 ether, 2, 2);
+
+  //   address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 5 ether);
+  //   (
+  //     DataTypes.SignAuction memory signAuction,
+  //     DataTypes.EIP712Signature memory sig
+  //   ) = auction_signature(
+  //       _auction,
+  //       AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.3 ether, totalAssets: 1}),
+  //       AssetParams({
+  //         assetId: AssetLogic.assetId(_nft, 1),
+  //         collection: _nft,
+  //         tokenId: 1,
+  //         assetPrice: 0.01 ether,
+  //         assetLtv: 6000
+  //       })
+  //     );
+  //   // Add funds to the actor two
+
+  //   uint128 bidAmount = 1.5 ether;
+  //   hoax(actorTwo);
+  //   approveAsset('WETH', address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+
+  //   hoax(actorTwo);
+  //   Auction(_auction).bid(bidAmount, 0, signAuction, sig); // BID ON THE ASSET
+
+  //   return loanId;
+  // }
+
   function test_auction_bid_on_expired_liquidation_auction() public returns (bytes32) {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1.2 ether, 2 ether, 2, 2);
 
@@ -469,7 +562,7 @@ contract AuctionTest is Setup {
         );
 
       hoax(_actor);
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
     }
   }
 
@@ -501,7 +594,7 @@ contract AuctionTest is Setup {
 
       hoax(_actor);
       vm.expectRevert(Errors.LoanNotUpdated.selector);
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
     }
   }
 
@@ -532,7 +625,7 @@ contract AuctionTest is Setup {
         );
 
       hoax(_actor);
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
 
       DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
       assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
@@ -564,7 +657,7 @@ contract AuctionTest is Setup {
 
       hoax(_actor);
       vm.expectRevert(Errors.OrderNotAllowed.selector);
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
     }
   }
 
@@ -593,7 +686,7 @@ contract AuctionTest is Setup {
 
       hoax(_actor);
       vm.expectRevert(Errors.TimestampNotExpired.selector);
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
     }
   }
 
@@ -623,7 +716,7 @@ contract AuctionTest is Setup {
         );
 
       hoax(_actor);
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
     }
 
     {
@@ -644,7 +737,7 @@ contract AuctionTest is Setup {
 
       hoax(_actor);
       vm.expectRevert(abi.encodeWithSelector(Errors.InvalidOrderOwner.selector));
-      Auction(_auction).finalize(orderId, signAuction, sig);
+      Auction(_auction).finalize(true, orderId, signAuction, sig);
     }
   }
 }

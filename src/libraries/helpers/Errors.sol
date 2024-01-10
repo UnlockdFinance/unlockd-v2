@@ -43,7 +43,7 @@ library Errors {
   error InvalidUserCollateralBalance();
   error InvalidOrderOwner();
   error InvalidOrderBuyer();
-
+  error InvalidBidAmount();
   error InvalidLoanOwner();
   error InvalidUnderlyingAsset();
 
@@ -104,7 +104,7 @@ library Errors {
   error UnlockdWalletNotFound();
   error InvalidWalletOwner();
   error NotEqualWallet();
-  error DelegationOwnerZeroAddress();
+  error ProtocolOwnerZeroAddress();
 
   ///////////////////////////////////////////
   ///   LOAN

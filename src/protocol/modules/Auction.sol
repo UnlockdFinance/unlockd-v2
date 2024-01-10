@@ -25,7 +25,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using PercentageMath for uint256;
@@ -257,10 +257,11 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loan.freeze();
     }
 
-    if (order.bid.buyer == address(0)) {
+    if (order.countBids == 0) {
       // We repay the debt at the beginning
       // The ASSET only support a % of the current debt in case of the next bids
       // we are not repaying more debt until the auction is ended.
+
       OrderLogic.repayDebt(
         OrderLogic.RepayDebtParams({
           loanId: loan.loanId,
@@ -419,6 +420,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
    * @param sig validation of this struct
    * */
   function finalize(
+    bool claimOnUWallet,
     bytes32 orderId,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
@@ -442,19 +444,25 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     // The aution need to be ended
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
 
-    // Se the address of the buyer to the EOA
+    // By default we get the EOA from the buyer
     address buyer = order.bid.buyer;
+    address protocolOwnerBuyer;
+
+    if (claimOnUWallet) {
+      (address wallet, address protocol) = GenericLogic.getMainWallet(
+        _walletRegistry,
+        order.bid.buyer
+      );
+      buyer = wallet;
+      protocolOwnerBuyer = protocol;
+    }
 
     // If the bidder has a loan with the new asset
     // we need to activate the loan and change the ownership to this new loan
     if (order.bid.loanId != 0) {
-      (address walletBuyer, address protocolOwnerBuyer) = GenericLogic.getMainWallet(
-        _walletRegistry,
-        buyer
-      );
-
-      // Change the address of the buyer to the UnlockdWallet
-      buyer = walletBuyer;
+      if (protocolOwnerBuyer == address(0)) {
+        revert Errors.ProtocolOwnerZeroAddress();
+      }
       // Block the asset
       IProtocolOwner(protocolOwnerBuyer).setLoanId(signAuction.assetId, loan.loanId);
       // Update the loan
@@ -463,16 +471,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loans[order.bid.loanId].activate();
     }
 
-    // Get protocol owner
-    address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);
-
     // The start amount it was payed as a debt
-    uint256 amount = order.bid.amountOfDebt + order.bid.amountToPay - order.offer.startAmount;
+    uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) - order.offer.startAmount;
+
     loan.underlyingAsset.safeTransfer(order.owner, amount);
     // Remove the order
     delete _orders[orderId];
 
-    // Check the messe it's correct
+    // Check the struct passed it's correct
     if (_loans[loan.loanId].totalAssets != signAuction.loan.totalAssets + 1) {
       revert Errors.LoanNotUpdated();
     }
@@ -484,6 +490,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       loan.activate();
       loan.totalAssets = signAuction.loan.totalAssets;
     }
+    // Get protocol owner from owner of the asset to transfer
+    address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, order.owner);
 
     // We transfer the ownership to the new Owner
     IProtocolOwner(protocolOwner).changeOwner(

@@ -126,6 +126,8 @@ contract DeployProtocolScript is DeployerHelper {
       // INSTALL
 
       {
+        // Install Manager MODULE
+
         Manager managerImp = new Manager(Constants.MODULEID__MANAGER, VERSION);
         //   // Install Modules
         address[] memory modules = new address[](1);

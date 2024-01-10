@@ -117,6 +117,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         owner: loan.owner
       })
     );
+
     if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
       revert Errors.LoanNotUpdated();
     }

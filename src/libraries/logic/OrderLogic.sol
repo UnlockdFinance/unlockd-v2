@@ -8,6 +8,7 @@ import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
 import {GenericLogic, Errors} from './GenericLogic.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {Constants} from '../helpers/Constants.sol';
+import {MathUtils} from '../math/MathUtils.sol';
 
 // import {console} from 'forge-std/console.sol';
 
@@ -174,7 +175,7 @@ library OrderLogic {
 
           That's why we calculate the total amount of debt that the user is capable of repaying. 
         **/
-        uint256 supportedDebt = currentDebt > totalAmount ? totalAmount : currentDebt;
+        uint256 supportedDebt = MathUtils.minOf(currentDebt, totalAmount);
         // We remove the current debt
         totalAmount = totalAmount - supportedDebt;
 
@@ -212,14 +213,13 @@ library OrderLogic {
       reserveData.underlyingAsset
     );
     if (totalDebt == 0) return defaultAmount;
-
     uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
       totalCollateral,
       totalDebt,
       ltv
     );
 
-    maxDebtOrDefault = minAmountNeeded > defaultAmount ? minAmountNeeded : defaultAmount;
+    maxDebtOrDefault = MathUtils.maxOf(minAmountNeeded, defaultAmount);
   }
 
   function getMinDebtOrDefault(
@@ -242,8 +242,7 @@ library OrderLogic {
       totalDebt,
       ltv
     );
-
-    minDebtOrDefault = minAmountNeeded < defaultAmount ? minAmountNeeded : defaultAmount;
+    minDebtOrDefault = MathUtils.minOf(minAmountNeeded, defaultAmount);
   }
 
   /**
@@ -309,15 +308,21 @@ library OrderLogic {
     uint256 debtAmount = getMaxDebtOrDefault(
       order.offer.loanId,
       params.uTokenFactory,
-      // Calculate the % of the owner want to repay the debt
-      order.offer.debtToSell > 0 ? params.totalAmount.percentMul(order.offer.debtToSell) : 0,
+      0,
       params.aggLoanPrice,
       params.aggLtv,
       reserveData
     );
+
+    if (order.offer.debtToSell > 0) {
+      // Calculate the % of the owner want to repay the debt
+      debtAmount = params.totalAmount.percentMul(order.offer.debtToSell);
+    }
+
     totalAmount = params.totalAmount;
     if (debtAmount > 0) {
       if (debtAmount > totalAmount) revert Errors.DebtExceedsAmount();
+
       // Repay the debt
       repayDebt(
         RepayDebtParams({
