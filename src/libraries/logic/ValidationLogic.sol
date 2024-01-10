@@ -20,7 +20,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title ValidationLogic library
@@ -136,12 +136,12 @@ library ValidationLogic {
     // console.log(
     //   '> validateFutureUnhealtyLoanState ----------------------------------------------- <'
     // );
-    // console.log('Total Collateral Balance : ', userCollateralBalance);
-    // console.log('userTotalDebt            : ', userTotalDebt);
+    // console.log('IN WETH Total Collateral Balance : ', params.loanConfig.aggLoanPrice);
+    // console.log('IN BASE baseUserTotalDebt        : ', baseUserTotalDebt);
     // console.log('HF                       : ', healthFactor);
     // console.log('LTV                      : ', params.loanConfig.aggLtv);
     // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-    // console.log('AMOUNT REPAY             ; ', params.amount);
+    // console.log('IN WTH AMOUNT REPAY             ; ', params.amount);
     // console.log('-----------------------------------------------');
 
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {

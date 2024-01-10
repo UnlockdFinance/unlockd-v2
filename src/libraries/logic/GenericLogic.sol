@@ -57,7 +57,7 @@ library GenericLogic {
       reserveData.underlyingAsset
     );
     // WARNING : We need to transform the asset to the BASE amount
-    vars.amount = amount.mulDiv(vars.reserveUnit, vars.reserveUnitPrice);
+    vars.amount = amount.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
 
     // Calculate total debt in base currency
     vars.totalDebtInReserve = getUserDebtInBaseCurrency(
@@ -72,7 +72,7 @@ library GenericLogic {
     // All the assets are expresed in the amount of the BASE (USD)
     uint256 collateral = loanConfig.totalAssets == 0 ? price : loanConfig.aggLoanPrice;
     // We transform the collateral in BASE currency
-    vars.totalCollateralInReserve = collateral.mulDiv(vars.reserveUnit, vars.reserveUnitPrice);
+    vars.totalCollateralInReserve = collateral.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
 
     uint256 updatedDebt = vars.totalDebtInReserve > vars.amount
       ? vars.totalDebtInReserve - vars.amount
@@ -210,7 +210,7 @@ library GenericLogic {
       loanId
     );
     if (userTotalDebt == 0) return 0;
-    return assetPrice.mulDiv(userTotalDebt, assetUnit);
+    return userTotalDebt.mulDiv(assetPrice, assetUnit);
   }
 
   function getMainWallet(
