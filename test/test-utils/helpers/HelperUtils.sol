@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.19;
 
-import {IDebtToken} from '../../../src/interfaces/tokens/IDebtToken.sol';
-import {IUToken} from '../../../src/interfaces/tokens/IUToken.sol';
+// import {IDebtToken} from '../../../src/interfaces/tokens/IDebtToken.sol';
+// import {IUToken} from '../../../src/interfaces/tokens/IUToken.sol';
 import {WadRayMath} from '../../../src/libraries/math/WadRayMath.sol';
 
 library HelperUtils {
@@ -13,20 +13,6 @@ library HelperUtils {
     assembly {
       mstore(add(b, 32), x)
     }
-  }
-
-  function getUserDebtInBaseCurrency(
-    bytes32 loanId,
-    address user,
-    address uToken
-  ) internal view returns (uint256) {
-    if (loanId == 0) return 0;
-    uint256 userTotalDebt = IDebtToken(IUToken(uToken).getDebtToken()).scaledBalanceOf(
-      loanId,
-      user
-    );
-    userTotalDebt = userTotalDebt.rayMul(IUToken(uToken).getReserveNormalizedVariableDebt());
-    return userTotalDebt;
   }
 
   function toHex16(bytes16 data) internal pure returns (bytes32 result) {

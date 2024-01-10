@@ -11,6 +11,7 @@ import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol'
 import {MarketSign} from '../../libraries/signatures/MarketSign.sol';
 import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
 
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 import {OrderLogic} from '../../libraries/logic/OrderLogic.sol';
@@ -25,9 +26,8 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IACLManager} from '../../interfaces/IACLManager.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
-import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
 
 import {console} from 'forge-std/console.sol';
 
@@ -51,47 +51,46 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
   /**
    * @dev Get min bid on auction
    * @param orderId identifier of the order
-   * @param uToken token of the loan
+   * @param underlyingAsset token asset of the loan
    * @param aggLoanPrice aggregated loan colaterized on the Loan
    * @param aggLTV aggregated ltv between assets on the Loan
    */
   function getMinBidPrice(
     bytes32 orderId,
-    address uToken,
+    address underlyingAsset,
     uint256 aggLoanPrice,
     uint256 aggLTV
   ) external view returns (uint256 minBid) {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
-      _reserveOracle,
+      _uTokenFactory,
       aggLoanPrice,
       aggLTV,
-      IUToken(uToken).getReserve()
+      IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
     );
   }
 
   /**
    * @dev Get price to buy the asset
    * @param orderId identifier of the order
-   * @param uToken token of the loan
+   * @param underlyingAsset token asset of the loan
    * @param aggLoanPrice aggregated loan colaterized on the Loan
    * @param aggLTV aggregated ltv between assets on the Loan
    */
   function getBuyNowPrice(
     bytes32 orderId,
-    address uToken,
+    address underlyingAsset,
     uint256 aggLoanPrice,
     uint256 aggLTV
   ) external view returns (uint256 amount) {
     DataTypes.Order memory order = _orders[orderId];
     amount = OrderLogic.getMaxDebtOrDefault(
       order.offer.loanId,
-      order.owner,
-      _reserveOracle,
+      _uTokenFactory,
       order.offer.endAmount,
       aggLoanPrice,
       aggLTV,
-      IUToken(uToken).getReserve()
+      IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
     );
   }
 
@@ -105,18 +104,21 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    * @param sig validation of the signature
    */
   function create(
-    address uToken,
-    DataTypes.OrderType orderType,
+    address underlyingAsset,
+    Constants.OrderType orderType,
     CreateOrderInput calldata config,
     DataTypes.SignMarket calldata signMarket,
     DataTypes.EIP712Signature calldata sig
-  ) external isUTokenAllowed(uToken) {
+  ) external {
     address msgSender = unpackTrailingParamMsgSender();
     _checkHasUnlockdWallet(msgSender);
 
     _validateSignature(msgSender, signMarket, sig);
 
     DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      underlyingAsset
+    );
 
     // In case we want to create a auction with a nft that are not in a loan
     if (loan.loanId == 0) {
@@ -127,8 +129,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           msgSender: msgSender,
           totalAssets: 1,
           loanId: LoanLogic.generateId(msgSender, signMarket.loan.nonce, signMarket.loan.deadline),
-          uToken: uToken,
-          underlyingAsset: IUToken(uToken).UNDERLYING_ASSET_ADDRESS()
+          underlyingAsset: underlyingAsset
         })
       );
 
@@ -136,18 +137,26 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         _walletRegistry,
         msgSender
       );
+
+      if (
+        IUTokenFactory(_uTokenFactory).validateReserveType(
+          reserve.reserveType,
+          _allowedCollections[signMarket.collection]
+        ) == false
+      ) {
+        revert Errors.NotValidReserve();
+      }
       ValidationLogic.validateLockAsset(
         signMarket.assetId,
         wallet,
-        _allowedControllers,
         delegationOwner,
         DataTypes.Asset({collection: signMarket.collection, tokenId: signMarket.tokenId})
       );
       // Lock the asset
       IProtocolOwner(delegationOwner).setLoanId(signMarket.assetId, loan.loanId);
     } else {
-      if (loan.uToken != uToken) {
-        revert Errors.InvalidUToken();
+      if (loan.underlyingAsset != underlyingAsset) {
+        revert Errors.InvalidUnderlyingAsset();
       }
 
       if (loan.owner != msgSender) {
@@ -158,15 +167,15 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         revert Errors.LoanNotUpdated();
       }
 
-      IUToken(loan.uToken).updateStateReserve();
+      IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
 
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
-          user: msgSender,
           amount: config.startAmount,
           price: signMarket.assetPrice,
           reserveOracle: _reserveOracle,
-          reserve: IUToken(loan.uToken).getReserve(),
+          uTokenFactory: _uTokenFactory,
+          reserve: reserve,
           loanConfig: signMarket.loan
         })
       );
@@ -223,14 +232,13 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // Cache Order data
     DataTypes.Order storage order = _orders[orderId];
     address orderOwner = order.owner;
-    DataTypes.OrderType orderType = order.orderType;
+    Constants.OrderType orderType = order.orderType;
     uint40 orderTimeframeEndtime = order.timeframe.endTime;
-    DataTypes.Bid memory bid = order.bid;
+    DataTypes.Bid memory bidData = order.bid;
 
     // Cache Loan data
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
-    address loanUToken = loan.uToken;
-    DataTypes.LoanState loanState = loan.state;
+    Constants.LoanState loanState = loan.state;
 
     ValidationLogic.validateCancelOrderMarket(
       msgSender,
@@ -241,26 +249,28 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     );
 
     //Refund bid
-    if (bid.buyer != address(0)) {
-      DataTypes.ReserveData memory reserve = IUToken(loanUToken).getReserve();
-      IUToken(loanUToken).updateStateReserve();
+    if (bidData.buyer != address(0)) {
+      IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+      DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+        loan.underlyingAsset
+      );
       // We assuming that the ltv is enought to cover the growing interest of this bid
       OrderLogic.refundBidder(
         OrderLogic.RefundBidderParams({
-          loanId: bid.loanId,
-          owner: bid.buyer,
+          loanId: bidData.loanId,
+          owner: bidData.buyer,
           reserveOracle: _reserveOracle,
-          uToken: loanUToken,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
-          amountOfDebt: bid.amountOfDebt,
-          amountToPay: bid.amountToPay,
+          uTokenFactory: _uTokenFactory,
+          amountOfDebt: bidData.amountOfDebt,
+          amountToPay: bidData.amountToPay,
           reserve: reserve
         })
       );
-      if (bid.loanId != 0) {
+      if (bidData.loanId != 0) {
         // Remove old loan
-        delete _loans[bid.loanId];
+        delete _loans[bidData.loanId];
       }
       _loans[order.offer.loanId].activate();
     }
@@ -289,12 +299,16 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     DataTypes.Order storage order = _orders[orderId];
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
+
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
     // Check if the loan is updated
     // The loan need to be the final result of the modification once the auction is ended
     if (signMarket.loan.totalAssets == loan.totalAssets) {
       revert Errors.LoanNotUpdated();
     }
-    DataTypes.LoanState loanState = loan.state;
+    Constants.LoanState loanState = loan.state;
     ValidationLogic.validateOrderBid(
       order.orderType,
       order.timeframe.endTime,
@@ -304,18 +318,19 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     );
 
     // Cache UToken address
-    address uToken = loan.uToken;
 
     //Validate if the loan is healthy and starts and auction
-    DataTypes.ReserveData memory reserve = IUToken(uToken).getReserve();
-    IUToken(uToken).updateStateReserve();
+    IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      loan.underlyingAsset
+    );
 
     // We need to validate that the next bid is bigger than the last one.
     uint256 totalAmount = amountToPay + amountOfDebt;
     {
       uint256 nextBid = OrderLogic.getMinBid(
         order,
-        _reserveOracle,
+        _uTokenFactory,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
         reserve
@@ -341,8 +356,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         OrderLogic.BorrowByBidderParams({
           loanId: loanId,
           owner: msgSender,
-          uToken: uToken,
           amountOfDebt: amountOfDebt,
+          underlyingAsset: reserve.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           assetPrice: signMarket.assetPrice,
           assetLtv: signMarket.assetLtv
         })
@@ -351,7 +367,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       _loans[loanId].createLoan(
         LoanLogic.ParamsCreateLoan({
           msgSender: msgSender,
-          uToken: uToken,
           underlyingAsset: reserve.underlyingAsset,
           totalAssets: 1,
           loanId: loanId
@@ -369,9 +384,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           loanId: order.bid.loanId,
           owner: order.bid.buyer,
           reserveOracle: _reserveOracle,
-          uToken: uToken,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: order.bid.amountOfDebt,
           amountToPay: order.bid.amountToPay,
           reserve: reserve
@@ -417,11 +432,14 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     // Get the loan asigned to the Order
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
 
     {
       // Avoid stack too deep
       uint88 loanTotalAssets = loan.totalAssets;
-      DataTypes.LoanState loanState = loan.state;
+      Constants.LoanState loanState = loan.state;
       // Validate if the order is ended
       ValidationLogic.validateOrderClaim(
         signMarket.loan.totalAssets,
@@ -432,11 +450,13 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
 
     // Cache uToken and underlying asset addresses
-    address uToken = loan.uToken;
+
     address underlyingAsset = loan.underlyingAsset;
 
-    DataTypes.ReserveData memory reserve = IUToken(uToken).getReserve();
-    IUToken(uToken).updateStateReserve();
+    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      underlyingAsset
+    );
 
     uint256 totalAmount = order.bid.amountToPay + order.bid.amountOfDebt;
 
@@ -445,11 +465,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     ValidationLogic.validateFutureLoanState(
       ValidationLogic.ValidateLoanStateParams({
-        user: order.owner,
         amount: totalAmount,
         price: signMarket.assetPrice,
         reserveOracle: _reserveOracle,
-        reserve: IUToken(loan.uToken).getReserve(),
+        uTokenFactory: _uTokenFactory,
+        reserve: reserve,
         loanConfig: signMarket.loan
       })
     );
@@ -460,7 +480,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
-        uToken: uToken,
+        uTokenFactory: _uTokenFactory,
         from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,
@@ -491,6 +511,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       }
       // Assign the asset to a new Loan
       IProtocolOwner(protocolOwnerBuyer).setLoanId(order.offer.assetId, order.bid.loanId);
+      // Update the loan
+      _loans[order.bid.loanId].totalAssets = 1;
       // Once the asset is sended to the correct wallet we reactivate
       _loans[order.bid.loanId].activate();
     }
@@ -499,7 +521,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     bytes32 loanId = loan.loanId;
 
     if (_loans[loan.loanId].totalAssets != signMarket.loan.totalAssets + 1) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
     // We check the status
     if (signMarket.loan.totalAssets == 0) {
@@ -546,12 +568,16 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     DataTypes.Order memory order = _orders[orderId];
 
     // Get the loan asigned to the Order
-    DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
 
     {
       // Avoid stack too deep
       uint88 loanTotalAssets = loan.totalAssets;
-      DataTypes.LoanState loanState = loan.state;
+      Constants.LoanState loanState = loan.state;
       // Validate if the order is ended
       ValidationLogic.validateOrderClaim(
         signMarket.loan.totalAssets,
@@ -562,25 +588,25 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
 
     // Cache uToken and underlying asset addresses
-    address uToken = loan.uToken;
     address underlyingAsset = loan.underlyingAsset;
 
-    DataTypes.ReserveData memory reserve = IUToken(uToken).getReserve();
-    IUToken(uToken).updateStateReserve();
+    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      underlyingAsset
+    );
 
     uint256 totalAmount = order.bid.amountToPay + order.bid.amountOfDebt;
 
     {
       uint256 minBid = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
-        order.owner,
-        _reserveOracle,
+        _uTokenFactory,
         totalAmount,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
         reserve
       );
-      // WARNING
+      // @dev WARNING
       // We check if the minBid is bigger than the amount added, in this case,
       // anyone can cancel the current bid and refund the amount deposited.
       if (totalAmount >= minBid) {
@@ -593,9 +619,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         loanId: order.bid.loanId,
         owner: order.bid.buyer,
         reserveOracle: _reserveOracle,
-        uToken: uToken,
         from: address(this),
         underlyingAsset: loan.underlyingAsset,
+        uTokenFactory: _uTokenFactory,
         amountOfDebt: order.bid.amountOfDebt,
         amountToPay: order.bid.amountToPay,
         reserve: reserve
@@ -641,12 +667,16 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
 
     DataTypes.Order memory order = _orders[orderId];
-    DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+
+    if (order.offer.loanId != signMarket.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
 
     {
       // Avoid stack too deep
       uint88 loanTotalAssets = loan.totalAssets;
-      DataTypes.LoanState loanState = loan.state;
+      Constants.LoanState loanState = loan.state;
 
       ValidationLogic.validateBuyNow(
         signMarket.loan.totalAssets,
@@ -657,11 +687,13 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
 
     // Cache uToken and underlying asset addresses
-    address uToken = loan.uToken;
+
     address underlyingAsset = loan.underlyingAsset;
 
-    IUToken(uToken).updateStateReserve();
-    DataTypes.ReserveData memory reserve = IUToken(uToken).getReserve();
+    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      underlyingAsset
+    );
 
     uint256 totalAmount = amountToPay + amountOfDebt;
 
@@ -669,12 +701,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       // Check what is the correct pricing for this asset
       uint256 assetPrice = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
-        order.owner,
-        _reserveOracle,
+        _uTokenFactory,
         order.offer.endAmount,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
-        IUToken(uToken).getReserve()
+        reserve
       );
 
       if (totalAmount != assetPrice) revert Errors.InvalidTotalAmount();
@@ -707,7 +738,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           OrderLogic.BorrowByBidderParams({
             loanId: newLoanId,
             owner: msgSender,
-            uToken: uToken,
+            underlyingAsset: reserve.underlyingAsset,
+            uTokenFactory: _uTokenFactory,
             amountOfDebt: amountOfDebt,
             assetPrice: signMarket.assetPrice,
             assetLtv: signMarket.assetLtv
@@ -717,7 +749,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         _loans[newLoanId].createLoan(
           LoanLogic.ParamsCreateLoan({
             msgSender: msgSender,
-            uToken: uToken,
             underlyingAsset: reserve.underlyingAsset,
             totalAssets: 1,
             loanId: newLoanId
@@ -737,9 +768,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
             loanId: order.bid.loanId,
             owner: order.bid.buyer,
             reserveOracle: _reserveOracle,
-            uToken: uToken,
             from: address(this),
             underlyingAsset: underlyingAsset,
+            uTokenFactory: _uTokenFactory,
             amountOfDebt: order.bid.amountOfDebt,
             amountToPay: order.bid.amountToPay,
             reserve: reserve
@@ -759,7 +790,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
-        uToken: uToken,
+        uTokenFactory: _uTokenFactory,
         from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,
@@ -780,7 +811,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     delete _orders[orderId];
 
     if (_loans[loan.loanId].totalAssets != signMarket.loan.totalAssets + 1) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
     // We check the status
     if (signMarket.loan.totalAssets == 0) {

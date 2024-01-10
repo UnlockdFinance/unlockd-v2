@@ -35,6 +35,7 @@ contract Test is BaseCoreModule, TestSign {
     SignTest calldata signTest,
     DataTypes.EIP712Signature calldata sig
   ) external {
+    random;
     address msgSender = unpackTrailingParamMsgSender();
     _validateSignature(msgSender, signTest, sig);
 

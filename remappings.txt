@@ -5,6 +5,6 @@ solady/=lib/solady/src/
 @openzeppelin/=lib/openzeppelin-contracts/
 @openzeppelin-upgradeable/=lib/openzeppelin-contracts-upgradeable/
 @chainlink/=lib/chainlink/
-@unlockd-wallet/=lib/unlockdv2-wallet
+@unlockd-wallet/=lib/unlockdv2-wallet/
 @solady/=lib/solady/src/
 @maxapy/=lib/maxapy/src/

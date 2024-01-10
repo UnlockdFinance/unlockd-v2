@@ -18,7 +18,6 @@ import './test-utils/mock/asset/MintableERC20.sol';
 import {console} from 'forge-std/console.sol';
 
 contract BorrowTest is Setup {
-  uint256 internal ACTOR = 1;
   address internal _actor;
   address internal _manager;
   address internal _nft;
@@ -27,31 +26,28 @@ contract BorrowTest is Setup {
 
   function setUp() public virtual override {
     super.setUp();
-
+    _actor = makeAddr('filipe');
     // Fill the protocol with funds
-    addFundToUToken(address(_uTokens['WETH']), 'WETH', 10 ether);
-    addFundToUToken(address(_uTokens['DAI']), 'DAI', 10 ether);
+    addFundToUToken('WETH', 10 ether);
+    addFundToUToken('DAI', 10 ether);
 
-    // Create wallet and mint to the safe wallet
-    createWalletAndMintTokens(ACTOR, 'PUNK');
+    // Create wallet
+    createWalletAndMintTokens(_actor, 'PUNK');
 
     Unlockd unlockd = super.getUnlockd();
     _action = unlockd.moduleIdToProxy(Constants.MODULEID__ACTION);
     _manager = unlockd.moduleIdToProxy(Constants.MODULEID__MANAGER);
-    _nft = super.getNFT('PUNK');
-
-    console.log('NFT address: ', _nft);
-    console.log('SUPPLY: ', MintableERC20(_nft).totalSupply());
+    _nft = _nfts.get('PUNK');
   }
 
   /////////////////////////////////////////////////////////////////////////////////
   // BORROW
   /////////////////////////////////////////////////////////////////////////////////
 
-  function test_borrow_one_asset() public useActor(ACTOR) {
+  function test_borrow_one_asset() public {
     uint256 amountToBorrow = 0.5 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
     (
       DataTypes.SignAction memory signAction,
@@ -61,39 +57,33 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 2 ether,
-          totalAssets: 1,
-          totalArray: 1
-        })
+        makeAsset('WETH'),
+        ActionSignParams({user: _actor, loanId: 0, price: 2 ether, totalAssets: 1, totalArray: 1})
       );
     uint256 initialGas = gasleft();
 
-    console.log('LIST ASSETS', assets.length);
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
     console.log('GAS Used:', gasUsed);
     // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
     // Check if the asset is locked
-    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+    address protocolOwner = getProtocolOwnerAddress(_actor);
 
     for (uint256 i = 0; i < assets.length; ) {
-      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assetsIds[i]), true);
+      assertEq(ProtocolOwner(protocolOwner).isAssetLocked(assetsIds[i]), true);
       unchecked {
         ++i;
       }
     }
   }
 
-  function test_borrow_with_multiples_nfts() public useActor(ACTOR) {
+  function test_borrow_with_multiples_nfts() public {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
     (
       DataTypes.SignAction memory signAction,
@@ -103,8 +93,9 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
+        makeAsset('WETH'),
         ActionSignParams({
-          user: super.getActorAddress(ACTOR),
+          user: _actor,
           loanId: 0,
           price: 10 ether,
           totalAssets: 10,
@@ -113,58 +104,27 @@ contract BorrowTest is Setup {
       );
     uint256 initialGas = gasleft();
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
     console.log('GAS Used:', gasUsed);
     // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
     // Check if the asset is locked
-    IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
-      .getOwnerWalletAt(super.getActorAddress(ACTOR), 0);
+    address protocolOwner = getProtocolOwnerAddress(_actor);
 
     for (uint256 i = 0; i < assetsIds.length; ) {
-      assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assetsIds[i]), true);
+      assertEq(ProtocolOwner(protocolOwner).isAssetLocked(assetsIds[i]), true);
       unchecked {
         ++i;
       }
     }
   }
 
-  // function test_borrow_with_multiples_nfts_different_user() public {
-  //   uint256 amountToBorrow = 1 ether;
-
-  //   address actorTwo = getActorWithFunds(2, 'WETH', 20 ether);
-
-  //   // User doesn't have WETH
-  //   assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-  //   // Get data signed
-  //   (
-  //     DataTypes.SignAction memory signAction,
-  //     DataTypes.EIP712Signature memory sig,
-  //     bytes32[] memory assetsIds,
-  //     DataTypes.Asset[] memory assets
-  //   ) = action_signature(
-  //       _action,
-  //       _nft,
-  //       ActionSignParams({
-  //         user: super.getActorAddress(ACTOR),
-  //         loanId: 0,
-  //         price: 10 ether,
-  //         totalAssets: 10,
-  //         totalArray: 10
-  //       })
-  //     );
-  //   uint256 initialGas = gasleft();
-  //   vm.startPrank(actorTwo);
-  //   // Borrow amount
-  //   Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-  //   vm.stopPrank();
-  // }
-
-  function test_borrow_two_times() public useActor(ACTOR) {
+  function test_borrow_two_times() public {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
     (
       DataTypes.SignAction memory signAction,
@@ -174,8 +134,9 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
+        makeAsset('WETH'),
         ActionSignParams({
-          user: super.getActorAddress(ACTOR),
+          user: _actor,
           loanId: 0,
           price: 10 ether,
           totalAssets: 10,
@@ -185,7 +146,8 @@ contract BorrowTest is Setup {
     uint256 initialGas = gasleft();
     vm.recordLogs();
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
     console.log('GAS Used:', gasUsed);
 
@@ -200,8 +162,9 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
+        makeAsset('WETH'),
         ActionSignParams({
-          user: super.getActorAddress(ACTOR),
+          user: _actor,
           loanId: loanId,
           price: 10 ether,
           totalAssets: 10,
@@ -210,25 +173,21 @@ contract BorrowTest is Setup {
       );
 
     // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
 
     // Borrow amount
-    Action(_action).borrow(
-      address(_uTokens['WETH']),
-      amountToBorrow,
-      assetsTwo,
-      signActionTwo,
-      sigTwo
-    );
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assetsTwo, signActionTwo, sigTwo);
 
     // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow * 2);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow * 2);
   }
 
-  function test_borrow_two_times_same_message() public useActor(ACTOR) {
+  function test_borrow_two_times_same_message() public {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
+
     // Get data signed
     (
       DataTypes.SignAction memory signAction,
@@ -238,8 +197,9 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
+        makeAsset('WETH'),
         ActionSignParams({
-          user: super.getActorAddress(ACTOR),
+          user: _actor,
           loanId: 0,
           price: 10 ether,
           totalAssets: 10,
@@ -249,385 +209,371 @@ contract BorrowTest is Setup {
     uint256 initialGas = gasleft();
 
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
     console.log('GAS Used:', gasUsed);
+    vm.startPrank(_actor);
     vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRecoveredAddress.selector));
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    vm.stopPrank();
   }
 
-  function test_borrow_with_one_nft_different_coin() public useActor(ACTOR) {
+  function test_borrow_with_one_nft_different_coin() public {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      ,
-      DataTypes.Asset[] memory assets
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 10 ether,
-          totalAssets: 10,
-          totalArray: 10
-        })
-      );
-    uint256 initialGas = gasleft();
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     vm.recordLogs();
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
-
-    Vm.Log[] memory entries = vm.getRecordedLogs();
-    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
-
-    (
-      DataTypes.SignAction memory signActionTwo,
-      DataTypes.EIP712Signature memory sigTwo,
-      ,
-      DataTypes.Asset[] memory assetsTwo
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 10 ether,
-          totalAssets: 10,
-          totalArray: 0
-        })
-      );
-
-    // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidUToken.selector));
-    // Borrow amount
-    Action(_action).borrow(
-      address(_uTokens['DAI']),
-      amountToBorrow,
-      assetsTwo,
-      signActionTwo,
-      sigTwo
-    );
-  }
-
-  function test_borrow_with_zero_loanId() public useActor(ACTOR) {
-    uint256 amountToBorrow = 1 ether;
-    // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      ,
-      DataTypes.Asset[] memory assets
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 10 ether,
-          totalAssets: 10,
-          totalArray: 10
-        })
-      );
-    uint256 initialGas = gasleft();
-
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
-
-    (
-      DataTypes.SignAction memory signActionTwo,
-      DataTypes.EIP712Signature memory sigTwo,
-      ,
-      DataTypes.Asset[] memory assetsTwo
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 10 ether,
-          totalAssets: 10,
-          totalArray: 10
-        })
-      );
-
-    // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-    vm.expectRevert(Errors.AssetLocked.selector);
-    // Borrow amount
-    Action(_action).borrow(
-      address(_uTokens['WETH']),
-      amountToBorrow,
-      assetsTwo,
-      signActionTwo,
-      sigTwo
-    );
-  }
-
-  function test_borrow_with_wrong_loanId() public useActor(ACTOR) {
-    uint256 amountToBorrow = 1 ether;
-    // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
-      DataTypes.Asset[] memory assets
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: bytes32('2'),
-          price: 10 ether,
-          totalAssets: 10,
-          totalArray: 10
-        })
-      );
-    uint256 initialGas = gasleft();
-
-    // Borrow amount
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidLoanOwner.selector));
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
-  }
-
-  function test_borrow_add_more_assets_to_loan() public useActor(ACTOR) {
-    uint256 amountToBorrow = 1 ether;
-    // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
-      DataTypes.Asset[] memory assets
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 10 ether,
-          totalAssets: 5,
-          totalArray: 5
-        })
-      );
-    uint256 initialGas = gasleft();
-    vm.recordLogs();
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-
+    {
+      // BORROW first time
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: 0,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+      // Borrow amount
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
     {
-      // Generate new signature with new assets
-      // Get nonce from the user
-      uint256 nonce = ActionSign(_action).getNonce(super.getActorAddress(ACTOR));
-      uint40 deadline = uint40(block.timestamp + 1000);
-      uint256 startAssets = assetsIds.length;
-      uint256 endAssets = startAssets + 2;
-
-      // Asesets
-      (bytes32[] memory assetsIdsTwo, DataTypes.Asset[] memory assetsTwo) = generate_assets(
-        _nft,
-        startAssets,
-        endAssets
-      );
-
-      // Create the struct
-      DataTypes.SignAction memory data = DataTypes.SignAction({
-        loan: DataTypes.SignLoanConfig({
-          loanId: loanId, // Because is new need to be 0
-          aggLoanPrice: 10 ether,
-          aggLtv: 60000,
-          aggLiquidationThreshold: 60000,
-          totalAssets: uint88(endAssets),
-          nonce: nonce,
-          deadline: deadline
-        }),
-        assets: assetsIdsTwo,
-        nonce: nonce,
-        deadline: deadline
-      });
-
-      bytes32 digest = Action(_action).calculateDigest(nonce, data);
-      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
-
-      // Build signature struct
-      DataTypes.EIP712Signature memory sigtwo = DataTypes.EIP712Signature({
-        v: v,
-        r: r,
-        s: s,
-        deadline: deadline
-      });
-
+      assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
       // We check the new balance
-      // assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-      // Borrow amount
-      Action(_action).borrow(address(_uTokens['WETH']), 0, assetsTwo, data, sigtwo);
-      // We don't borrow more
-      assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 1 ether);
+
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('DAI'),
+          ActionSignParams({
+            user: _actor,
+            loanId: loanId,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+
+      vm.expectRevert(abi.encodeWithSelector(Errors.InvalidUnderlyingAsset.selector));
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     }
   }
 
-  function test_borrow_error_invalid_assets_array_lenght() public useActor(ACTOR) {
+  function test_borrow_with_zero_loanId() public {
+    uint256 amountToBorrow = 1 ether;
+    // User doesn't have WETH
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
+    vm.recordLogs();
+    {
+      // BORROW first time
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: 0,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+      // Borrow amount
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
+
+    {
+      assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
+      // We check the new balance
+
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: loanId,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+
+      vm.expectRevert(abi.encodeWithSelector(Errors.AssetLocked.selector));
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
+  }
+
+  function test_borrow_with_wrong_loanId() public {
+    uint256 amountToBorrow = 1 ether;
+    // User doesn't have WETH
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
+
+    {
+      // BORROW first time
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: 0,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+      // Borrow amount
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
+
+    {
+      assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
+      // We check the new balance
+
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: '2',
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+
+      vm.expectRevert(abi.encodeWithSelector(Errors.InvalidLoanOwner.selector));
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
+  }
+
+  function test_borrow_add_more_assets_to_loan() public {
+    uint256 amountToBorrow = 1 ether;
+    uint256 amountToBorrowMore = 0.5 ether;
+    // User doesn't have WETH
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
+    vm.recordLogs();
+    {
+      // BORROW first time
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: 0,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+      // Borrow amount
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
+
+    // BORROW MORE
+    {
+      assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
+      // We check the new balance
+
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: loanId,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 0
+          })
+        );
+
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrowMore, assets, signAction, sig);
+    }
+
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow + amountToBorrowMore);
+  }
+
+  function test_borrow_error_invalid_assets_array_lenght() public {
     uint256 amountToBorrow = 0.5 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
 
     DataTypes.Asset[] memory assets;
+
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
+      ,
 
     ) = action_signature(
         _action,
         _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 2 ether,
-          totalAssets: 1,
-          totalArray: 1
-        })
+        makeAsset('WETH'),
+        ActionSignParams({user: _actor, loanId: 0, price: 10 ether, totalAssets: 1, totalArray: 1})
       );
-    uint256 initialGas = gasleft();
-
-    console.log('LIST ASSETS', assets.length);
     // Borrow amount
     vm.expectRevert(abi.encodeWithSelector(Errors.InvalidAssetAmount.selector));
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
   }
 
-  function test_borrow_error_invalid_assets_array_lenght_in_loan() public useActor(ACTOR) {
+  function test_borrow_error_invalid_assets_array_lenght_in_loan() public {
     uint256 amountToBorrow = 0.5 ether;
     // User doesn't have WETH
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
 
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
+      ,
       DataTypes.Asset[] memory assets
     ) = action_signature(
         _action,
         _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 2 ether,
-          totalAssets: 2,
-          totalArray: 1
-        })
+        makeAsset('WETH'),
+        ActionSignParams({user: _actor, loanId: 0, price: 10 ether, totalAssets: 2, totalArray: 2})
       );
-    uint256 initialGas = gasleft();
+
     DataTypes.Asset[] memory newAssets = new DataTypes.Asset[](1);
     newAssets[0] = assets[0];
-    console.log('LIST ASSETS', assets.length);
     // Borrow amount
     vm.expectRevert(abi.encodeWithSelector(Errors.InvalidArrayLength.selector));
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, newAssets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, newAssets, signAction, sig);
   }
 
-  function test_borrow_token_assets_mismatch() public useActor(ACTOR) {
+  function test_borrow_loan_not_updated() public {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
-
-    // FIRST BORROW
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), 0);
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      ,
-      DataTypes.Asset[] memory assets
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: 10 ether,
-          totalAssets: 10,
-          totalArray: 10
-        })
-      );
-    uint256 initialGas = gasleft();
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     vm.recordLogs();
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
-
+    {
+      // BORROW first time
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: 0,
+            price: 10 ether,
+            totalAssets: 1,
+            totalArray: 1
+          })
+        );
+      // Borrow amount
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
     Vm.Log[] memory entries = vm.getRecordedLogs();
-
-    // SECOND BORROW
     bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
-    (
-      DataTypes.SignAction memory signActionTwo,
-      DataTypes.EIP712Signature memory sigTwo,
-      ,
-      DataTypes.Asset[] memory assetsTwo
-    ) = action_signature(
-        _action,
-        _nft,
-        ActionSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: loanId,
-          price: 10 ether,
-          totalAssets: 11,
-          totalArray: 0
-        })
-      );
+    {
+      assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
+      // We check the new balance
 
-    // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
-    vm.expectRevert(abi.encodeWithSelector(Errors.TokenAssetsMismatch.selector));
-    // Borrow amount
-    Action(_action).borrow(
-      address(_uTokens['WETH']),
-      amountToBorrow,
-      assetsTwo,
-      signActionTwo,
-      sigTwo
-    );
+      (
+        DataTypes.SignAction memory signAction,
+        DataTypes.EIP712Signature memory sig,
+        ,
+        DataTypes.Asset[] memory assets
+      ) = action_signature(
+          _action,
+          _nft,
+          makeAsset('WETH'),
+          ActionSignParams({
+            user: _actor,
+            loanId: loanId,
+            price: 10 ether,
+            totalAssets: 11,
+            totalArray: 0
+          })
+        );
+
+      vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotUpdated.selector));
+      hoax(_actor);
+      Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+    }
   }
 
   function test_borrow_token_frezze() public {
-    vm.startPrank(getActorAddress(ACTOR));
+    vm.startPrank(_actor);
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH
 
     // FIRST BORROW
-    assertEq(balanceOfAsset('WETH', getActorAddress(ACTOR)), 0);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
     (
       DataTypes.SignAction memory signAction,
@@ -637,8 +583,9 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
+        makeAsset('WETH'),
         ActionSignParams({
-          user: getActorAddress(ACTOR),
+          user: _actor,
           loanId: 0,
           price: 10 ether,
           totalAssets: 10,
@@ -648,7 +595,7 @@ contract BorrowTest is Setup {
     uint256 initialGas = gasleft();
     vm.recordLogs();
     // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
     console.log('GAS Used:', gasUsed);
 
@@ -661,11 +608,10 @@ contract BorrowTest is Setup {
     ///////////////////////
     vm.startPrank(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
-
     vm.stopPrank();
 
     ///////////////////////
-    vm.startPrank(getActorAddress(ACTOR));
+    vm.startPrank(_actor);
     (
       DataTypes.SignAction memory signActionTwo,
       DataTypes.EIP712Signature memory sigTwo,
@@ -674,8 +620,9 @@ contract BorrowTest is Setup {
     ) = action_signature(
         _action,
         _nft,
+        makeAsset('WETH'),
         ActionSignParams({
-          user: super.getActorAddress(ACTOR),
+          user: _actor,
           loanId: loanId,
           price: 10 ether,
           totalAssets: 10,
@@ -684,16 +631,46 @@ contract BorrowTest is Setup {
       );
 
     // We check the new balance
-    assertEq(balanceOfAsset('WETH', super.getActorAddress(ACTOR)), amountToBorrow);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
 
     vm.expectRevert(abi.encodeWithSelector(Errors.LoanNotActive.selector));
-    Action(_action).borrow(
-      address(_uTokens['WETH']),
-      amountToBorrow,
-      assetsTwo,
-      signActionTwo,
-      sigTwo
-    );
+    Action(_action).borrow(amountToBorrow, assetsTwo, signActionTwo, sigTwo);
     vm.stopPrank();
   }
+
+  function test_not_assets_missmatch() public {
+    uint256 amountToBorrow = 0.5 ether;
+    // User doesn't have WETH
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
+    // Get data signed
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      ,
+      DataTypes.Asset[] memory assets
+    ) = action_signature(
+        _action,
+        _nft,
+        makeAsset('WETH'),
+        ActionSignParams({user: _actor, loanId: 0, price: 2 ether, totalAssets: 1, totalArray: 1})
+      );
+    // Update
+    assets[0].tokenId = 2;
+    vm.expectRevert(abi.encodeWithSelector(Errors.AssetsMismatch.selector));
+    // Borrow amount
+    hoax(_actor);
+    Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  // TODO: Pending tests
+  ///////////////////////////////////////////////////////////////////
+
+  function test_borrow_adding_new_asset_in_params() internal {}
+
+  function test_borrow_with_diferent_asset_params() internal {}
+
+  function test_borrow_wrong_reserve_type() internal {}
+
+  ///////////////////////////////////////////////////////////////////
 }

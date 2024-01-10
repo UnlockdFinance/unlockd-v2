@@ -191,7 +191,7 @@ contract MarketSignTest is Setup {
 
   function buildSignatureAndData(
     uint256 deadline
-  ) private returns (DataTypes.EIP712Signature memory, DataTypes.SignMarket memory) {
+  ) private view returns (DataTypes.EIP712Signature memory, DataTypes.SignMarket memory) {
     uint256 nonce = SignSeam(_seam).getNonce(super.getActorAddress(ACTOR));
 
     DataTypes.SignMarket memory data = buildData(nonce, deadline);

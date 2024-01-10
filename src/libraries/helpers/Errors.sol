@@ -45,7 +45,7 @@ library Errors {
   error InvalidOrderBuyer();
   error InvalidBidAmount();
   error InvalidLoanOwner();
-  error InvalidUToken();
+  error InvalidUnderlyingAsset();
 
   error InvalidEndAmount();
   error InvalidStartAmount();
@@ -64,7 +64,7 @@ library Errors {
   error CollectionNotAllowed();
   error NotAssetOwner();
   error UnsuccessfulExecution();
-  error TokenAssetsMismatch();
+  error AssetsMismatch();
   error InvalidRecoveredAddress();
   error SenderZeroAddress();
 
@@ -75,13 +75,21 @@ library Errors {
   error NotEqualSender();
 
   error ProtocolAccessDenied();
-  error UTokenAccessDenied();
+
   error GovernanceAccessDenied();
   error EmergencyAccessDenied();
   error RoleAccessDenied();
   error MarketPriceNotCoverDebt();
   error LoanNotUpdated();
   error LoanBlocked();
+  ///////////////////////////////////////////
+  ///   UTOKEN
+  ///////////////////////////////////////////
+  error UnderlyingMarketNotExist();
+  error UnderlyingMarketAlreadyExist();
+  error UTokenAccessDenied();
+  error ReserveNotActive();
+  error NotValidReserve();
   ///////////////////////////////////////////
   ///   ROUTER
   ///////////////////////////////////////////

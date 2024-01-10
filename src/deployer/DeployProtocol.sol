@@ -14,6 +14,8 @@ import {Manager} from '../protocol/modules/Manager.sol';
 import {SellNow} from '../protocol/modules/SellNow.sol';
 import {Market} from '../protocol/modules/Market.sol';
 
+import {Errors} from '../libraries/helpers/Errors.sol';
+
 contract DeployProtocol {
   address internal _aclManager;
   address internal _admin;
@@ -29,6 +31,10 @@ contract DeployProtocol {
   }
 
   constructor(address admin, address adminUpdater, address aclManager) {
+    Errors.verifyNotZero(admin);
+    Errors.verifyNotZero(adminUpdater);
+    Errors.verifyNotZero(aclManager);
+
     _admin = admin;
     _adminUpdater = adminUpdater;
     _aclManager = aclManager;

@@ -11,7 +11,7 @@ contract ActionSign is BaseSignature {
   string internal constant VERSION = '1';
 
   bytes32 internal constant TYPEHASH =
-    0xb1f140f91ab6affef1936223880cf9f846fc46cb3669fc6813adc08a24ddb4a7;
+    0x2b5fb3950865094faa266e01d5f20a42b500057e9664bd3e8cf41f17c14c163b;
 
   constructor() BaseSignature(NAME, VERSION) {
     // DO NOTHING
@@ -52,6 +52,7 @@ contract ActionSign is BaseSignature {
         TYPEHASH,
         LoanLogic.getLoanStructHash(nonce, signAction.loan),
         keccak256(abi.encodePacked(signAction.assets)),
+        signAction.underlyingAsset,
         nonce,
         signAction.deadline
       )

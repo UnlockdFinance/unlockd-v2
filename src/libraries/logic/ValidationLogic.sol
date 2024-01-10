@@ -8,7 +8,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IAllowedControllers} from '@unlockd-wallet/src/interfaces/IAllowedControllers.sol';
-
+import {Constants} from '../helpers/Constants.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 
@@ -19,7 +19,6 @@ import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
 import {console} from 'forge-std/console.sol';
 
@@ -35,7 +34,6 @@ library ValidationLogic {
   function validateLockAsset(
     bytes32 assetId,
     address owner,
-    address allowedController,
     address protocolOwner,
     DataTypes.Asset memory asset
   ) internal view {
@@ -43,9 +41,6 @@ library ValidationLogic {
       revert Errors.NotAssetOwner();
     }
 
-    if (IAllowedControllers(allowedController).isAllowedCollection(asset.collection) == false) {
-      revert Errors.CollectionNotAllowed();
-    }
     // Check if is not already locked
     if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
       revert Errors.AssetLocked();
@@ -59,17 +54,15 @@ library ValidationLogic {
   }
 
   struct ValidateLoanStateParams {
-    address user;
     uint256 amount;
     uint256 price;
     address reserveOracle;
+    address uTokenFactory;
     DataTypes.ReserveData reserve;
     DataTypes.SignLoanConfig loanConfig;
   }
 
-  function validateFutureLoanState(
-    ValidateLoanStateParams memory params
-  ) internal view returns (uint256 userPendingDebt) {
+  function validateFutureLoanState(ValidateLoanStateParams memory params) internal view {
     // We always need to define the LTV and the Liquidation threshold
     if (params.loanConfig.aggLtv == 0 || params.loanConfig.aggLtv > 9999) {
       revert Errors.InvalidCurrentLtv();
@@ -82,15 +75,16 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
-      params.loanConfig.loanId,
-      params.amount,
-      params.price,
-      params.user,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
-    );
+    (, uint256 baseUserTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
+      .calculateFutureLoanData(
+        params.loanConfig.loanId,
+        params.amount,
+        params.price,
+        params.reserveOracle,
+        params.uTokenFactory,
+        params.reserve,
+        params.loanConfig
+      );
 
     // ........................ DEBUG MODE ....................................
     // console.log('> validateFutureLoanState ----------------------------------------------- <');
@@ -106,15 +100,12 @@ library ValidationLogic {
       revert Errors.UnhealtyLoan();
     }
 
-    if (params.loanConfig.totalAssets == 0 && userTotalDebt > params.amount) {
+    if (params.loanConfig.totalAssets == 0 && baseUserTotalDebt > baseAmount) {
       revert Errors.UnhealtyLoan();
     }
-    return userTotalDebt;
   }
 
-  function validateFutureUnhealtyLoanState(
-    ValidateLoanStateParams memory params
-  ) internal view returns (uint256 userPendingDebt) {
+  function validateFutureUnhealtyLoanState(ValidateLoanStateParams memory params) internal view {
     // We always need to define the LTV and the Liquidation threshold
     if (params.loanConfig.aggLtv == 0 || params.loanConfig.aggLtv > 9999) {
       revert Errors.InvalidCurrentLtv();
@@ -127,53 +118,51 @@ library ValidationLogic {
     }
 
     // We calculate the current debt and the HF
-    (, uint256 userTotalDebt, uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
-      params.loanConfig.loanId,
-      params.amount,
-      params.price,
-      params.user,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
-    );
+    (, uint256 baseUserTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
+      .calculateFutureLoanData(
+        params.loanConfig.loanId,
+        params.amount,
+        params.price,
+        params.reserveOracle,
+        params.uTokenFactory,
+        params.reserve,
+        params.loanConfig
+      );
 
     // ........................ DEBUG MODE ....................................
     // console.log(
     //   '> validateFutureUnhealtyLoanState ----------------------------------------------- <'
     // );
-    // console.log('Total Collateral Balance : ', userCollateralBalance);
-    // console.log('userTotalDebt            : ', userTotalDebt);
+    // console.log('IN WETH Total Collateral Balance : ', params.loanConfig.aggLoanPrice);
+    // console.log('IN BASE baseUserTotalDebt        : ', baseUserTotalDebt);
     // console.log('HF                       : ', healthFactor);
     // console.log('LTV                      : ', params.loanConfig.aggLtv);
     // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-    // console.log('AMOUNT REPAY             ; ', params.amount);
+    // console.log('IN WTH AMOUNT REPAY             ; ', params.amount);
     // console.log('-----------------------------------------------');
 
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
     }
-    if (params.loanConfig.totalAssets == 0 && userTotalDebt < params.amount) {
+    if (params.loanConfig.totalAssets == 0 && baseUserTotalDebt < baseAmount) {
       revert Errors.HealtyLoan();
     }
-    return userTotalDebt;
   }
 
   function validateRepay(
     bytes32 loanId,
-    address user,
+    address uTokenFactory,
     uint256 amount,
-    address reserveOracle,
     DataTypes.ReserveData memory reserve
   ) internal view {
     // Check allowance to perform the payment to the UToken
-    uint256 loanDebtInBaseCurrency = GenericLogic.calculateLoanDebt(
+    uint256 loanDebt = GenericLogic.calculateLoanDebt(
       loanId,
-      user,
-      reserveOracle,
-      reserve
+      uTokenFactory,
+      reserve.underlyingAsset
     );
 
-    if (amount > loanDebtInBaseCurrency) {
+    if (amount > loanDebt) {
       revert Errors.AmountExceedsDebt();
     }
   }
@@ -183,46 +172,46 @@ library ValidationLogic {
   ///////////////////////////////////////////////////////
 
   function validateOrderBid(
-    DataTypes.OrderType orderType,
+    Constants.OrderType orderType,
     uint40 orderTimeframeEndtime,
     uint256 totalAssets,
     uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    Constants.LoanState loanState
   ) internal view {
     if (
-      orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
-      orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION
+      orderType == Constants.OrderType.TYPE_FIXED_PRICE ||
+      orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION
     ) {
       revert Errors.OrderNotAllowed();
     }
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
     // Check if the starting time is not in the past
     Errors.verifyNotExpiredTimestamp(orderTimeframeEndtime, block.timestamp);
 
     // Check if it is a biddable order
-    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
   }
 
   function validateBuyNow(
     uint256 totalAssets,
     DataTypes.Order memory order,
     uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    Constants.LoanState loanState
   ) internal view {
     if (
-      order.orderType == DataTypes.OrderType.TYPE_AUCTION ||
-      order.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION
+      order.orderType == Constants.OrderType.TYPE_AUCTION ||
+      order.orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION
     ) {
       revert Errors.OrderNotAllowed();
     }
-    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
-    if (order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
+    if (order.orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION) {
       // Check time only for typefixed price
       Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
     }
@@ -232,11 +221,11 @@ library ValidationLogic {
     uint256 totalAssets,
     DataTypes.Order memory order,
     uint88 loanTotalAssets,
-    DataTypes.LoanState loanState
+    Constants.LoanState loanState
   ) internal view {
     if (
-      order.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
-      order.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION
+      order.orderType == Constants.OrderType.TYPE_FIXED_PRICE ||
+      order.orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION
     ) {
       revert Errors.OrderNotAllowed();
     }
@@ -245,34 +234,34 @@ library ValidationLogic {
 
     // Check if is auction over
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
-    if (loanTotalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
+    if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
   }
 
   struct ValidateCreateOrderMarketParams {
-    DataTypes.OrderType orderType;
+    Constants.OrderType orderType;
+    Constants.LoanState loanState;
     uint256 endAmount;
     uint256 startAmount;
     uint256 endTime;
     uint256 startTime;
     uint256 debtToSell;
     uint256 currentTimestamp;
-    DataTypes.LoanState loanState;
   }
 
   function validateCreateOrderMarket(ValidateCreateOrderMarketParams memory params) internal pure {
-    if (params.loanState != DataTypes.LoanState.ACTIVE) {
+    if (params.loanState != Constants.LoanState.ACTIVE) {
       revert Errors.LoanNotActive();
     }
     // Check order not liquidation
-    if (params.orderType == DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+    if (params.orderType == Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
     if (
-      params.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE ||
-      params.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
+      params.orderType == Constants.OrderType.TYPE_FIXED_PRICE ||
+      params.orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
     ) {
       if (params.endAmount == 0) {
         revert Errors.InvalidEndAmount();
@@ -286,8 +275,8 @@ library ValidationLogic {
     }
 
     if (
-      params.orderType == DataTypes.OrderType.TYPE_AUCTION ||
-      params.orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
+      params.orderType == Constants.OrderType.TYPE_AUCTION ||
+      params.orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION
     ) {
       if (params.startTime == 0) {
         revert Errors.InvalidEndTime();
@@ -308,9 +297,9 @@ library ValidationLogic {
 
   function validateCancelOrderMarket(
     address msgSender,
-    DataTypes.LoanState loanState,
+    Constants.LoanState loanState,
     address orderOwner,
-    DataTypes.OrderType orderType,
+    Constants.OrderType orderType,
     uint40 orderTimeframeEndTime
   ) internal view {
     // Only ORDER OWNER
@@ -318,13 +307,13 @@ library ValidationLogic {
       revert Errors.NotEqualOrderOwner();
     }
 
-    if (loanState == DataTypes.LoanState.BLOCKED) {
+    if (loanState == Constants.LoanState.BLOCKED) {
       revert Errors.LoanBlocked();
     }
 
     if (
-      orderType == DataTypes.OrderType.TYPE_FIXED_PRICE_AND_AUCTION ||
-      orderType == DataTypes.OrderType.TYPE_AUCTION
+      orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION ||
+      orderType == Constants.OrderType.TYPE_AUCTION
     ) {
       // Check time only for typefixed price
       Errors.verifyNotExpiredTimestamp(orderTimeframeEndTime, block.timestamp);
@@ -342,8 +331,8 @@ library ValidationLogic {
     DataTypes.Order memory order,
     DataTypes.Loan memory loan
   ) internal view {
-    if (loan.totalAssets != totalAssets + 1) revert Errors.TokenAssetsMismatch();
-    if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION)
+    if (loan.totalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
+    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION)
       revert Errors.OrderNotAllowed();
 
     Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);

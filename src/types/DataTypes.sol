@@ -1,58 +1,61 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
+import {Constants} from '../libraries/helpers/Constants.sol';
+
+
 library DataTypes {
 
   ///////////////////////////////////////////////////////
   // ASSET 
   ///////////////////////////////////////////////////////
 
+  struct MarketBalance {
+  // Total supply invested
+    uint128 totalSupplyScaledNotInvested;   
+    // Total supply
+    uint128 totalSupplyAssets;
+    uint128 totalSupplyScaled;
+    // Total supply borrowed
+    uint128 totalBorrowScaled;
+      // last update
+    uint40 lastUpdateTimestamp;
+  }
+
   struct ReserveData {
-    // Slot 0
     //the liquidity index. Expressed in ray
     uint128 liquidityIndex;
     //variable borrow index. Expressed in ray
     uint128 variableBorrowIndex;
-    // Slot 1
     //the current supply rate. Expressed in ray
     uint128 currentLiquidityRate;
     //the current variable borrow rate. Expressed in ray
     uint128 currentVariableBorrowRate;
-    // Slot 2
-    address uToken;
-    // last update
-    uint40 lastUpdateTimestamp;
-    // Decimals of the underlyingAsset
-    uint8 decimals;
+    // Reserve type
+    Constants.ReserveType reserveType;
+    // Reserve state
+    Constants.ReserveState reserveState;
     // Reserve factor
     uint16 reserveFactor;
-    // Slot 3
-    //debt token
-    address debtTokenAddress;
-    // Slot 4
-    // Underlying Token
+    // address asset
     address underlyingAsset;
-    // Slot 5
-    //address of the interest rate strategy 
+    // Decimals of the underlyingAsset
+    uint8 decimals;
+    // address scaled token
+    address scaledTokenAddress;
+    //address of the interest rate strategy
     address interestRateAddress;
     // address of the strategy
     address strategyAddress;
-    
+    // last update
+    uint40 lastUpdateTimestamp;
   }
+
+   
 
   ///////////////////////////////////////////////////////
   // ORDER 
   ///////////////////////////////////////////////////////
-
-  enum OrderType {
-    TYPE_LIQUIDATION_AUCTION,
-    //Auction with BIDs
-    TYPE_AUCTION,
-    // Fixed price only buynow function
-    TYPE_FIXED_PRICE,
-    // Fixed price and auction with bids
-    TYPE_FIXED_PRICE_AND_AUCTION
-  }
 
   struct OfferItem {
     // Slot 0
@@ -87,7 +90,7 @@ library DataTypes {
     bytes32 orderId;
     // Slot 1
     address owner;
-    OrderType orderType;
+    Constants.OrderType orderType;
     uint88 countBids;
     // Slot 2
     OfferItem offer;
@@ -105,20 +108,14 @@ library DataTypes {
     // Slot 0
     bytes32 loanId;
     // Slot 1
-    address uToken;
     uint88 totalAssets;
-    LoanState state;
+    Constants.LoanState state;
     // Slot 2
     address underlyingAsset;
     // Slot 3
     address owner;
   }
 
-  enum LoanState {
-    BLOCKED,
-    ACTIVE,
-    FREEZE
-  }
 
   ///////////////////////////////////////////////////////
   // Asset
@@ -169,17 +166,19 @@ library DataTypes {
     bytes data;
     uint256 value;
     // Configuration
+    address marketAdapter;
     address marketApproval; // Approval needed to make the buy
     uint256 marketPrice; // Market Adapter Price (Reservoir, Opensea ...)
     address underlyingAsset; // asset needed to buy
-   
     uint256 nonce;
     uint256 deadline;
   }
 
   struct SignSellNow {
     SignLoanConfig loan;
+    bytes32 assetId;
     // approval
+    address marketAdapter;
     address marketApproval;
     uint256 marketPrice;
     address underlyingAsset;
@@ -197,6 +196,7 @@ library DataTypes {
   struct SignAction {
     SignLoanConfig loan;
     bytes32[] assets;
+    address underlyingAsset;
     uint256 nonce;
     uint256 deadline;
   }

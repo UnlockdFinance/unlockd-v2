@@ -188,7 +188,7 @@ contract SellNowSignTest is Setup {
 
   function buildSignatureAndData(
     uint256 deadline
-  ) private returns (DataTypes.EIP712Signature memory, DataTypes.SignSellNow memory) {
+  ) private view returns (DataTypes.EIP712Signature memory, DataTypes.SignSellNow memory) {
     uint256 nonce = SignSeam(_seam).getNonce(super.getActorAddress(ACTOR));
 
     DataTypes.SignSellNow memory data = buildData(nonce, deadline);
@@ -220,14 +220,8 @@ contract SellNowSignTest is Setup {
           nonce: nonce,
           deadline: deadline
         }),
-        // asset: DataTypes.SignAsset({
-        //   assetId: AssetLogic.assetId(_nft, 1),
-        //   collection: _nft,
-        //   tokenId: 1,
-        //   price: 0.5 ether,
-        //   nonce: nonce,
-        //   deadline: deadline
-        // }),
+        assetId: '',
+        marketAdapter: address(0),
         marketApproval: address(0),
         marketPrice: 1 ether,
         underlyingAsset: address(0),

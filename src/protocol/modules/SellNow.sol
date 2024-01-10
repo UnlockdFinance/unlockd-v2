@@ -19,25 +19,19 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 
 import {SellNowSign} from '../../libraries/signatures/SellNowSign.sol';
 import {ISellNowModule} from '../../interfaces/modules/ISellNowModule.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+
+// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
+
 import {DataTypes} from '../../types/DataTypes.sol';
 
 contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
   using SafeERC20 for IERC20;
   using OrderLogic for DataTypes.Order;
   using LoanLogic for DataTypes.Loan;
-
-  /**
-   * @dev check if the market is allowed on the protocol
-   * @param adapter Address of the Adapter
-   *
-   */
-  modifier isMarketAdapterAllowed(address adapter) {
-    if (_allowedMarketAdapter[adapter] == 0) revert Errors.AdapterNotAllowed();
-    _;
-  }
 
   /**
    * @dev Modifier that checks if the sender has Auction Admin ROLE
@@ -54,32 +48,36 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
   /**
    * @dev Force liquidation of a NFT managed by the bot from Unlockd
-   * @param marketAdapter market used to sell the asset
    * @param asset asset to sell
    * @param signSellNow struct the information to sell the asset
    * @param sig validation of
    */
   function forceSell(
-    address marketAdapter,
     DataTypes.Asset calldata asset,
     DataTypes.SignSellNow calldata signSellNow,
     DataTypes.EIP712Signature calldata sig
-  ) external isMarketAdapterAllowed(marketAdapter) onlyAuctionAdmin {
+  ) external onlyAuctionAdmin {
     address msgSender = unpackTrailingParamMsgSender();
 
     _validateSignature(msgSender, signSellNow, sig);
 
     DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
 
-    IUToken(loan.uToken).updateStateReserve();
-    DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
+    IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      loan.underlyingAsset
+    );
+    uint256 totalDebt = IUTokenFactory(_uTokenFactory).getDebtFromLoanId(
+      loan.underlyingAsset,
+      loan.loanId
+    );
 
-    uint256 totalDebt = ValidationLogic.validateFutureUnhealtyLoanState(
+    ValidationLogic.validateFutureUnhealtyLoanState(
       ValidationLogic.ValidateLoanStateParams({
-        user: loan.owner,
         amount: 0,
         price: signSellNow.marketPrice,
         reserveOracle: _reserveOracle,
+        uTokenFactory: _uTokenFactory,
         reserve: reserve,
         loanConfig: signSellNow.loan
       })
@@ -102,7 +100,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           signSellNow: signSellNow,
           wallet: wallet,
           protocolOwner: protocolOwner,
-          marketAdapter: marketAdapter
+          marketAdapter: signSellNow.marketAdapter
         })
       );
     }
@@ -115,13 +113,13 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         totalDebt: totalDebt,
         marketPrice: signSellNow.marketPrice,
         underlyingAsset: loan.underlyingAsset,
-        uToken: loan.uToken,
+        uTokenFactory: _uTokenFactory,
         owner: loan.owner
       })
     );
 
     if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
     if (signSellNow.loan.totalAssets == 0) {
       // If there is only one we can remove the loan
@@ -131,7 +129,6 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       _loans[loan.loanId].activate();
       _loans[signSellNow.loan.loanId].totalAssets = signSellNow.loan.totalAssets;
     }
-
     emit ForceSold(
       signSellNow.loan.loanId,
       AssetLogic.assetId(asset.collection, asset.tokenId),
@@ -143,17 +140,15 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
   /**
    * @dev Sell a nft on the market, can be locked on a loan and repay the debt until arrives to HF > 1
-   * @param marketAdapter market used to sell the asset
    * @param asset asset to sell
    * @param signSellNow struct the information to sell the asset
    * @param sig validation of
    */
   function sell(
-    address marketAdapter,
     DataTypes.Asset calldata asset,
     DataTypes.SignSellNow calldata signSellNow,
     DataTypes.EIP712Signature calldata sig
-  ) external isMarketAdapterAllowed(marketAdapter) {
+  ) external {
     address msgSender = unpackTrailingParamMsgSender();
 
     _validateSignature(msgSender, signSellNow, sig);
@@ -168,28 +163,40 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     ValidationLogic.validateOwnerAsset(wallet, asset.collection, asset.tokenId);
 
     uint256 totalDebt = 0;
-    address uToken = address(0);
     bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
+    bytes32 assetLoanId = IProtocolOwner(protocolOwner).getLoanId(assetId);
     // Check if is not already locked
-    if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
+    if (assetLoanId != 0) {
+      if (assetLoanId != signSellNow.loan.loanId) {
+        revert Errors.InvalidLoanId();
+      }
+
       DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
-      uToken = loan.uToken;
+
       // The loan need to be active
-      if (loan.state != DataTypes.LoanState.ACTIVE) {
+      if (loan.state != Constants.LoanState.ACTIVE) {
         revert Errors.LoanNotActive();
       }
-      IUToken(loan.uToken).updateStateReserve();
-      DataTypes.ReserveData memory reserve = IUToken(loan.uToken).getReserve();
 
-      totalDebt = ValidationLogic.validateFutureLoanState(
+      IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+      DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+        loan.underlyingAsset
+      );
+
+      ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
-          user: loan.owner,
           amount: signSellNow.marketPrice,
           price: signSellNow.marketPrice,
           reserveOracle: _reserveOracle,
+          uTokenFactory: _uTokenFactory,
           reserve: reserve,
           loanConfig: signSellNow.loan
         })
+      );
+
+      totalDebt = IUTokenFactory(_uTokenFactory).getDebtFromLoanId(
+        loan.underlyingAsset,
+        loan.loanId
       );
     }
     // Sell the asset using the adapter
@@ -200,7 +207,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         signSellNow: signSellNow,
         wallet: wallet,
         protocolOwner: protocolOwner,
-        marketAdapter: marketAdapter
+        marketAdapter: signSellNow.marketAdapter
       })
     );
 
@@ -214,13 +221,13 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           totalDebt: totalDebt,
           marketPrice: signSellNow.marketPrice,
           underlyingAsset: signSellNow.underlyingAsset,
-          uToken: uToken,
+          uTokenFactory: _uTokenFactory,
           owner: msgSender
         })
       );
 
       if (_loans[signSellNow.loan.loanId].totalAssets != signSellNow.loan.totalAssets + 1) {
-        revert Errors.TokenAssetsMismatch();
+        revert Errors.LoanNotUpdated();
       }
       // If we don't have more loans we can remoe it
       if (signSellNow.loan.totalAssets == 0) {

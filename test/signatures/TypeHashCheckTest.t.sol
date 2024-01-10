@@ -40,7 +40,7 @@ contract SellNowSignMock is SellNowSign {
   }
 }
 
-contract SellNowSignTest is Test {
+contract TypeHashCheckTest is Test {
   address internal _nft;
   address internal _seam;
   uint256 internal ACTOR = 1;
@@ -70,7 +70,7 @@ contract SellNowSignTest is Test {
   function test_action_typehash() public {
     bytes32 TYPEHASH = keccak256(
       abi.encodePacked(
-        'SignAction(SignLoanConfig loan,bytes32[] assets,uint256 nonce,uint256 deadline)',
+        'SignAction(SignLoanConfig loan,bytes32[] assets,address underlyingAsset,uint256 nonce,uint256 deadline)',
         LOAN_CONFIG
       )
     );
@@ -82,7 +82,7 @@ contract SellNowSignTest is Test {
   function test_auction_typehash() public {
     bytes32 TYPEHASH = keccak256(
       abi.encodePacked(
-        'SignAuction(SignLoanConfig loan,bytes32 assetId,address collection,uint256 tokenId,uint256 assetPrice,uint256 assetLtv,uint256 endTime,uint256 nonce,uint256 deadline)',
+        'SignAuction(SignLoanConfig loan,bytes32 assetId,address collection,uint256 tokenId,uint256 assetPrice,uint256 assetLtv,uint40 endTime,uint256 nonce,uint256 deadline)',
         LOAN_CONFIG
       )
     );
@@ -94,7 +94,7 @@ contract SellNowSignTest is Test {
   function test_buynow_typehash() public {
     bytes32 TYPEHASH = keccak256(
       abi.encodePacked(
-        'SignBuyNow(SignAsset asset,uint256 assetLtv,uint256 assetLiquidationThreshold,address from,address to,bytes data,uint256 value,address marketApproval,uint256 marketPrice,address underlyingAsset,uint256 nonce,uint256 deadline)',
+        'SignBuyNow(SignAsset asset,address marketAdapter,uint256 assetLtv,uint256 assetLiquidationThreshold,address from,address to,bytes data,uint256 value,address marketApproval,uint256 marketPrice,address underlyingAsset,uint256 nonce,uint256 deadline)',
         ASSET
       )
     );
@@ -118,7 +118,7 @@ contract SellNowSignTest is Test {
   function test_sellnow_typehash() public {
     bytes32 TYPEHASH = keccak256(
       abi.encodePacked(
-        'SignSellNow(SignLoanConfig loan,address marketApproval,uint256 marketPrice,address underlyingAsset,address from,address to,bytes data,uint256 value,uint256 nonce,uint256 deadline)',
+        'SignSellNow(SignLoanConfig loan,bytes32 assetId,address marketAdapter,address marketApproval,uint256 marketPrice,address underlyingAsset,address from,address to,bytes data,uint256 value,uint256 nonce,uint256 deadline)',
         LOAN_CONFIG
       )
     );

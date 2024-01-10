@@ -7,14 +7,19 @@ import '../helpers/DeployerHelper.sol';
 import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
+import {UTokenFactory} from '../../src/protocol/UTokenFactory.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../src/protocol/modules/Installer.sol';
+import {MaxApyStrategy} from '../../src/protocol/strategies/MaxApy.sol';
+import {ReservoirAdapter} from '../../src/protocol/adapters/ReservoirAdapter.sol';
+
+import {ScaledToken} from '../../src/libraries/tokens/ScaledToken.sol';
+import {IUTokenFactory} from '../../src/interfaces/IUTokenFactory.sol';
+import {InterestRate} from '../../src/libraries/base/InterestRate.sol';
+import {ReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
 
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
-import {DeployPeriphery} from '../../src/deployer/DeployPeriphery.sol';
-import {DeployUToken} from '../../src/deployer/DeployUToken.sol';
 import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
-import {DeployUTokenConfig} from '../../src/deployer/DeployUTokenConfig.sol';
 
 import {Action} from '../../src/protocol/modules/Action.sol';
 import {Auction} from '../../src/protocol/modules/Auction.sol';
@@ -22,73 +27,87 @@ import {BuyNow} from '../../src//protocol/modules/BuyNow.sol';
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {SellNow} from '../../src/protocol/modules/SellNow.sol';
 import {Market} from '../../src/protocol/modules/Market.sol';
+// Only testing
+import {Source} from '../../test/test-utils/mock/chainlink/Source.sol';
 
 contract DeployProtocolScript is DeployerHelper {
   bytes32 public constant VERSION = 0;
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
-
+    UTokenFactory _uTokenFactory;
     /******************** DeployUTokenConfig ********************/
     {
-      // Deploy Oracles
-      DeployUTokenConfig deployerConfig = new DeployUTokenConfig(
-        DeployConfig.ADMIN,
-        DeployConfig.ADMIN,
-        addresses.aclManager
+      uint256 percentageToInvest = 10000; // 100%
+      address _maxApyStrategy = address(
+        new MaxApyStrategy(DeployConfig.WETH, DeployConfig.MAXAPY, 1 ether, percentageToInvest)
       );
 
-      // DebtToken
-      DeployUTokenConfig.DeployDebtTokenParams memory debtParams = DeployUTokenConfig
-        .DeployDebtTokenParams({
+      _uTokenFactory = new UTokenFactory(addresses.aclManager, address(new ScaledToken()));
+
+      addresses.uToken = address(_uTokenFactory);
+
+      // Deploy weth pool
+      _uTokenFactory.createMarket(
+        IUTokenFactory.CreateMarketParams({
+          interestRateAddress: address(
+            new InterestRate(addresses.aclManager, 1 ether, 1 ether, 1 ether, 1 ether)
+          ),
+          strategyAddress: _maxApyStrategy,
+          reserveFactor: 0,
+          underlyingAsset: DeployConfig.WETH,
+          reserveType: Constants.ReserveType.COMMON,
           decimals: 18,
-          tokenName: 'Unlockd Debt WETH',
-          tokenSymbol: 'UDWETH'
-        });
+          tokenName: 'UWETH',
+          tokenSymbol: 'UWETH'
+        })
+      );
 
-      address debtToken = deployerConfig.deployDebtToken(debtParams);
+      // Deploy weth usdc
+      _uTokenFactory.createMarket(
+        IUTokenFactory.CreateMarketParams({
+          interestRateAddress: address(
+            new InterestRate(addresses.aclManager, 1 ether, 1 ether, 1 ether, 1 ether)
+          ),
+          strategyAddress: address(0),
+          reserveFactor: 0,
+          underlyingAsset: DeployConfig.USDC,
+          reserveType: Constants.ReserveType.STABLE,
+          decimals: 6,
+          tokenName: 'UUSDC',
+          tokenSymbol: 'UUSDC'
+        })
+      );
 
-      // Interes Rate
-      DeployUTokenConfig.DeployInterestRateParams memory interestParams = DeployUTokenConfig
-        .DeployInterestRateParams({
-          optimalUtilizationRate: 1 ether,
-          baseVariableBorrowRate: 1 ether,
-          variableRateSlope1: 1 ether,
-          variableRateSlope2: 1 ether
-        });
-      address interestRate = deployerConfig.deployInterestRate(interestParams);
-
-      DeployUToken.DeployUtokenParams memory utokenParams = DeployUToken.DeployUtokenParams({
-        treasury: DeployConfig.TREASURY,
-        underlyingAsset: DeployConfig.WETH,
-        decimals: 18,
-        tokenName: 'UToken WETH',
-        tokenSymbol: 'UWETH',
-        strategyAddress: address(0), // We don't define any strategy
-        debtToken: debtToken,
-        reserveFactor: 0,
-        interestRate: interestRate
-      });
-
-      DeployUToken deployerUToken = new DeployUToken(DeployConfig.ADMIN, addresses.aclManager);
-      // Grant rol UTokenAdmin to deploy and configure
-      ACLManager(addresses.aclManager).addUTokenAdmin(address(deployerUToken));
-      // Deploy
-      addresses.uToken = deployerUToken.deploy(utokenParams);
-      // Revoke Grant
-      ACLManager(addresses.aclManager).removeUTokenAdmin(address(deployerUToken));
+      // Activate Pools
+      _uTokenFactory.updateReserveState(DeployConfig.WETH, Constants.ReserveState.ACTIVE);
+      _uTokenFactory.updateReserveState(DeployConfig.USDC, Constants.ReserveState.ACTIVE);
     }
 
     /******************** Deploy Periphery ********************/
     address reserveOracle;
     address adapter;
     {
-      DeployPeriphery deployer = new DeployPeriphery(DeployConfig.ADMIN, addresses.aclManager);
+      // We define the base token to USDC
+      reserveOracle = address(new ReserveOracle(addresses.aclManager, DeployConfig.USDC, 1 ether));
+      //////////////////////////////
+      // WARNING ONLY FOR TESTING
+      // Add DAI to the Oracle
+      // https://data.chain.link/ethereum/mainnet/stablecoins/usdc-usd
+      Source usdcSource = new Source(8, 100000000);
+      // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
+      Source wethSource = new Source(8, 224136576100);
 
-      reserveOracle = deployer.deployReserveOracle(DeployConfig.WETH, 1 ether);
-      adapter = deployer.deployReservoirMarket(
-        DeployConfig.RESERVOIR_ROUTER,
-        0x0000000000000000000000000000000000000000
+      ReserveOracle(reserveOracle).addAggregator(DeployConfig.WETH, address(wethSource));
+      ReserveOracle(reserveOracle).addAggregator(DeployConfig.USDC, address(usdcSource));
+
+      // DEPLOY ADAPTER RESERVOIR
+      adapter = address(
+        new ReservoirAdapter(
+          addresses.aclManager,
+          DeployConfig.RESERVOIR_ROUTER,
+          0x0000000000000000000000000000000000000000
+        )
       );
     }
     /******************** Deploy Protocol ********************/
@@ -101,7 +120,6 @@ contract DeployProtocolScript is DeployerHelper {
       addresses.unlockd = deployerProtocol.deploy(VERSION);
 
       ACLManager(addresses.aclManager).setProtocol(addresses.unlockd);
-
       ACLManager(addresses.aclManager).addProtocolAdmin(msg.sender);
       ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
 
@@ -111,6 +129,7 @@ contract DeployProtocolScript is DeployerHelper {
         // Install Manager MODULE
 
         Manager managerImp = new Manager(Constants.MODULEID__MANAGER, VERSION);
+        //   // Install Modules
         address[] memory modules = new address[](1);
         modules[0] = address(managerImp);
 
@@ -122,9 +141,6 @@ contract DeployProtocolScript is DeployerHelper {
 
       /*** CONFIGURE PROTOCOL */
       {
-        address[] memory listUTokens = new address[](1);
-        listUTokens[0] = addresses.uToken;
-
         address[] memory listMarketAdapters = new address[](1);
         listMarketAdapters[0] = adapter;
 
@@ -137,16 +153,7 @@ contract DeployProtocolScript is DeployerHelper {
         manager.setReserveOracle(reserveOracle);
         manager.setWalletRegistry(addresses.walletRegistry);
         manager.setAllowedControllers(addresses.allowedControllers);
-
-        // Configure UTokens
-        uint256 i = 0;
-        while (i < listUTokens.length) {
-          manager.addUToken(listUTokens[i], true);
-          unchecked {
-            ++i;
-          }
-        }
-
+        manager.setUTokenFactory(address(_uTokenFactory));
         // Configure Adapters
         uint256 x = 0;
         while (x < listMarketAdapters.length) {

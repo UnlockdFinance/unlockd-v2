@@ -32,11 +32,19 @@ contract CoreStorage {
   address internal _reserveOracle;
   // SIGNED ADDRESS
   address internal _signer;
+  // UTOKEN FACTORY
+  address internal _uTokenFactory;
 
   /////////////////////////////////////////
   //  Signature Logic
   /////////////////////////////////////////
   mapping(address => uint256) internal _signNonce;
+
+  /////////////////////////////////////////
+  //  Allowed NFTS
+  /////////////////////////////////////////
+
+  mapping(address => Constants.ReserveType) internal _allowedCollections;
 
   /////////////////////////////////////////
   //  Allowed addresses
@@ -51,8 +59,8 @@ contract CoreStorage {
   //  Data Structs
   /////////////////////////////////////////
 
-  // Loans struct
-  mapping(bytes32 => DataTypes.Loan) internal _loans; // List of loans
-  // Orders mapping struct
+  mapping(bytes32 => DataTypes.Loan) internal _loans;
   mapping(bytes32 => DataTypes.Order) internal _orders;
+
+  /////////////////////////////////////////
 }

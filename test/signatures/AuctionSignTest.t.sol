@@ -191,7 +191,7 @@ contract AuctionSignTest is Setup {
 
   function buildSignatureAndData(
     uint256 deadline
-  ) private returns (DataTypes.EIP712Signature memory, DataTypes.SignAuction memory) {
+  ) private view returns (DataTypes.EIP712Signature memory, DataTypes.SignAuction memory) {
     uint256 nonce = SignSeam(_seam).getNonce(super.getActorAddress(ACTOR));
 
     DataTypes.SignAuction memory data = buildData(nonce, deadline);

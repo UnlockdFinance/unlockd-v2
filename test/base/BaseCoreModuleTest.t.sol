@@ -47,11 +47,11 @@ contract TestBaseModuleCore is BaseCoreModule {
     return true;
   }
 
-  function getMsgSender() external view returns (address) {
+  function getMsgSender() external pure returns (address) {
     return unpackTrailingParamMsgSender();
   }
 
-  function getMsgSenderAndProxy() external view returns (address, address) {
+  function getMsgSenderAndProxy() external pure returns (address, address) {
     return unpackTrailingParams();
   }
 }

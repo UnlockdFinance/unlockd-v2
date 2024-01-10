@@ -6,7 +6,7 @@ import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
-import {DataTypes} from '../../types/DataTypes.sol';
+import {DataTypes, Constants} from '../../types/DataTypes.sol';
 import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 
 contract Manager is BaseCoreModule, IManagerModule {
@@ -72,24 +72,27 @@ contract Manager is BaseCoreModule, IManagerModule {
     return _allowedControllers;
   }
 
-  /**
-   * @dev Allow a uToken to interact with the protocol
-   * @param uToken Address of the uToken
-   * @param active Bolean to allow or disable the UToken on the protocol
-   */
-  function addUToken(address uToken, bool active) external onlyGovernance {
-    if (uToken == address(0)) revert Errors.ZeroAddress();
-    _allowedUTokens[uToken] = active ? 1 : 0;
-
-    if (active) {
-      emit ActivateUToken(uToken);
-    } else {
-      emit DisableUToken(uToken);
-    }
+  function allowCollectiononReserveType(
+    address collection,
+    Constants.ReserveType reserveType
+  ) external onlyAdmin {
+    if (collection == address(0)) revert Errors.ZeroAddress();
+    _allowedCollections[collection] = reserveType;
   }
 
-  function isUTokenActive(address uToken) external view returns (uint256) {
-    return _allowedUTokens[uToken];
+  function getCollectiononReserveType(
+    address collection
+  ) external view returns (Constants.ReserveType) {
+    return _allowedCollections[collection];
+  }
+
+  function setUTokenFactory(address uTokenFactory) external onlyAdmin {
+    if (uTokenFactory == address(0)) revert Errors.ZeroAddress();
+    _uTokenFactory = uTokenFactory;
+  }
+
+  function getUTokenFactory() external view returns (address) {
+    return _uTokenFactory;
   }
 
   /**

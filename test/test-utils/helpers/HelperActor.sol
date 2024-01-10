@@ -10,7 +10,8 @@ struct ActorsState {
 }
 
 library Actors {
-  function get(ActorsState storage self, uint256 index) internal returns (address) {
+  function get(ActorsState storage self, uint256 index) internal pure returns (address) {
+    self;
     return address(uint160(100 * index));
   }
 

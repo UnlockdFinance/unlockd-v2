@@ -32,7 +32,7 @@ interface IAuctionModule {
   );
 
   struct AmountToRedeemParams {
-    address uToken;
+    address underlyingAsset;
     bytes32 loanId;
     address owner;
     uint256 aggLoanPrice;

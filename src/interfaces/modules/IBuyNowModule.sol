@@ -23,15 +23,12 @@ interface IBuyNowModule is ILoan {
   }
 
   function buy(
-    address marketAdapter,
-    address uToken,
     uint256 amount,
     DataTypes.SignBuyNow calldata signBuyNow,
     DataTypes.EIP712Signature calldata sig
   ) external;
 
   function getCalculations(
-    address uToken,
     DataTypes.SignBuyNow calldata signBuyNow
   ) external view returns (uint256, uint256);
 }

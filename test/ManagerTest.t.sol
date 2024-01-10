@@ -11,135 +11,33 @@ import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.so
 
 import {Action, ActionSign} from '../src/protocol/modules/Action.sol';
 import {Manager} from '../src/protocol/modules/Manager.sol';
-import {DataTypes} from '../src/types/DataTypes.sol';
+import {DataTypes, Constants} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 import './test-utils/mock/asset/MintableERC20.sol';
 
-contract AuctionTest is Setup {
-  uint256 internal ACTOR = 1;
+contract ManagerTest is Setup {
   address internal _actor;
   address internal _manager;
   address internal _action;
   address internal _nft;
+  address internal _WETH;
 
   function setUp() public virtual override {
     super.setUp();
+
+    _actor = makeAddr('filipe');
+    _WETH = makeAsset('WETH');
     // Fill the protocol with funds
-    addFundToUToken(address(_uTokens['WETH']), 'WETH', 10 ether);
-    addFundToUToken(address(_uTokens['DAI']), 'DAI', 10 ether);
+    addFundToUToken('WETH', 10 ether);
+    addFundToUToken('DAI', 10 ether);
 
     // Create wallet and mint to the safe wallet
-    createWalletAndMintTokens(ACTOR, 'PUNK');
-    _nft = super.getNFT('PUNK');
+    createWalletAndMintTokens(_actor, 'PUNK');
+    _nft = _nfts.get('PUNK');
 
     Unlockd unlockd = super.getUnlockd();
     _action = unlockd.moduleIdToProxy(Constants.MODULEID__ACTION);
     _manager = unlockd.moduleIdToProxy(Constants.MODULEID__MANAGER);
-  }
-
-  //////////////////////////////////////////////////
-
-  function _generate_assets(
-    uint256 totalArray
-  ) internal view returns (bytes32[] memory, DataTypes.Asset[] memory) {
-    // Asesets
-    bytes32[] memory assetsIds = new bytes32[](totalArray);
-    DataTypes.Asset[] memory assets = new DataTypes.Asset[](totalArray);
-    for (uint256 i = 0; i < totalArray; ) {
-      uint256 tokenId = i + 1;
-      assetsIds[i] = AssetLogic.assetId(_nft, tokenId);
-      assets[i] = DataTypes.Asset({collection: _nft, tokenId: tokenId});
-      unchecked {
-        ++i;
-      }
-    }
-    return (assetsIds, assets);
-  }
-
-  struct GenerateSignParams {
-    address user;
-    bytes32 loanId;
-    uint256 price;
-    uint256 totalAssets;
-    uint256 totalArray;
-  }
-
-  function _generate_signature(
-    GenerateSignParams memory params
-  )
-    internal
-    view
-    returns (
-      DataTypes.SignAction memory,
-      DataTypes.EIP712Signature memory,
-      bytes32[] memory,
-      DataTypes.Asset[] memory
-    )
-  {
-    // Get nonce from the user
-    uint256 nonce = ActionSign(_action).getNonce(params.user);
-    uint40 deadline = uint40(block.timestamp + 1000);
-    (bytes32[] memory assetsIds, DataTypes.Asset[] memory assets) = _generate_assets(
-      params.totalArray
-    );
-    // Create the struct
-    DataTypes.SignAction memory data = DataTypes.SignAction({
-      loan: DataTypes.SignLoanConfig({
-        loanId: params.loanId, // Because is new need to be 0
-        aggLoanPrice: params.price,
-        aggLtv: 6000,
-        aggLiquidationThreshold: 6000,
-        totalAssets: uint88(params.totalAssets),
-        nonce: nonce,
-        deadline: deadline
-      }),
-      assets: assetsIds,
-      nonce: nonce,
-      deadline: deadline
-    });
-
-    bytes32 digest = Action(_action).calculateDigest(nonce, data);
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
-
-    // Build signature struct
-    DataTypes.EIP712Signature memory sig = DataTypes.EIP712Signature({
-      v: v,
-      r: r,
-      s: s,
-      deadline: deadline
-    });
-
-    return (data, sig, assetsIds, assets);
-  }
-
-  function _generate_borrow(
-    uint256 amountToBorrow,
-    uint256 price,
-    uint256 totalAssets,
-    uint256 totalArray
-  ) internal returns (bytes32 loanId) {
-    // Get data signed
-    (
-      DataTypes.SignAction memory signAction,
-      DataTypes.EIP712Signature memory sig,
-      ,
-      DataTypes.Asset[] memory assets
-    ) = _generate_signature(
-        GenerateSignParams({
-          user: super.getActorAddress(ACTOR),
-          loanId: 0,
-          price: price,
-          totalAssets: totalAssets,
-          totalArray: totalArray
-        })
-      );
-    vm.recordLogs();
-    // Borrow amount
-    Action(_action).borrow(address(_uTokens['WETH']), amountToBorrow, assets, signAction, sig);
-    Vm.Log[] memory entries = vm.getRecordedLogs();
-    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
-
-    return loanId;
   }
 
   ////////////////////////////////////////////////
@@ -208,31 +106,66 @@ contract AuctionTest is Setup {
     vm.stopPrank();
   }
 
-  function test_addUToken() external {
-    vm.assume(Manager(_manager).isUTokenActive(address(0x123)) == 0);
+  function test_setUTokenFactory() external {
     vm.startPrank(_admin);
-    Manager(_manager).addUToken(address(0x123), true);
-    assertEq(Manager(_manager).isUTokenActive(address(0x123)), 1);
+    Manager(_manager).setUTokenFactory(address(0x123));
+    assertEq(Manager(_manager).getUTokenFactory(), address(0x123));
     vm.stopPrank();
   }
 
-  function test_addUToken_disable() external {
-    vm.assume(Manager(_manager).isUTokenActive(address(0x123)) == 0);
-    vm.startPrank(_admin);
-    // Set to true
-    Manager(_manager).addUToken(address(0x123), true);
-    assertEq(Manager(_manager).isUTokenActive(address(0x123)), 1);
-    // Set to false
-    Manager(_manager).addUToken(address(0x123), false);
-    assertEq(Manager(_manager).isUTokenActive(address(0x123)), 0);
-    vm.stopPrank();
-  }
-
-  function test_addUToken_zero() external {
-    vm.assume(Manager(_manager).isUTokenActive(address(0x123)) == 0);
+  function test_setUTokenFactory_zero() external {
     vm.startPrank(_admin);
     vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddress.selector));
-    Manager(_manager).addUToken(address(0), true);
+    Manager(_manager).setUTokenFactory(address(0));
+    vm.stopPrank();
+  }
+
+  function test_allowCollectiononReserveType() external {
+    /**
+    enum ReserveType {
+        DISABLED, // Disabled collection
+        ALL, // All the assets with the exception SPECIAL
+        STABLE, // For the stable coins
+        COMMON, // Common coins WETH etc ...
+        SPECIAL // Only if the collection is also isolated to one asset token
+    }
+    **/
+    vm.startPrank(_admin);
+
+    assertEq(
+      uint(Manager(_manager).getCollectiononReserveType(address(0x10001))),
+      uint(Constants.ReserveType.DISABLED)
+    );
+
+    Manager(_manager).allowCollectiononReserveType(address(0x1), Constants.ReserveType.DISABLED);
+    assertEq(
+      uint(Manager(_manager).getCollectiononReserveType(address(0x1))),
+      uint(Constants.ReserveType.DISABLED)
+    );
+
+    Manager(_manager).allowCollectiononReserveType(address(0x2), Constants.ReserveType.ALL);
+    assertEq(
+      uint(Manager(_manager).getCollectiononReserveType(address(0x2))),
+      uint(Constants.ReserveType.ALL)
+    );
+
+    Manager(_manager).allowCollectiononReserveType(address(0x3), Constants.ReserveType.STABLE);
+    assertEq(
+      uint(Manager(_manager).getCollectiononReserveType(address(0x3))),
+      uint(Constants.ReserveType.STABLE)
+    );
+
+    Manager(_manager).allowCollectiononReserveType(address(0x4), Constants.ReserveType.COMMON);
+    assertEq(
+      uint(Manager(_manager).getCollectiononReserveType(address(0x4))),
+      uint(Constants.ReserveType.COMMON)
+    );
+
+    Manager(_manager).allowCollectiononReserveType(address(0x5), Constants.ReserveType.SPECIAL);
+    assertEq(
+      uint(Manager(_manager).getCollectiononReserveType(address(0x5))),
+      uint(Constants.ReserveType.SPECIAL)
+    );
     vm.stopPrank();
   }
 
@@ -267,19 +200,16 @@ contract AuctionTest is Setup {
   function test_emergencyFreezeLoan() external {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;
-    vm.startPrank(getActorAddress(ACTOR));
-    bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
-    vm.stopPrank();
+    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToBorrow, collateral, 2, 2);
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
-
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loanUpdated.state), uint(Constants.LoanState.FREEZE));
   }
 
   function test_emergencyFreezeLoan_error() external {
@@ -292,16 +222,15 @@ contract AuctionTest is Setup {
   function test_emergencyActivateLoan() external {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;
-    vm.startPrank(getActorAddress(ACTOR));
-    bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
-    vm.stopPrank();
+
+    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToBorrow, collateral, 2, 2);
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loanUpdated.state), uint(Constants.LoanState.FREEZE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyActivateLoan(loanId);
@@ -309,7 +238,7 @@ contract AuctionTest is Setup {
 
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.ACTIVE));
+    assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
   }
 
   function test_emergencyActivateLoan_error() external {
@@ -322,16 +251,14 @@ contract AuctionTest is Setup {
   function test_emergencyBlockLoan() external {
     uint256 amountToBorrow = 0.5 ether;
     uint256 collateral = 2 ether;
-    vm.startPrank(getActorAddress(ACTOR));
-    bytes32 loanId = _generate_borrow(amountToBorrow, collateral, 2, 2);
-    vm.stopPrank();
+    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToBorrow, collateral, 2, 2);
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
     vm.stopPrank();
 
     DataTypes.Loan memory loanUpdated = Action(_action).getLoan(loanId);
-    assertEq(uint(loanUpdated.state), uint(DataTypes.LoanState.FREEZE));
+    assertEq(uint(loanUpdated.state), uint(Constants.LoanState.FREEZE));
 
     vm.startPrank(_admin);
     Manager(_manager).emergencyBlockLoan(loanId);
@@ -339,6 +266,6 @@ contract AuctionTest is Setup {
 
     DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
 
-    assertEq(uint(loan.state), uint(DataTypes.LoanState.BLOCKED));
+    assertEq(uint(loan.state), uint(Constants.LoanState.BLOCKED));
   }
 }

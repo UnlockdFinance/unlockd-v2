@@ -42,19 +42,19 @@ contract BaseCoreTest is Setup {
 
   function test_create_proxy_invalid_id() public {
     vm.expectRevert(abi.encodeWithSelector(Errors.InvalidModule.selector));
-    address proxy = _test.createProxy(0);
+    _test.createProxy(0);
   }
 
   function test_create_proxy_max_modules() public {
     vm.expectRevert(abi.encodeWithSelector(Errors.InvalidModule.selector));
-    address proxy = _test.createProxy(999_999_999);
+    _test.createProxy(999_999_999);
   }
 
   function test_internal_call() public {
     TestBaseCore moduleOne = new TestBaseCore();
-    address oneProxy = moduleOne.createProxy(2);
+    moduleOne.createProxy(2);
     TestBaseCore moduleTwo = new TestBaseCore();
-    address twoProxy = moduleTwo.createProxy(3);
+    moduleTwo.createProxy(3);
     bytes memory result = moduleOne.internalCall(
       3,
       abi.encodeWithSelector(TestBaseCore.getId.selector)

@@ -196,7 +196,7 @@ contract BuyNowSignTest is Setup {
 
   function buildSignatureAndData(
     uint256 deadline
-  ) private returns (DataTypes.EIP712Signature memory, DataTypes.SignBuyNow memory) {
+  ) private view returns (DataTypes.EIP712Signature memory, DataTypes.SignBuyNow memory) {
     uint256 nonce = SignSeam(_seam).getNonce(super.getActorAddress(ACTOR));
 
     DataTypes.SignBuyNow memory data = buildData(nonce, deadline);
@@ -216,7 +216,7 @@ contract BuyNowSignTest is Setup {
   function buildData(
     uint256 nonce,
     uint256 deadline
-  ) private returns (DataTypes.SignBuyNow memory) {
+  ) private view returns (DataTypes.SignBuyNow memory) {
     return
       DataTypes.SignBuyNow({
         asset: DataTypes.SignAsset({
@@ -227,6 +227,7 @@ contract BuyNowSignTest is Setup {
           nonce: nonce,
           deadline: deadline
         }),
+        marketAdapter: address(0),
         assetLtv: 6000,
         assetLiquidationThreshold: 6000,
         data: dataETHCurrency.data,

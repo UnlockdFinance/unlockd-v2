@@ -1,14 +1,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
-import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
+
+import {DelegateCall} from '../utils/DelegateCall.sol';
 import {MathUtils} from '../math/MathUtils.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../../types/DataTypes.sol';
+import {DataTypes, Constants} from '../../types/DataTypes.sol';
+import {IStrategy} from '../../interfaces/IStrategy.sol';
+import {ScaledToken} from '../tokens/ScaledToken.sol';
+
+import {console} from 'forge-std/console.sol';
 
 /**
  * @title ReserveLogic library
@@ -17,20 +25,16 @@ import {DataTypes} from '../../types/DataTypes.sol';
  */
 library ReserveLogic {
   using WadRayMath for uint256;
+  using WadRayMath for uint128;
   using PercentageMath for uint256;
+  using SafeCast for uint256;
+  using SafeERC20 for IERC20;
+  using DelegateCall for address;
   using ReserveLogic for DataTypes.ReserveData;
 
-  /**
-   * @dev Emitted when the state of a reserve is updated
-   * @param asset The address of the underlying asset of the reserve
-   * @param liquidityRate The new liquidity rate
-   * @param variableBorrowRate The new variable borrow rate
-   * @param liquidityIndex The new liquidity index
-   * @param variableBorrowIndex The new variable borrow index
-   *
-   */
+  // See `IPool` for descriptions
   event ReserveDataUpdated(
-    address indexed asset,
+    address indexed underlyingAsset,
     uint256 liquidityRate,
     uint256 variableBorrowRate,
     uint256 liquidityIndex,
@@ -38,12 +42,11 @@ library ReserveLogic {
   );
 
   /**
-   * @dev Returns the ongoing normalized income for the reserve
-   * A value of 1e27 means there is no income. As time passes, the income is accrued
-   * A value of 2*1e27 means for each unit of asset one unit of income has been accrued
+   * @notice Returns the ongoing normalized income for the reserve.
+   * @dev A value of 1e27 means there is no income. As time passes, the income is accrued
+   * @dev A value of 2*1e27 means for each unit of asset one unit of income has been accrued
    * @param reserve The reserve object
-   * @return the normalized income. expressed in ray
-   *
+   * @return The normalized income, expressed in ray
    */
   function getNormalizedIncome(
     DataTypes.ReserveData storage reserve
@@ -51,24 +54,23 @@ library ReserveLogic {
     uint40 timestamp = reserve.lastUpdateTimestamp;
 
     //solium-disable-next-line
-    if (timestamp == uint40(block.timestamp)) {
+    if (timestamp == block.timestamp) {
       //if the index was updated in the same block, no need to perform any calculation
       return reserve.liquidityIndex;
+    } else {
+      return
+        MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
+          reserve.liquidityIndex
+        );
     }
-
-    return
-      MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
-        reserve.liquidityIndex
-      );
   }
 
   /**
-   * @dev Returns the ongoing normalized variable debt for the reserve
-   * A value of 1e27 means there is no debt. As time passes, the income is accrued
-   * A value of 2*1e27 means that for each unit of debt, one unit worth of interest has been accumulated
+   * @notice Returns the ongoing normalized variable debt for the reserve.
+   * @dev A value of 1e27 means there is no debt. As time passes, the debt is accrued
+   * @dev A value of 2*1e27 means that for each unit of debt, one unit worth of interest has been accumulated
    * @param reserve The reserve object
-   * @return The normalized variable debt. expressed in ray
-   *
+   * @return The normalized variable debt, expressed in ray
    */
   function getNormalizedDebt(
     DataTypes.ReserveData storage reserve
@@ -76,222 +78,357 @@ library ReserveLogic {
     uint40 timestamp = reserve.lastUpdateTimestamp;
 
     //solium-disable-next-line
-    if (timestamp == uint40(block.timestamp)) {
+    if (timestamp == block.timestamp) {
       //if the index was updated in the same block, no need to perform any calculation
       return reserve.variableBorrowIndex;
+    } else {
+      return
+        MathUtils.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp).rayMul(
+          reserve.variableBorrowIndex
+        );
+    }
+  }
+
+  /**
+   * @notice Updates the liquidity cumulative index and the variable borrow index.
+   */
+  function updateState(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balance
+  ) internal {
+    // If time didn't pass since last stored timestamp, skip state update
+    //solium-disable-next-line
+    if (reserve.lastUpdateTimestamp == uint40(block.timestamp)) {
+      return;
     }
 
-    return
-      MathUtils.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp).rayMul(
-        reserve.variableBorrowIndex
-      );
+    _updateIndexes(reserve, balance);
+    _updateBalances(reserve, balance);
+
+    //solium-disable-next-line
+    reserve.lastUpdateTimestamp = uint40(block.timestamp);
+  }
+
+  function _updateBalances(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balance
+  ) internal {
+    ////////////////////7
+    // ESTA MAAAAAAAAAAAAAAAAAAAAAAAL
+    ////
+    // totalSupplyScaledNotInvested -> Parte no invertida que tendria que tener en cuenta el borrow
+    // BORROWED
+
+    // We calculate the current value based on the current scaled
+    uint256 totalBalance = balance.totalSupplyScaledNotInvested; // + balance.borrow
+    uint256 totalBorrow = balance.totalBorrowScaled;
+    balance.totalSupplyAssets =
+      totalBalance.rayMul(reserve.getNormalizedIncome()).toUint128() +
+      totalBorrow.rayMul(reserve.getNormalizedDebt()).toUint128();
+
+    if (reserve.strategyAddress != address(0)) {
+      balance.totalSupplyAssets += IStrategy(reserve.strategyAddress)
+        .balanceOf(address(this))
+        .toUint128();
+    }
   }
 
   /**
-   * @dev Updates the liquidity cumulative index and the variable borrow index.
-   * @param reserve the reserve object
-   *
-   */
-  function updateState(DataTypes.ReserveData storage reserve) internal returns (uint256, uint256) {
-    uint256 scaledVariableDebt = IDebtToken(reserve.debtTokenAddress).scaledTotalSupply();
-
-    uint256 previousVariableBorrowIndex = reserve.variableBorrowIndex;
-    uint256 previousLiquidityIndex = reserve.liquidityIndex;
-    uint40 lastUpdatedTimestamp = reserve.lastUpdateTimestamp;
-
-    (uint256 newLiquidityIndex, uint256 newVariableBorrowIndex) = _updateIndexes(
-      reserve,
-      scaledVariableDebt,
-      previousLiquidityIndex,
-      previousVariableBorrowIndex,
-      lastUpdatedTimestamp
-    );
-
-    return (
-      _calculateAmountToMintToTreasury( // amountToMint
-        reserve,
-        scaledVariableDebt,
-        previousVariableBorrowIndex,
-        newVariableBorrowIndex,
-        lastUpdatedTimestamp
-      ),
-      newLiquidityIndex
-    );
-  }
-
-  /**
-   * @dev Initializes a reserve
+   * @notice Accumulates a predefined amount of asset to the reserve as a fixed, instantaneous income. Used for example
+   * to accumulate the flashloan fee to the reserve, and spread it between all the suppliers.
    * @param reserve The reserve object
-   *
+   * @param totalLiquidity The total liquidity available in the reserve
+   * @param amount The amount to accumulate
+   * @return The next liquidity index of the reserve
+   */
+  function cumulateToLiquidityIndex(
+    DataTypes.ReserveData storage reserve,
+    uint256 totalLiquidity,
+    uint256 amount
+  ) internal returns (uint256) {
+    //next liquidity index is calculated this way: `((amount / totalLiquidity) + 1) * liquidityIndex`
+    //division `amount / totalLiquidity` done in ray for precision
+    uint256 result = (amount.wadToRay().rayDiv(totalLiquidity.wadToRay()) + WadRayMath.RAY).rayMul(
+      reserve.liquidityIndex
+    );
+    reserve.liquidityIndex = result.toUint128();
+    return result;
+  }
+
+  /**
+   * @notice Initializes a reserve.
    */
   function init(
     DataTypes.ReserveData storage reserve,
     address underlyingAsset,
+    Constants.ReserveType reserveType,
+    address scaledTokenAddress,
     address interestRateAddress,
     address strategyAddress,
-    address debtTokenAddress,
-    uint8 decimals,
     uint16 reserveFactor
   ) internal {
-    reserve.uToken = address(this);
-    reserve.underlyingAsset = underlyingAsset;
-    reserve.debtTokenAddress = debtTokenAddress;
-    reserve.liquidityIndex = uint128(WadRayMath.ray());
-    reserve.variableBorrowIndex = uint128(WadRayMath.ray());
+    reserve.liquidityIndex = uint128(WadRayMath.RAY);
+    reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
+    reserve.reserveFactor = reserveFactor;
+    reserve.scaledTokenAddress = scaledTokenAddress;
     reserve.interestRateAddress = interestRateAddress;
     reserve.strategyAddress = strategyAddress;
-    reserve.decimals = decimals;
-    reserve.reserveFactor = reserveFactor;
+    reserve.underlyingAsset = underlyingAsset;
+    reserve.decimals = ScaledToken(scaledTokenAddress).decimals();
+    reserve.reserveType = reserveType;
+    reserve.reserveState = Constants.ReserveState.STOPPED;
+    reserve.lastUpdateTimestamp = uint40(block.timestamp);
   }
 
   struct UpdateInterestRatesLocalVars {
-    uint256 availableLiquidity;
-    uint256 newLiquidityRate;
-    uint256 newVariableRate;
+    uint256 nextLiquidityRate;
+    uint256 nextVariableRate;
     uint256 totalVariableDebt;
   }
 
   /**
-   * @dev Updates the reserve current stable borrow rate, the current variable borrow rate and the current liquidity rate
-   * @param reserve The address of the reserve to be updated
-   * @param liquidityAdded The amount of liquidity added to the protocol (deposit or repay) in the previous action
-   * @param liquidityTaken The amount of liquidity taken from the protocol (withdraw or borrow)
-   *
+   * @notice Updates the reserve current stable borrow rate, the current variable borrow rate and the current liquidity rate.
+   * @param reserve The reserve reserve to be updated
+   * @param totalBorrowScaled total borrowed scaled
+   * @param totalSupplyAssets total balance
+   * @param liquidityAdded The amount of liquidity added to the protocol (supply or repay) in the previous action
+   * @param liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
    */
   function updateInterestRates(
     DataTypes.ReserveData storage reserve,
+    uint128 totalBorrowScaled,
+    uint128 totalSupplyAssets,
     uint256 liquidityAdded,
     uint256 liquidityTaken
   ) internal {
     UpdateInterestRatesLocalVars memory vars;
 
-    vars.totalVariableDebt = IDebtToken(reserve.debtTokenAddress).scaledTotalSupply().rayMul(
-      reserve.variableBorrowIndex
-    );
+    vars.totalVariableDebt = totalBorrowScaled.rayMul(reserve.variableBorrowIndex);
 
-    (vars.newLiquidityRate, vars.newVariableRate) = IInterestRate(reserve.interestRateAddress)
+    // We calculate the interest rate of all the amount include the current deposited on the strategy
+    (vars.nextLiquidityRate, vars.nextVariableRate) = IInterestRate(reserve.interestRateAddress)
       .calculateInterestRates(
-        address(this),
-        liquidityAdded,
-        liquidityTaken,
-        vars.totalVariableDebt,
-        reserve.reserveFactor
+        IInterestRate.CalculateInterestRatesParams({
+          liquidityAdded: liquidityAdded,
+          liquidityTaken: liquidityTaken,
+          totalVariableDebt: vars.totalVariableDebt, // Need to be the real not the scaled
+          reserveFactor: reserve.reserveFactor,
+          totalSupplyAssets: totalSupplyAssets // Need to be the real not the scaled
+        })
       );
 
-    if (vars.newLiquidityRate > type(uint128).max) {
-      revert Errors.LiquidityRateOverflow();
-    }
-    if (vars.newVariableRate > type(uint128).max) {
-      revert Errors.BorrorRateOverflow();
-    }
-
-    reserve.currentLiquidityRate = uint128(vars.newLiquidityRate);
-    reserve.currentVariableBorrowRate = uint128(vars.newVariableRate);
+    reserve.currentLiquidityRate = vars.nextLiquidityRate.toUint128();
+    reserve.currentVariableBorrowRate = vars.nextVariableRate.toUint128();
 
     emit ReserveDataUpdated(
       reserve.underlyingAsset,
-      vars.newLiquidityRate,
-      vars.newVariableRate,
+      vars.nextLiquidityRate,
+      vars.nextVariableRate,
       reserve.liquidityIndex,
       reserve.variableBorrowIndex
     );
   }
 
-  struct MintToTreasuryLocalVars {
-    uint256 currentVariableDebt;
-    uint256 previousVariableDebt;
+  struct AccrueToTreasuryLocalVars {
+    uint256 prevTotalStableDebt;
+    uint256 prevTotalVariableDebt;
+    uint256 currTotalVariableDebt;
+    uint256 cumulatedStableInterest;
     uint256 totalDebtAccrued;
     uint256 amountToMint;
-    // uint256 reserveFactor;
   }
 
   /**
-   * @dev Mints part of the repaid interest to the reserve treasury as a function of the reserveFactor for the
-   * specific asset.
-   * @param reserve The reserve reserve to be updated
-   * @param scaledVariableDebt The current scaled total variable debt
-   * @param previousVariableBorrowIndex The variable borrow index before the last accumulation of the interest
-   * @param newVariableBorrowIndex The variable borrow index after the last accumulation of the interest
-   *
-   */
-  function _calculateAmountToMintToTreasury(
-    DataTypes.ReserveData storage reserve,
-    uint256 scaledVariableDebt,
-    uint256 previousVariableBorrowIndex,
-    uint256 newVariableBorrowIndex,
-    uint40 timestamp
-  ) internal view returns (uint256) {
-    MintToTreasuryLocalVars memory vars;
-
-    if (reserve.reserveFactor == 0) {
-      return 0;
-    }
-
-    //calculate the last principal variable debt
-    vars.previousVariableDebt = scaledVariableDebt.rayMul(previousVariableBorrowIndex);
-
-    //calculate the new total supply after accumulation of the index
-    vars.currentVariableDebt = scaledVariableDebt.rayMul(newVariableBorrowIndex);
-
-    //debt accrued is the sum of the current debt minus the sum of the debt at the last update
-    vars.totalDebtAccrued = vars.currentVariableDebt - (vars.previousVariableDebt);
-
-    return vars.totalDebtAccrued.percentMul(reserve.reserveFactor);
-  }
-
-  /**
-   * @dev Updates the reserve indexes and the timestamp of the update
-   * @param reserve The reserve reserve to be updated
-   * @param scaledVariableDebt The scaled variable debt
-   * @param liquidityIndex The last stored liquidity index
-   * @param variableBorrowIndex The last stored variable borrow index
-   *
+   * @notice Updates the reserve indexes and the timestamp of the update.
    */
   function _updateIndexes(
     DataTypes.ReserveData storage reserve,
-    uint256 scaledVariableDebt,
-    uint256 liquidityIndex,
-    uint256 variableBorrowIndex,
-    uint40 timestamp
-  ) internal returns (uint256, uint256) {
-    uint256 currentLiquidityRate = reserve.currentLiquidityRate;
-
-    uint256 newLiquidityIndex = liquidityIndex;
-    uint256 newVariableBorrowIndex = variableBorrowIndex;
-
+    DataTypes.MarketBalance storage balance
+  ) internal {
     // Only cumulating on the supply side if there is any income being produced
     // The case of Reserve Factor 100% is not a problem (currentLiquidityRate == 0),
     // as liquidity index should not be updated
-    if (currentLiquidityRate != 0) {
+    if (reserve.currentLiquidityRate != 0) {
       uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(
-        currentLiquidityRate,
-        timestamp
+        reserve.currentLiquidityRate,
+        reserve.lastUpdateTimestamp
       );
-      newLiquidityIndex = cumulatedLiquidityInterest.rayMul(liquidityIndex);
-      if (newLiquidityIndex > type(uint128).max) {
-        revert Errors.LiquidityIndexOverflow();
-      }
-
-      reserve.liquidityIndex = uint128(newLiquidityIndex);
-
-      //as the liquidity rate might come only from stable rate loans, we need to ensure
-      //that there is actual variable debt before accumulating
-      if (scaledVariableDebt != 0) {
-        uint256 cumulatedVariableBorrowInterest = MathUtils.calculateCompoundedInterest(
-          reserve.currentVariableBorrowRate,
-          timestamp
-        );
-        newVariableBorrowIndex = cumulatedVariableBorrowInterest.rayMul(variableBorrowIndex);
-        if (newVariableBorrowIndex > type(uint128).max) {
-          revert Errors.BorrowIndexOverflow();
-        }
-
-        reserve.variableBorrowIndex = uint128(newVariableBorrowIndex);
-      }
+      reserve.liquidityIndex = cumulatedLiquidityInterest
+        .rayMul(reserve.liquidityIndex)
+        .toUint128();
     }
 
-    //solium-disable-next-line
-    reserve.lastUpdateTimestamp = uint40(block.timestamp);
-    return (newLiquidityIndex, newVariableBorrowIndex);
+    if (balance.totalBorrowScaled != 0) {
+      uint256 cumulatedVariableBorrowInterest = MathUtils.calculateCompoundedInterest(
+        reserve.currentVariableBorrowRate,
+        reserve.lastUpdateTimestamp
+      );
+      reserve.variableBorrowIndex = cumulatedVariableBorrowInterest
+        .rayMul(reserve.variableBorrowIndex)
+        .toUint128();
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // DEBT
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  function increaseDebt(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances,
+    uint256 amount
+  ) internal returns (uint256) {
+    uint256 amountScaled = amount.rayDiv(reserve.variableBorrowIndex);
+    if (amountScaled == 0) {
+      revert Errors.InvalidAmount();
+    }
+    balances.totalBorrowScaled += amountScaled.toUint128();
+    balances.totalSupplyScaledNotInvested -= amountScaled.toUint128();
+    // Updates general balances
+    return amountScaled;
+  }
+
+  function decreaseDebt(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances,
+    uint256 amount
+  ) internal returns (uint256) {
+    uint256 amountScaled = amount.rayDiv(reserve.variableBorrowIndex);
+    if (amountScaled == 0) {
+      revert Errors.InvalidAmount();
+    }
+    // Updates general balances
+    balances.totalBorrowScaled -= amountScaled.toUint128();
+    balances.totalSupplyScaledNotInvested += amountScaled.toUint128();
+
+    return amountScaled;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // SHARES
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  function mintScaled(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances,
+    address user,
+    uint256 amount
+  ) internal {
+    IERC20(reserve.underlyingAsset).safeTransferFrom(user, address(this), amount);
+    // MINT SHARES TO THE USER
+    uint256 scaledAmount = ScaledToken(reserve.scaledTokenAddress).mint(
+      user,
+      amount,
+      reserve.liquidityIndex
+    );
+    // calculate the new amounts
+    balances.totalSupplyAssets += amount.toUint128();
+    balances.totalSupplyScaled += scaledAmount.toUint128();
+    balances.totalSupplyScaledNotInvested += scaledAmount.toUint128();
+  }
+
+  function burnScaled(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances,
+    address user,
+    address to,
+    uint256 amount
+  ) internal {
+    // Check shares
+    uint256 scaledAmount = ScaledToken(reserve.scaledTokenAddress).burn(
+      user,
+      amount,
+      reserve.liquidityIndex
+    );
+
+    balances.totalSupplyAssets -= amount.toUint128();
+    balances.totalSupplyScaled -= scaledAmount.toUint128();
+    balances.totalSupplyScaledNotInvested -= scaledAmount.toUint128();
+    // Transfer the amount to the user
+    IERC20(reserve.underlyingAsset).safeTransfer(to, amount);
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // INVEST ON ESTRATEGY
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  function strategyInvest(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances,
+    uint256 amount
+  ) internal {
+    // If there is no strategy just ignore
+    if (reserve.strategyAddress == address(0)) return;
+    uint256 totalSupplyScaledNotInvested = balances.totalSupplyScaledNotInvested;
+    uint256 totalSupplyNotInvested = totalSupplyScaledNotInvested.rayMul(
+      reserve.getNormalizedIncome()
+    );
+    uint256 amountToInvest = IStrategy(reserve.strategyAddress).calculateAmountToSupply(
+      totalSupplyNotInvested,
+      address(this),
+      amount
+    );
+
+    if (amountToInvest > 0) {
+      IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
+      // console.log(' ======================= INVEST ========================');
+      // console.log('totalSupplyNotInvested  :', totalSupplyNotInvested);
+      // console.log('amount repayed          :', amount);
+      // console.log('amountToInvest          :', amountToInvest);
+      // console.log(' ================== ================== ==================');
+
+      reserve.strategyAddress.functionDelegateCall(
+        abi.encodeWithSelector(
+          IStrategy.supply.selector,
+          config.vault,
+          config.asset,
+          address(this),
+          amountToInvest
+        )
+      );
+      uint128 amountInvestedScaled = amountToInvest.rayDiv(reserve.liquidityIndex).toUint128();
+      balances.totalSupplyScaledNotInvested -= amountInvestedScaled;
+
+      uint256 totalSupplyScaledNotInvestedAfter = balances.totalSupplyScaledNotInvested;
+      uint256 totalSupplyNotInvestedAfter = totalSupplyScaledNotInvestedAfter.rayMul(
+        reserve.getNormalizedIncome()
+      );
+      // console.log(' ======================= DESPUES ========================');
+      // console.log('balanceNotInvested ', balances.totalSupplyScaledNotInvested);
+      // console.log('totalSupplyNotInvestedAfter', totalSupplyNotInvestedAfter);
+      // console.log(' ================== ================== ==================');
+    }
+  }
+
+  function strategyWithdraw(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances,
+    uint256 amount
+  ) internal {
+    if (reserve.strategyAddress == address(0)) return;
+    uint256 totalSupplyScaledNotInvested = balances.totalSupplyScaledNotInvested;
+    uint256 totalSupplyNotInvested = totalSupplyScaledNotInvested.rayMul(
+      reserve.getNormalizedIncome()
+    );
+
+    uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateAmountToWithdraw(
+      totalSupplyNotInvested,
+      address(this),
+      amount
+    );
+
+    if (amountNeed > 0) {
+      IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
+
+      bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
+        abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
+      );
+
+      // Because of the slippage we need to ensure the exact withdraw
+      uint256 amountWithdrawed = abi.decode(returnData, (uint256));
+
+      balances.totalSupplyScaledNotInvested += amountWithdrawed
+        .rayDiv(reserve.liquidityIndex)
+        .toUint128();
+    }
   }
 }

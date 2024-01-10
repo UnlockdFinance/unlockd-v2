@@ -5,6 +5,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
 import {BaseCore} from './BaseCore.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
+import {Constants} from '../helpers/Constants.sol';
 
 // import {console} from 'forge-std/console.sol';
 
@@ -67,11 +68,12 @@ contract BaseCoreModule is BaseCore {
   }
 
   /**
+   * DEPRECATED
    * @dev Modifier to check if this UToken is allowed by the protocol
-   * @param uToken Address of the uToken
+   * @param underlyingAsset Address of the uToken
    */
-  modifier isUTokenAllowed(address uToken) {
-    if (_allowedUTokens[uToken] == 0) {
+  modifier isReserveActive(address underlyingAsset) {
+    if (_allowedCollections[underlyingAsset] == Constants.ReserveType.DISABLED) {
       revert Errors.UTokenNotAllowed();
     }
     _;
@@ -108,4 +110,6 @@ contract BaseCoreModule is BaseCore {
       revert Errors.UnlockdWalletNotFound();
     }
   }
+
+  function _checkUnderlyingAsset(address underlyingAsset) internal view {}
 }

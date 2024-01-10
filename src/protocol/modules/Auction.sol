@@ -9,11 +9,9 @@ import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol'
 import {SafeCastLib} from '@solady/utils/SafeCastLib.sol';
 
 import {BaseCoreModule, IACLManager} from '../../libraries/base/BaseCoreModule.sol';
-import {IUToken} from '../../interfaces/tokens/IUToken.sol';
-import {IDebtToken} from '../../interfaces/tokens/IDebtToken.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IAuctionModule} from '../../interfaces/modules/IAuctionModule.sol';
-
+import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
 import {AuctionSign} from '../../libraries/signatures/AuctionSign.sol';
 
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
@@ -25,6 +23,7 @@ import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {Constants} from '../../libraries/helpers/Constants.sol';
 
 // import {console} from 'forge-std/console.sol';
 
@@ -47,13 +46,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     view
     returns (uint256 totalAmount, uint256 totalDebt, uint256 minDebt, uint256 bidderBonus)
   {
-    DataTypes.ReserveData memory reserve = IUToken(params.uToken).getReserve();
-
     totalDebt = GenericLogic.calculateLoanDebt(
       params.loanId,
-      params.owner,
-      _reserveOracle,
-      reserve
+      _uTokenFactory,
+      params.underlyingAsset
     );
     // The user need to recover at least until the LTV
     minDebt = GenericLogic.calculateAmountToArriveToLTV(
@@ -82,40 +78,24 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   /**
    * @dev Get min bid on auction
-   * @param loanId identifier of the loanId
-   * @param assetId assetId of the asset
-   * @param assetPrice price of this asset on the market
+   * @param orderId identifier of the order
+   * @param underlyingAsset token of the loan
    * @param aggLoanPrice aggregated loan colaterized on the Loan
    * @param aggLTV aggregated ltv between assets on the Loan
    */
   function getMinBidPriceAuction(
-    bytes32 loanId,
-    bytes32 assetId,
-    uint256 assetPrice,
+    bytes32 orderId,
+    address underlyingAsset,
     uint256 aggLoanPrice,
     uint256 aggLTV
   ) external view returns (uint256 minBid) {
-    DataTypes.Loan memory loan = _loans[loanId];
-    IUToken utoken = IUToken(loan.uToken);
-    DataTypes.ReserveData memory reserve = utoken.getReserve();
-
-    // Calculate the order ID
-    bytes32 orderId = OrderLogic.generateId(assetId, loanId);
-    DataTypes.Order memory order = _orders[orderId];
-
-    if (order.owner == address(0)) {
-      minBid = OrderLogic.getMinDebtOrDefault(
-        loanId,
-        loan.owner,
-        _reserveOracle,
-        assetPrice,
-        aggLoanPrice,
-        aggLTV,
-        reserve
-      );
-    } else {
-      minBid = OrderLogic.getMinBid(order, _reserveOracle, aggLoanPrice, aggLTV, reserve);
-    }
+    minBid = OrderLogic.getMinBid(
+      _orders[orderId],
+      _uTokenFactory,
+      aggLoanPrice,
+      aggLTV,
+      IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
+    );
   }
 
   /**
@@ -146,9 +126,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     DataTypes.Loan memory loan = _loans[signAuction.loan.loanId];
     bytes32 orderId = OrderLogic.generateId(signAuction.assetId, signAuction.loan.loanId);
 
-    IUToken utoken = IUToken(loan.uToken);
-    utoken.updateStateReserve();
-    DataTypes.ReserveData memory reserve = utoken.getReserve();
+    IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      loan.underlyingAsset
+    );
 
     uint256 totalAmount = amountToPay + amountOfDebt;
 
@@ -163,8 +144,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // we need to continue the auction with the rest of the elements in the loan.
         minBid = OrderLogic.getMinDebtOrDefault(
           loan.loanId,
-          loan.owner,
-          _reserveOracle,
+          _uTokenFactory,
           signAuction.assetPrice,
           signAuction.loan.aggLoanPrice,
           signAuction.loan.aggLtv,
@@ -176,10 +156,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
         ValidationLogic.validateFutureUnhealtyLoanState(
           ValidationLogic.ValidateLoanStateParams({
-            user: loan.owner,
             amount: 0,
             price: signAuction.assetPrice,
             reserveOracle: _reserveOracle,
+            uTokenFactory: _uTokenFactory,
             reserve: reserve,
             loanConfig: signAuction.loan
           })
@@ -188,7 +168,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // Creation of the Order
         order.createOrder(
           OrderLogic.ParamsCreateOrder({
-            orderType: DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION,
+            orderType: Constants.OrderType.TYPE_LIQUIDATION_AUCTION,
             orderId: orderId,
             owner: loan.owner,
             loanId: signAuction.loan.loanId,
@@ -206,20 +186,20 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       {
         minBid = OrderLogic.getMinBid(
           order,
-          _reserveOracle,
+          _uTokenFactory,
           signAuction.loan.aggLoanPrice,
           signAuction.loan.aggLtv,
           reserve
         );
 
         // If the auction is in market, we migrate this type of auction to liquidation
-        if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+        if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
           ValidationLogic.validateFutureUnhealtyLoanState(
             ValidationLogic.ValidateLoanStateParams({
-              user: order.owner,
               amount: order.bid.amountOfDebt + order.bid.amountToPay,
               price: signAuction.assetPrice,
               reserveOracle: _reserveOracle,
+              uTokenFactory: _uTokenFactory,
               reserve: reserve,
               loanConfig: signAuction.loan
             })
@@ -255,7 +235,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         OrderLogic.BorrowByBidderParams({
           loanId: loanId,
           owner: msgSender,
-          uToken: address(utoken),
+          underlyingAsset: reserve.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: amountOfDebt,
           assetPrice: signAuction.assetPrice,
           assetLtv: signAuction.assetLtv
@@ -267,7 +248,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loan.createLoan(
         LoanLogic.ParamsCreateLoan({
           msgSender: msgSender,
-          uToken: address(utoken),
           underlyingAsset: reserve.underlyingAsset,
           totalAssets: 1,
           loanId: loanId
@@ -287,8 +267,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           loanId: loan.loanId,
           owner: order.owner,
           from: address(this),
-          uToken: address(utoken),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amount: minBid
         })
       );
@@ -311,9 +291,9 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           loanId: order.bid.loanId,
           owner: order.bid.buyer,
           reserveOracle: _reserveOracle,
-          uToken: address(utoken),
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
+          uTokenFactory: _uTokenFactory,
           amountOfDebt: order.bid.amountOfDebt,
           amountToPay: amountToPayBuyer,
           reserve: reserve
@@ -360,26 +340,29 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
     _validateSignature(msgSender, signAuction, sig);
     DataTypes.Order memory order = _orders[orderId];
-    if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
     if (order.owner != msgSender) {
       revert Errors.InvalidOrderOwner();
     }
-
+    if (order.offer.loanId != signAuction.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
     // Validate signature
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
-    address utoken = loan.uToken;
     address underlyingAsset = loan.underlyingAsset;
 
-    IUToken(utoken).updateStateReserve();
-    DataTypes.ReserveData memory reserve = IUToken(utoken).getReserve();
+    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      underlyingAsset
+    );
 
     Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
     // Check pending debt
     (uint256 totalAmount, , uint256 minDebt, uint256 bidderBonus) = getAmountToReedem(
       AmountToRedeemParams({
-        uToken: utoken,
+        underlyingAsset: underlyingAsset,
         loanId: order.offer.loanId,
         owner: order.owner,
         aggLoanPrice: signAuction.loan.aggLoanPrice,
@@ -399,9 +382,9 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         loanId: order.bid.loanId,
         owner: order.bid.buyer,
         reserveOracle: _reserveOracle,
-        uToken: utoken,
         from: address(this),
         underlyingAsset: underlyingAsset,
+        uTokenFactory: _uTokenFactory,
         amountOfDebt: order.bid.amountOfDebt,
         amountToPay: order.offer.startAmount + bidderBonus,
         reserve: reserve
@@ -414,8 +397,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     }
 
     if (minDebt > 0) {
-      underlyingAsset.safeApprove(utoken, minDebt);
-      IUToken(utoken).repayOnBelhalf(order.offer.loanId, minDebt, address(this), msgSender);
+      underlyingAsset.safeApprove(_uTokenFactory, minDebt);
+      IUTokenFactory(_uTokenFactory).repay(
+        underlyingAsset,
+        order.offer.loanId,
+        minDebt,
+        address(this),
+        msgSender
+      );
     }
 
     delete _orders[orderId];
@@ -442,10 +431,12 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     DataTypes.Order memory order = _orders[orderId];
 
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
-    if (order.orderType != DataTypes.OrderType.TYPE_LIQUIDATION_AUCTION) {
+    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
       revert Errors.OrderNotAllowed();
     }
-
+    if (order.offer.loanId != signAuction.loan.loanId) {
+      revert Errors.InvalidLoanId();
+    }
     bytes32 offerLoanId = order.offer.loanId;
 
     DataTypes.Loan storage loan = _loans[offerLoanId];
@@ -474,6 +465,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       }
       // Block the asset
       IProtocolOwner(protocolOwnerBuyer).setLoanId(signAuction.assetId, loan.loanId);
+      // Update the loan
+      _loans[order.bid.loanId].totalAssets = 1;
       // Activate the loan from the bidder
       _loans[order.bid.loanId].activate();
     }
@@ -487,7 +480,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
     // Check the struct passed it's correct
     if (_loans[loan.loanId].totalAssets != signAuction.loan.totalAssets + 1) {
-      revert Errors.TokenAssetsMismatch();
+      revert Errors.LoanNotUpdated();
     }
     if (signAuction.loan.totalAssets == 0) {
       // If there is only one we can remove the loan
