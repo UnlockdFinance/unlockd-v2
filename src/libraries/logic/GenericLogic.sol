@@ -56,7 +56,6 @@ library GenericLogic {
     vars.reserveUnitPrice = IReserveOracle(reserveOracle).getAssetPrice(
       reserveData.underlyingAsset
     );
-    // WARNING : We need to transform the asset to the BASE amount
     vars.amount = amount.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
 
     // Calculate total debt in base currency

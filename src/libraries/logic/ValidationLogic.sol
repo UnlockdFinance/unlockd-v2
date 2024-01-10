@@ -41,9 +41,6 @@ library ValidationLogic {
       revert Errors.NotAssetOwner();
     }
 
-    // if (IAllowedControllers(allowedController).isAllowedCollection(asset.collection) == false) {
-    //   revert Errors.CollectionNotAllowed();
-    // }
     // Check if is not already locked
     if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
       revert Errors.AssetLocked();

@@ -2,11 +2,10 @@
 pragma solidity 0.8.19;
 import {IMaxApyVault} from '@maxapy/interfaces/IMaxApyVault.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
-// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 contract MaxApyStrategy is IStrategy {
   using PercentageMath for uint256;

@@ -608,7 +608,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         signMarket.loan.aggLtv,
         reserve
       );
-      // WARNING
+      // @dev WARNING
       // We check if the minBid is bigger than the amount added, in this case,
       // anyone can cancel the current bid and refund the amount deposited.
       if (totalAmount >= minBid) {
