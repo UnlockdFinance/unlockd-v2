@@ -32,10 +32,7 @@ import '../base/NFTBase.sol';
 
 import {Source} from '../mock/chainlink/Source.sol';
 
-import {DeployPeriphery} from '../../../src/deployer/DeployPeriphery.sol';
 import {DeployProtocol} from '../../../src/deployer/DeployProtocol.sol';
-import {DeployUToken} from '../../../src/deployer/DeployUToken.sol';
-import {DeployUTokenConfig} from '../../../src/deployer/DeployUTokenConfig.sol';
 
 import {IUTokenFactory} from '../../../src/interfaces/IUTokenFactory.sol';
 
@@ -52,7 +49,7 @@ import {Market, MarketSign} from '../../../src/protocol/modules/Market.sol';
 
 import {MaxApyStrategy} from '../../../src/protocol/strategies/MaxApy.sol';
 import {ReserveOracle, IReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
-
+import {ReservoirAdapter} from '../../../src/protocol/adapters/ReservoirAdapter.sol';
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
 import {DataTypes} from '../../../src/types/DataTypes.sol';
 
@@ -192,16 +189,17 @@ contract Setup is Base, ActorsBase, NFTBase {
     vm.startPrank(_deployer);
     // ERC20 Assets
 
-    // Deploy Oracles
-    DeployPeriphery deployer = new DeployPeriphery(_adminUpdater, address(_aclManager));
+    // We define base asset address to USDC
+    _reserveOracle = address(new ReserveOracle(address(_aclManager), makeAsset('USDC'), 1 ether));
 
-    _reserveOracle = deployer.deployReserveOracle(makeAsset('WETH'), 1 ether);
-
-    _reservoirAdapter = deployer.deployReservoirMarket(
-      config.reservoirRouter,
-      0x0000000000000000000000000000000000000000
+    // DEPLOY ADAPTER RESERVOIR
+    _reservoirAdapter = address(
+      new ReservoirAdapter(
+        address(_aclManager),
+        config.reservoirRouter,
+        0x0000000000000000000000000000000000000000
+      )
     );
-
     _mockAdapter = address(
       new MockAdapter(
         config.reservoirRouter,

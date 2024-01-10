@@ -7,6 +7,8 @@ library DeployConfig {
   // ************************ TOKENS ************************
   // https://testnets.opensea.io/  to wrap
   address public constant WETH = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
+  // https://staging.aave.com/faucet/ to mint
+  address public constant USDC = 0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8;
 
   address public constant MAXAPY = 0x8607F61246753Ff3189243Cc1768E8Cf453A4534;
   // ************************ RESERVOIR ************************

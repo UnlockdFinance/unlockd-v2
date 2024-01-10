@@ -80,7 +80,9 @@ contract Manager is BaseCoreModule, IManagerModule {
     _allowedCollections[collection] = reserveType;
   }
 
-  function getCollectiononReserveType(address collection) external returns (Constants.ReserveType) {
+  function getCollectiononReserveType(
+    address collection
+  ) external view returns (Constants.ReserveType) {
     return _allowedCollections[collection];
   }
 

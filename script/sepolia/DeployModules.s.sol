@@ -11,10 +11,7 @@ import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../src/protocol/modules/Installer.sol';
 
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
-import {DeployPeriphery} from '../../src/deployer/DeployPeriphery.sol';
-import {DeployUToken} from '../../src/deployer/DeployUToken.sol';
 import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
-import {DeployUTokenConfig} from '../../src/deployer/DeployUTokenConfig.sol';
 
 import {Test} from '../../test/test-utils/mock/modules/Test.sol';
 import {Action} from '../../src/protocol/modules/Action.sol';

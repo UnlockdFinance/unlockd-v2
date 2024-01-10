@@ -12,7 +12,7 @@ contract BuyNowSign is BaseSignature {
   string internal constant VERSION = '1';
 
   bytes32 internal constant TYPEHASH =
-    0xa1b382cd04c1e09dce831bd75205ea7ec46524169863d87bd6a9c432e104058b;
+    0x6b77050f9bf3df21b1bd19ccdbf03be95abec0c1da32ea40a2950af432b17e6f;
 
   constructor() BaseSignature(NAME, VERSION) {
     // NOTHINIG TO DO
@@ -35,9 +35,7 @@ contract BuyNowSign is BaseSignature {
     if (msgSender == address(0)) {
       revert Errors.SenderZeroAddress();
     }
-    // if (signBuyNow.to != msgSender) {
-    //   revert Errors.NotEqualSender();
-    // }
+
     // Validate signature
     _validateRecoveredAddress(
       calculateDigest(_signNonce[msgSender]++, signBuyNow),
