@@ -30,6 +30,8 @@ import {Market} from '../../src/protocol/modules/Market.sol';
 // Only testing
 import {Source} from '../../test/test-utils/mock/chainlink/Source.sol';
 
+import {UnlockdUpgradeableProxy} from '../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
+
 contract DeployProtocolScript is DeployerHelper {
   bytes32 public constant VERSION = 0;
 
@@ -47,9 +49,19 @@ contract DeployProtocolScript is DeployerHelper {
         new MaxApyStrategy(DeployConfig.WETH, DeployConfig.MAXAPY, 1 ether, percentageToInvest)
       );
 
-      _uTokenFactory = new UTokenFactory(addresses.aclManager, address(new ScaledToken()));
+      UTokenFactory uTokenFactoryImp = new UTokenFactory(addresses.aclManager);
 
-      addresses.uToken = address(_uTokenFactory);
+      bytes memory data = abi.encodeWithSelector(
+        UTokenFactory.initialize.selector,
+        address(new ScaledToken())
+      );
+
+      address uTokenFactoryProxy = address(
+        new UnlockdUpgradeableProxy(address(uTokenFactoryImp), data)
+      );
+
+      _uTokenFactory = UTokenFactory(address(uTokenFactoryProxy));
+      addresses.uToken = uTokenFactoryProxy;
 
       // Deploy weth pool
       _uTokenFactory.createMarket(

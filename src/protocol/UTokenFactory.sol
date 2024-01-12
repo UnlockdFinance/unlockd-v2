@@ -5,7 +5,8 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-
+import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
+import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {IUTokenFactory} from '../interfaces/IUTokenFactory.sol';
@@ -25,7 +26,13 @@ import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProx
 
 // import {console} from 'forge-std/console.sol';
 
-contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
+contract UTokenFactory is
+  Initializable,
+  UUPSUpgradeable,
+  UFactoryStorage,
+  BaseEmergency,
+  IUTokenFactory
+{
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
   using WadRayMath for uint256;
@@ -50,9 +57,12 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
 
   /////////////////////////////////////////////////////
 
-  constructor(address aclManager, address sharesTokenImp) BaseEmergency(aclManager) {
-    if (sharesTokenImp == address(0)) revert Errors.ZeroAddress();
+  constructor(address aclManager) BaseEmergency(aclManager) {
+    if (aclManager == address(0)) revert Errors.ZeroAddress();
+  }
 
+  function initialize(address sharesTokenImp) public initializer {
+    if (sharesTokenImp == address(0)) revert Errors.ZeroAddress();
     _sharesTokenImp = sharesTokenImp;
   }
 
@@ -177,8 +187,8 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     uint256 scaledAmount = reserve.increaseDebt(balance, amount);
 
     // Update balances
-    borrowScaledBalanceByLoanId[loanId] += scaledAmount;
-    borrowScaledBalanceByUser[onBehalfOf] += scaledAmount;
+    borrowScaledBalanceByLoanId[underlyingAsset][loanId] += scaledAmount;
+    borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] += scaledAmount;
 
     IERC20(underlyingAsset).safeTransfer(to, amount);
 
@@ -225,8 +235,8 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     // User can't repay more thant the current debt
     if (currentDebt == 0 || currentDebt < scaledAmount) revert Errors.AmountExceedsDebt();
     // Update balances
-    borrowScaledBalanceByLoanId[loanId] -= scaledAmount;
-    borrowScaledBalanceByUser[onBehalfOf] -= scaledAmount;
+    borrowScaledBalanceByLoanId[underlyingAsset][loanId] -= scaledAmount;
+    borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] -= scaledAmount;
 
     IERC20(underlyingAsset).safeTransferFrom(from, address(this), amount);
     reserve.updateState(balance);
@@ -288,19 +298,46 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
   /////////////////////////////////////////////////////////
   // DEBT
   /////////////////////////////////////////////////////////
+
+  function getScaledTotalDebtMarket(address underlyingAsset) external view returns (uint256) {
+    return
+      balances[underlyingAsset].totalBorrowScaled.rayMul(
+        reserves[underlyingAsset].getNormalizedDebt()
+      );
+  }
+
   function getTotalDebtFromUser(
     address underlyingAsset,
     address user
   ) external view returns (uint256) {
-    return borrowScaledBalanceByUser[user].rayMul(reserves[underlyingAsset].getNormalizedDebt());
+    return borrowScaledBalanceByUser[underlyingAsset][user];
+  }
+
+  function getScaledTotalDebtFromUser(
+    address underlyingAsset,
+    address user
+  ) external view returns (uint256) {
+    return
+      borrowScaledBalanceByUser[underlyingAsset][user].rayMul(
+        reserves[underlyingAsset].getNormalizedDebt()
+      );
   }
 
   function getDebtFromLoanId(
     address underlyingAsset,
     bytes32 loanId
   ) external view returns (uint256) {
+    return borrowScaledBalanceByLoanId[underlyingAsset][loanId];
+  }
+
+  function getScaledDebtFromLoanId(
+    address underlyingAsset,
+    bytes32 loanId
+  ) external view returns (uint256) {
     return
-      borrowScaledBalanceByLoanId[loanId].rayMul(reserves[underlyingAsset].getNormalizedDebt());
+      borrowScaledBalanceByLoanId[underlyingAsset][loanId].rayMul(
+        reserves[underlyingAsset].getNormalizedDebt()
+      );
   }
 
   /////////////////////////////////////////////////////////
@@ -311,6 +348,20 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
     address underlyingAsset
   ) external view returns (DataTypes.MarketBalance memory) {
     return balances[underlyingAsset];
+  }
+
+  function getBalanceByUser(address underlyingAsset, address user) external view returns (uint256) {
+    return ScaledToken(reserves[underlyingAsset].scaledTokenAddress).balanceOf(user);
+  }
+
+  function getScaledBalanceByUser(
+    address underlyingAsset,
+    address user
+  ) external view returns (uint256) {
+    return
+      ScaledToken(reserves[underlyingAsset].scaledTokenAddress).balanceOf(user).rayMul(
+        reserves[underlyingAsset].getNormalizedIncome()
+      );
   }
 
   function totalSupply(address underlyingAsset) external view returns (uint256) {
@@ -362,4 +413,10 @@ contract UTokenFactory is UFactoryStorage, BaseEmergency, IUTokenFactory {
 
     return address(scaledTokenProxy);
   }
+
+  /**
+   * @notice Checks authorization for UUPS upgrades
+   * @dev Only ACL manager is allowed to upgrade
+   */
+  function _authorizeUpgrade(address) internal override onlyAdmin {}
 }

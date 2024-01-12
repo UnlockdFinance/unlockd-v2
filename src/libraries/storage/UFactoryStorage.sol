@@ -21,6 +21,6 @@ contract UFactoryStorage {
   //  Borrow Balances
   /////////////////////////////////////////
 
-  mapping(bytes32 => uint256) internal borrowScaledBalanceByLoanId;
-  mapping(address => uint256) internal borrowScaledBalanceByUser;
+  mapping(address => mapping(bytes32 => uint256)) internal borrowScaledBalanceByLoanId;
+  mapping(address => mapping(address => uint256)) internal borrowScaledBalanceByUser;
 }

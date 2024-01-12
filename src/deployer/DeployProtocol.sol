@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 import {ACLManager} from '../libraries/configuration/ACLManager.sol';
 import {Unlockd} from '../protocol/Unlockd.sol';
 import {Constants} from '../libraries/helpers/Constants.sol';

@@ -69,13 +69,13 @@ contract UTokenFactoryTest is Setup {
     vm.startPrank(_actor);
     super.approveAsset(_WETH, address(_uTokenFactory), 0.5 ether);
 
-    assertEq(_uTokenFactory.getTotalDebtFromUser(_WETH, makeAddr('paco')), 0.5 ether);
+    assertEq(_uTokenFactory.getScaledTotalDebtFromUser(_WETH, makeAddr('paco')), 0.5 ether);
     assertEq(IERC20(_WETH).balanceOf(makeAddr('paco')), 0.5 ether);
     bytes32 loanId = 'new_loan';
 
     _uTokenFactory.repay(_WETH, loanId, 0.5 ether, _actor, makeAddr('paco'));
     vm.stopPrank();
-    assertEq(_uTokenFactory.getTotalDebtFromUser(_WETH, makeAddr('paco')), 0);
+    assertEq(_uTokenFactory.getScaledTotalDebtFromUser(_WETH, makeAddr('paco')), 0);
     assertEq(IERC20(_WETH).balanceOf(makeAddr('paco')), 0.5 ether);
   }
 }

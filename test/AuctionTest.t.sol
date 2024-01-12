@@ -396,7 +396,13 @@ contract AuctionTest is Setup {
     hoax(_admin);
     Manager(_manager).emergencyFreezeLoan(loanId);
 
-    uint256 minBid = Auction(_auction).getMinBidPriceAuction(orderId, _WETH, 0, 6000);
+    uint256 minBid = Auction(_auction).getMinBidPriceAuction(
+      loanId,
+      AssetLogic.assetId(_nft, 1),
+      0.3 ether,
+      0,
+      6000
+    );
 
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
     (
@@ -437,7 +443,13 @@ contract AuctionTest is Setup {
 
     _bid_market_auction(loanId, orderId, _actorThree);
 
-    uint256 minBid = Auction(_auction).getMinBidPriceAuction(orderId, _WETH, 0, 6000);
+    uint256 minBid = Auction(_auction).getMinBidPriceAuction(
+      loanId,
+      AssetLogic.assetId(_nft, 1),
+      1 ether,
+      0,
+      6000
+    );
 
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
 

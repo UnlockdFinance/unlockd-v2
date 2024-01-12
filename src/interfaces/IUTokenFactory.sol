@@ -128,7 +128,14 @@ interface IUTokenFactory {
     address underlyingAsset
   ) external view returns (DataTypes.ReserveData memory);
 
+  function getScaledTotalDebtMarket(address underlyingAsset) external view returns (uint256);
+
   function getTotalDebtFromUser(
+    address underlyingAsset,
+    address user
+  ) external view returns (uint256);
+
+  function getScaledTotalDebtFromUser(
     address underlyingAsset,
     address user
   ) external view returns (uint256);
@@ -138,9 +145,23 @@ interface IUTokenFactory {
     bytes32 loanId
   ) external view returns (uint256);
 
+  function getScaledDebtFromLoanId(
+    address underlyingAsset,
+    bytes32 loanId
+  ) external view returns (uint256);
+
+  //////////// GET /////////////////////
+
   function getBalances(
     address underlyingAsset
   ) external view returns (DataTypes.MarketBalance memory);
+
+  function getBalanceByUser(address underlyingAsset, address user) external view returns (uint256);
+
+  function getScaledBalanceByUser(
+    address underlyingAsset,
+    address user
+  ) external view returns (uint256);
 
   function totalSupply(address underlyingAsset) external view returns (uint256);
 

@@ -358,12 +358,9 @@ library ReserveLogic {
   ) internal {
     // If there is no strategy just ignore
     if (reserve.strategyAddress == address(0)) return;
-    uint256 totalSupplyScaledNotInvested = balances.totalSupplyScaledNotInvested;
-    uint256 totalSupplyNotInvested = totalSupplyScaledNotInvested.rayMul(
-      reserve.getNormalizedIncome()
-    );
+
     uint256 amountToInvest = IStrategy(reserve.strategyAddress).calculateAmountToSupply(
-      totalSupplyNotInvested,
+      balances.totalSupplyScaledNotInvested.rayMul(reserve.getNormalizedIncome()),
       address(this),
       amount
     );
@@ -385,13 +382,15 @@ library ReserveLogic {
           amountToInvest
         )
       );
-      uint128 amountInvestedScaled = amountToInvest.rayDiv(reserve.liquidityIndex).toUint128();
-      balances.totalSupplyScaledNotInvested -= amountInvestedScaled;
 
-      uint256 totalSupplyScaledNotInvestedAfter = balances.totalSupplyScaledNotInvested;
-      uint256 totalSupplyNotInvestedAfter = totalSupplyScaledNotInvestedAfter.rayMul(
-        reserve.getNormalizedIncome()
-      );
+      balances.totalSupplyScaledNotInvested -= amountToInvest
+        .rayDiv(reserve.liquidityIndex)
+        .toUint128();
+
+      // uint256 totalSupplyScaledNotInvestedAfter = balances.totalSupplyScaledNotInvested;
+      // uint256 totalSupplyNotInvestedAfter = totalSupplyScaledNotInvestedAfter.rayMul(
+      //   reserve.getNormalizedIncome()
+      // );
       // console.log(' ======================= DESPUES ========================');
       // console.log('balanceNotInvested ', balances.totalSupplyScaledNotInvested);
       // console.log('totalSupplyNotInvestedAfter', totalSupplyNotInvestedAfter);

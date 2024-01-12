@@ -67,7 +67,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
       loan.underlyingAsset
     );
-    uint256 totalDebt = IUTokenFactory(_uTokenFactory).getDebtFromLoanId(
+    uint256 totalDebt = IUTokenFactory(_uTokenFactory).getScaledDebtFromLoanId(
       loan.underlyingAsset,
       loan.loanId
     );
@@ -194,7 +194,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         })
       );
 
-      totalDebt = IUTokenFactory(_uTokenFactory).getDebtFromLoanId(
+      totalDebt = IUTokenFactory(_uTokenFactory).getScaledDebtFromLoanId(
         loan.underlyingAsset,
         loan.loanId
       );

@@ -78,24 +78,41 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   /**
    * @dev Get min bid on auction
-   * @param orderId identifier of the order
-   * @param underlyingAsset token of the loan
+   * @param loanId identifier of the loanId
+   * @param assetId assetId of the asset
+   * @param assetPrice price of this asset on the market
    * @param aggLoanPrice aggregated loan colaterized on the Loan
    * @param aggLTV aggregated ltv between assets on the Loan
    */
   function getMinBidPriceAuction(
-    bytes32 orderId,
-    address underlyingAsset,
+    bytes32 loanId,
+    bytes32 assetId,
+    uint256 assetPrice,
     uint256 aggLoanPrice,
     uint256 aggLTV
   ) external view returns (uint256 minBid) {
-    minBid = OrderLogic.getMinBid(
-      _orders[orderId],
-      _uTokenFactory,
-      aggLoanPrice,
-      aggLTV,
-      IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
+    DataTypes.Loan memory loan = _loans[loanId];
+
+    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      loan.underlyingAsset
     );
+
+    // Calculate the order ID
+    bytes32 orderId = OrderLogic.generateId(assetId, loanId);
+    DataTypes.Order memory order = _orders[orderId];
+
+    if (order.owner == address(0)) {
+      minBid = OrderLogic.getMinDebtOrDefault(
+        loan.loanId,
+        _uTokenFactory,
+        assetPrice,
+        aggLoanPrice,
+        aggLTV,
+        reserve
+      );
+    } else {
+      minBid = OrderLogic.getMinBid(order, _uTokenFactory, aggLoanPrice, aggLTV, reserve);
+    }
   }
 
   /**

@@ -246,7 +246,18 @@ contract Setup is Base, ActorsBase, NFTBase {
   function deploy_uTokenFactory() public returns (address) {
     vm.startPrank(_admin);
 
-    _uTokenFactory = new UTokenFactory(address(_aclManager), address(new ScaledToken()));
+    UTokenFactory uTokenFactoryImp = new UTokenFactory(address(_aclManager));
+
+    bytes memory data = abi.encodeWithSelector(
+      UTokenFactory.initialize.selector,
+      address(new ScaledToken())
+    );
+
+    address uTokenFactoryProxy = address(
+      new UnlockdUpgradeableProxy(address(uTokenFactoryImp), data)
+    );
+
+    _uTokenFactory = UTokenFactory(address(uTokenFactoryProxy));
 
     // Deploy weth pool
     _uTokenFactory.createMarket(
