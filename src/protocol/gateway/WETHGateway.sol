@@ -5,9 +5,9 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IWETH} from '../../interfaces/tokens/IWETH.sol';
-import {IWETH} from '../../interfaces/tokens/IWETH.sol';
+import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
 
+import {IWETH} from '../../interfaces/tokens/IWETH.sol';
 import {IWETHGateway} from '../../interfaces/IWETHGateway.sol';
 import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
 
@@ -15,7 +15,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 
 contract WETHGateway is IWETHGateway, Ownable {
   using SafeERC20 for IERC20;
-
+  using WadRayMath for uint256;
   IWETH internal immutable WETH;
   IUTokenFactory internal immutable IUTOKEN;
   address internal immutable SCALEDTOKEN;
@@ -42,9 +42,20 @@ contract WETHGateway is IWETHGateway, Ownable {
   function withdrawETH(uint256 amount, address to) external override {
     uint256 amountToWithdraw = amount;
     if (type(uint256).max == amount) {
-      amountToWithdraw = IUTOKEN.getScaledBalanceByUser(address(WETH), msg.sender);
+      amountToWithdraw = IUTOKEN.getBalanceByUser(address(WETH), msg.sender);
+      // We transfer all the assets scaled
+      IERC20(SCALEDTOKEN).safeTransferFrom(
+        msg.sender,
+        address(this),
+        IERC20(SCALEDTOKEN).balanceOf(msg.sender)
+      );
+    } else {
+      amountToWithdraw = amount;
+      DataTypes.ReserveData memory reserve = IUTOKEN.getReserveData(address(WETH));
+      uint256 scaledAmount = amountToWithdraw.rayDiv(reserve.liquidityIndex);
+      IERC20(SCALEDTOKEN).safeTransferFrom(msg.sender, address(this), scaledAmount);
     }
-    IERC20(SCALEDTOKEN).safeTransferFrom(msg.sender, address(this), amountToWithdraw);
+
     IUTOKEN.withdraw(address(WETH), amountToWithdraw, address(this));
     WETH.withdraw(amountToWithdraw);
     _safeTransferETH(to, amountToWithdraw);
