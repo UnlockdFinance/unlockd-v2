@@ -295,6 +295,10 @@ contract UTokenFactory is
     return reserves[underlyingAsset];
   }
 
+  function getScaledToken(address underlyingAsset) external view returns (address) {
+    return reserves[underlyingAsset].scaledTokenAddress;
+  }
+
   /////////////////////////////////////////////////////////
   // DEBT
   /////////////////////////////////////////////////////////

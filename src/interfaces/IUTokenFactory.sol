@@ -119,6 +119,9 @@ interface IUTokenFactory {
 
   //////////////////////////////////
   // GETTERS
+
+  function getScaledToken(address underlyingAsset) external view returns (address);
+
   function validateReserveType(
     Constants.ReserveType currentReserveType,
     Constants.ReserveType reserveType
