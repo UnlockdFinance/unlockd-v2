@@ -7,6 +7,7 @@ import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol'
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
+import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {BaseCoreModule, IACLManager} from '../../libraries/base/BaseCoreModule.sol';
 
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
@@ -91,7 +92,10 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       // Check if this user has unlockd wallet
       Errors.verifyNotZero(wallet);
       // Validate current ownership
-      ValidationLogic.validateOwnerAsset(wallet, asset.collection, asset.tokenId);
+      if (ISafeERC721(_safeERC721).ownerOf(asset.collection, asset.tokenId) != wallet) {
+        revert Errors.NotAssetOwner();
+      }
+
       // Sell the asset using the adapter
       SellNowLogic.sellAsset(
         SellNowLogic.SellParams({
@@ -159,11 +163,15 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     );
     // Check if this user has unlockd wallet
     Errors.verifyNotZero(wallet);
+    bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
+
     // Validate current ownership
-    ValidationLogic.validateOwnerAsset(wallet, asset.collection, asset.tokenId);
+    if (ISafeERC721(_safeERC721).ownerOf(asset.collection, asset.tokenId) != wallet) {
+      revert Errors.NotAssetOwner();
+    }
 
     uint256 totalDebt = 0;
-    bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
+
     bytes32 assetLoanId = IProtocolOwner(protocolOwner).getLoanId(assetId);
     // Check if is not already locked
     if (assetLoanId != 0) {

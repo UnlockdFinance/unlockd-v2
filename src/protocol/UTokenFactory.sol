@@ -230,7 +230,7 @@ contract UTokenFactory is
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
     uint256 scaledAmount = reserve.decreaseDebt(balance, amount);
-    uint256 currentDebt = borrowScaledBalanceByLoanId[loanId];
+    uint256 currentDebt = borrowScaledBalanceByLoanId[underlyingAsset][loanId];
 
     // User can't repay more thant the current debt
     if (currentDebt == 0 || currentDebt < scaledAmount) revert Errors.AmountExceedsDebt();

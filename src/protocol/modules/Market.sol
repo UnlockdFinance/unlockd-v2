@@ -3,7 +3,6 @@ pragma solidity 0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
@@ -28,7 +27,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
 import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
-
+import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {console} from 'forge-std/console.sol';
 
 contract Market is BaseCoreModule, IMarketModule, MarketSign {
@@ -133,7 +132,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         })
       );
 
-      (address wallet, address delegationOwner) = GenericLogic.getMainWallet(
+      (address wallet, address protocolOwner) = GenericLogic.getMainWallet(
         _walletRegistry,
         msgSender
       );
@@ -146,14 +145,17 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       ) {
         revert Errors.NotValidReserve();
       }
-      ValidationLogic.validateLockAsset(
-        signMarket.assetId,
-        wallet,
-        delegationOwner,
-        DataTypes.Asset({collection: signMarket.collection, tokenId: signMarket.tokenId})
-      );
+
+      if (IProtocolOwner(protocolOwner).isAssetLocked(signMarket.assetId) == true) {
+        revert Errors.AssetLocked();
+      }
+      // Validate current ownership
+      if (ISafeERC721(_safeERC721).ownerOf(signMarket.collection, signMarket.tokenId) != wallet) {
+        revert Errors.NotAssetOwner();
+      }
+
       // Lock the asset
-      IProtocolOwner(delegationOwner).setLoanId(signMarket.assetId, loan.loanId);
+      IProtocolOwner(protocolOwner).setLoanId(signMarket.assetId, loan.loanId);
     } else {
       if (loan.underlyingAsset != underlyingAsset) {
         revert Errors.InvalidUnderlyingAsset();

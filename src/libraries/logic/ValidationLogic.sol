@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
@@ -30,28 +29,6 @@ import {console} from 'forge-std/console.sol';
 library ValidationLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
-
-  function validateLockAsset(
-    bytes32 assetId,
-    address owner,
-    address protocolOwner,
-    DataTypes.Asset memory asset
-  ) internal view {
-    if (IERC721(asset.collection).ownerOf(asset.tokenId) != owner) {
-      revert Errors.NotAssetOwner();
-    }
-
-    // Check if is not already locked
-    if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
-      revert Errors.AssetLocked();
-    }
-  }
-
-  function validateOwnerAsset(address owner, address collection, uint256 tokenId) internal view {
-    if (IERC721(collection).ownerOf(tokenId) != owner) {
-      revert Errors.NotAssetOwner();
-    }
-  }
 
   struct ValidateLoanStateParams {
     uint256 amount;

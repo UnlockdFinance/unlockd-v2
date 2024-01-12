@@ -38,6 +38,7 @@ import {IUTokenFactory} from '../../../src/interfaces/IUTokenFactory.sol';
 
 import {Constants} from '../../../src/libraries/helpers/Constants.sol';
 import {ScaledToken} from '../../../src/libraries/tokens/ScaledToken.sol';
+import {SafeERC721} from '../../../src/libraries/tokens/SafeERC721.sol';
 import {Installer} from '../../../src/protocol/modules/Installer.sol';
 
 import {Manager} from '../../../src/protocol/modules/Manager.sol';
@@ -333,6 +334,9 @@ contract Setup is Base, ActorsBase, NFTBase {
 
   function deploy_protocol() public {
     bytes32 gitCommit = 0;
+
+    SafeERC721 safeERC721 = new SafeERC721(0x0000000000000000000000000000000000000000);
+
     DeployProtocol deployerProtocol = new DeployProtocol(
       _admin,
       _adminUpdater,
@@ -387,6 +391,7 @@ contract Setup is Base, ActorsBase, NFTBase {
       manager.setWalletRegistry(_walletRegistry);
       manager.setAllowedControllers(_allowedControllers);
       manager.setUTokenFactory(address(_uTokenFactory));
+      manager.setSafeERC721(address(safeERC721));
       /*
         DISABLED, // Disabled collection
         ALL, // All the assets with the exception SPECIAL

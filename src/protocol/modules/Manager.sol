@@ -17,6 +17,19 @@ contract Manager is BaseCoreModule, IManagerModule {
   }
 
   /**
+   * @dev Is a helper where you can get some params in a standard way
+   * @param safeERC721 Address of the SafeERC721
+   */
+  function setSafeERC721(address safeERC721) external onlyAdmin {
+    if (safeERC721 == address(0)) revert Errors.ZeroAddress();
+    _safeERC721 = safeERC721;
+  }
+
+  function getSafeERC721() external view returns (address) {
+    return _safeERC721;
+  }
+
+  /**
    * @dev Oracle for the reserve
    * @param oracle Address of the new Reserve Oracle
    */

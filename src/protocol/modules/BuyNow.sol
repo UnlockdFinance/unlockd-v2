@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeTransferLib} from '@solady/utils/SafeTransferLib.sol';
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
@@ -15,6 +14,7 @@ import {ValidationLogic} from '../../libraries/logic/ValidationLogic.sol';
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 import {BuyNowLogic} from '../../libraries/logic/BuyNowLogic.sol';
 import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {IBuyNowModule} from '../../interfaces/modules/IBuyNowModule.sol';
 import {BuyNowSign} from '../../libraries/signatures/BuyNowSign.sol';
 
@@ -105,7 +105,10 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
 
       // Validate we recived the NFT.
       Errors.verifyAreEquals(
-        IERC721(signBuyMarket.asset.collection).ownerOf(signBuyMarket.asset.tokenId),
+        ISafeERC721(_safeERC721).ownerOf(
+          signBuyMarket.asset.collection,
+          signBuyMarket.asset.tokenId
+        ),
         wallet
       );
     }

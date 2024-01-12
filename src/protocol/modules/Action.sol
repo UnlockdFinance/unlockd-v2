@@ -14,6 +14,7 @@ import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 
 import {IActionModule} from '../../interfaces/modules/IActionModule.sol';
 import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {UTokenFactory} from '../UTokenFactory.sol';
 import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
 
@@ -144,7 +145,13 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           revert Errors.NotValidReserve();
         }
 
-        ValidationLogic.validateLockAsset(assetId, wallet, protocolOwner, asset);
+        if (IProtocolOwner(protocolOwner).isAssetLocked(assetId) == true) {
+          revert Errors.AssetLocked();
+        }
+
+        if (ISafeERC721(_safeERC721).ownerOf(asset.collection, asset.tokenId) != wallet) {
+          revert Errors.NotAssetOwner();
+        }
 
         IProtocolOwner(protocolOwner).setLoanId(assetId, loan.loanId);
         unchecked {
@@ -218,6 +225,11 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     }
 
     UTokenFactory uTokenFactory = UTokenFactory(_uTokenFactory);
+
+    if (type(uint256).max == amount) {
+      // If the amount is uint max we return the full amount
+      amount = uTokenFactory.getScaledDebtFromLoanId(loan.underlyingAsset, loan.loanId);
+    }
 
     DataTypes.ReserveData memory reserve = uTokenFactory.getReserveData(loan.underlyingAsset);
     uTokenFactory.updateState(loan.underlyingAsset);

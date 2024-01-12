@@ -35,6 +35,7 @@ contract CoreStorage {
   // UTOKEN FACTORY
   address internal _uTokenFactory;
 
+  address internal _safeERC721;
   /////////////////////////////////////////
   //  Signature Logic
   /////////////////////////////////////////

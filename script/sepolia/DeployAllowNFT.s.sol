@@ -7,18 +7,44 @@ import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
+import {SafeERC721} from '../../src/libraries/tokens/SafeERC721.sol';
 import '../helpers/DeployerHelper.sol';
 
 contract DeployAllowNFTScript is DeployerHelper {
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
+    // CryptoPunk address
+    SafeERC721 safeERC721 = new SafeERC721(0x987EfDB241fE66275b3594481696f039a82a799e);
 
     ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
     address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
       Constants.MODULEID__MANAGER
     );
     Manager manager = Manager(managerAddress);
+    // Set the new SAFE ERC721
+    manager.setSafeERC721(address(safeERC721));
+    {
+      AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
+        0x987EfDB241fE66275b3594481696f039a82a799e,
+        true
+      );
 
+      manager.allowCollectiononReserveType(
+        0x987EfDB241fE66275b3594481696f039a82a799e,
+        Constants.ReserveType.ALL
+      );
+    }
+    {
+      AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
+        0x546C5e8eC646439601586F7bb0b54158fF456Ea4,
+        true
+      );
+
+      manager.allowCollectiononReserveType(
+        0x546C5e8eC646439601586F7bb0b54158fF456Ea4,
+        Constants.ReserveType.ALL
+      );
+    }
     {
       AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
         0x4Ac593920D734BE24250cb0bfAC39DF621C6e636,
