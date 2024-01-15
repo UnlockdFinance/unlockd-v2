@@ -305,37 +305,39 @@ library OrderLogic {
     RepayDebtToSellParams memory params,
     DataTypes.ReserveData memory reserveData
   ) internal returns (uint256 totalAmount) {
-    uint256 debtAmount = getMaxDebtOrDefault(
+    uint256 totalDebt = GenericLogic.calculateLoanDebt(
       order.offer.loanId,
       params.uTokenFactory,
-      0,
-      params.aggLoanPrice,
-      params.aggLtv,
-      reserveData
+      reserveData.underlyingAsset
     );
 
-    if (order.offer.debtToSell > 0) {
-      // Calculate the % of the owner want to repay the debt
-      debtAmount = params.totalAmount.percentMul(order.offer.debtToSell);
-    }
-
     totalAmount = params.totalAmount;
-    if (debtAmount > 0) {
-      if (debtAmount > totalAmount) revert Errors.DebtExceedsAmount();
 
-      // Repay the debt
-      repayDebt(
-        RepayDebtParams({
-          loanId: order.offer.loanId,
-          owner: order.owner,
-          from: params.from,
-          amount: debtAmount,
-          underlyingAsset: params.underlyingAsset,
-          uTokenFactory: params.uTokenFactory
-        })
+    if (totalDebt > 0) {
+      uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
+        params.aggLoanPrice,
+        totalDebt,
+        params.aggLtv
       );
-      // We remove from the total amount the debt repayed
-      totalAmount = totalAmount - debtAmount;
+
+      if (order.offer.debtToSell > 0) {
+        // Calculate the % of the owner want to repay the debt
+        uint256 amounToRepay = minAmountNeeded.percentMul(order.offer.debtToSell);
+
+        // Repay the debt
+        repayDebt(
+          RepayDebtParams({
+            loanId: order.offer.loanId,
+            owner: order.owner,
+            from: params.from,
+            amount: amounToRepay,
+            underlyingAsset: params.underlyingAsset,
+            uTokenFactory: params.uTokenFactory
+          })
+        );
+        // // We remove from the total amount the debt repayed
+        totalAmount = totalAmount - amounToRepay;
+      }
     }
   }
 }
