@@ -367,11 +367,6 @@ library ReserveLogic {
 
     if (amountToInvest > 0) {
       IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
-      // console.log(' ======================= INVEST ========================');
-      // console.log('totalSupplyNotInvested  :', totalSupplyNotInvested);
-      // console.log('amount repayed          :', amount);
-      // console.log('amountToInvest          :', amountToInvest);
-      // console.log(' ================== ================== ==================');
 
       reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
@@ -386,15 +381,6 @@ library ReserveLogic {
       balances.totalSupplyScaledNotInvested -= amountToInvest
         .rayDiv(reserve.liquidityIndex)
         .toUint128();
-
-      // uint256 totalSupplyScaledNotInvestedAfter = balances.totalSupplyScaledNotInvested;
-      // uint256 totalSupplyNotInvestedAfter = totalSupplyScaledNotInvestedAfter.rayMul(
-      //   reserve.getNormalizedIncome()
-      // );
-      // console.log(' ======================= DESPUES ========================');
-      // console.log('balanceNotInvested ', balances.totalSupplyScaledNotInvested);
-      // console.log('totalSupplyNotInvestedAfter', totalSupplyNotInvestedAfter);
-      // console.log(' ================== ================== ==================');
     }
   }
 

@@ -34,28 +34,25 @@ contract WETHGateway is IWETHGateway, Ownable {
     WETH.approve(uTokenFactory, type(uint256).max);
   }
 
-  function supplyETH(address onBehalfOf) external payable override {
+  function depositETH(address onBehalfOf) external payable override {
     WETH.deposit{value: msg.value}();
-    IUTOKEN.supply(address(WETH), msg.value, onBehalfOf);
+    IUTOKEN.deposit(address(WETH), msg.value, onBehalfOf);
   }
 
   function withdrawETH(uint256 amount, address to) external override {
     uint256 amountToWithdraw = amount;
+    uint256 scaledAmount;
     if (type(uint256).max == amount) {
       amountToWithdraw = IUTOKEN.getBalanceByUser(address(WETH), msg.sender);
-      // We transfer all the assets scaled
-      IERC20(SCALEDTOKEN).safeTransferFrom(
-        msg.sender,
-        address(this),
-        IERC20(SCALEDTOKEN).balanceOf(msg.sender)
-      );
+      scaledAmount = IERC20(SCALEDTOKEN).balanceOf(msg.sender);
     } else {
       amountToWithdraw = amount;
+      // We update the index
+      IUTOKEN.updateState(address(WETH));
       DataTypes.ReserveData memory reserve = IUTOKEN.getReserveData(address(WETH));
-      uint256 scaledAmount = amountToWithdraw.rayDiv(reserve.liquidityIndex);
-      IERC20(SCALEDTOKEN).safeTransferFrom(msg.sender, address(this), scaledAmount);
+      scaledAmount = amountToWithdraw.rayDiv(reserve.liquidityIndex);
     }
-
+    IERC20(SCALEDTOKEN).safeTransferFrom(msg.sender, address(this), scaledAmount);
     IUTOKEN.withdraw(address(WETH), amountToWithdraw, address(this));
     WETH.withdraw(amountToWithdraw);
     _safeTransferETH(to, amountToWithdraw);

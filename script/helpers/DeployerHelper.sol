@@ -12,13 +12,14 @@ contract DeployerHelper is Script {
   struct Addresses {
     address deployer;
     address aclManager;
-    address uToken;
-    address uTokenTwo;
+    address uTokenFactory;
     address unlockd;
     address walletFactory;
     address walletRegistry;
     address allowedControllers;
-    address mockNFT;
+    address reserveOracle;
+    address adapter;
+    address strategy;
   }
 
   string constant path = './deployments/deploy-';
@@ -39,13 +40,14 @@ contract DeployerHelper is Script {
       Addresses memory addresses = Addresses({
         deployer: abi.decode(persistedJson.parseRaw('.deployer'), (address)),
         aclManager: abi.decode(persistedJson.parseRaw('.aclManager'), (address)),
-        uToken: abi.decode(persistedJson.parseRaw('.uToken'), (address)),
-        uTokenTwo: abi.decode(persistedJson.parseRaw('.uTokenTwo'), (address)),
+        uTokenFactory: abi.decode(persistedJson.parseRaw('.uTokenFactory'), (address)),
         unlockd: abi.decode(persistedJson.parseRaw('.unlockd'), (address)),
         walletFactory: abi.decode(persistedJson.parseRaw('.walletFactory'), (address)),
         walletRegistry: abi.decode(persistedJson.parseRaw('.walletRegistry'), (address)),
         allowedControllers: abi.decode(persistedJson.parseRaw('.allowedControllers'), (address)),
-        mockNFT: abi.decode(persistedJson.parseRaw('.mockNFT'), (address))
+        reserveOracle: abi.decode(persistedJson.parseRaw('.reserveOracle'), (address)),
+        adapter: abi.decode(persistedJson.parseRaw('.adapter'), (address)),
+        strategy: abi.decode(persistedJson.parseRaw('.strategy'), (address))
       });
 
       return addresses;
@@ -53,13 +55,14 @@ contract DeployerHelper is Script {
       Addresses memory newaddresses = Addresses({
         deployer: address(0),
         aclManager: address(0),
-        uToken: address(0),
-        uTokenTwo: address(0),
+        uTokenFactory: address(0),
         unlockd: address(0),
         walletFactory: address(0),
         walletRegistry: address(0),
         allowedControllers: address(0),
-        mockNFT: address(0)
+        reserveOracle: address(0),
+        adapter: address(0),
+        strategy: address(0)
       });
       _encodeJson(newaddresses);
       return newaddresses;
@@ -71,14 +74,15 @@ contract DeployerHelper is Script {
 
     vm.serializeAddress(json, 'deployer', addresses.deployer);
     vm.serializeAddress(json, 'aclManager', addresses.aclManager);
-    vm.serializeAddress(json, 'uToken', addresses.uToken);
-    vm.serializeAddress(json, 'uTokenTwo', addresses.uTokenTwo);
+    vm.serializeAddress(json, 'uTokenFactory', addresses.uTokenFactory);
     vm.serializeAddress(json, 'unlockd', addresses.unlockd);
     vm.serializeAddress(json, 'walletFactory', addresses.walletFactory);
     vm.serializeAddress(json, 'walletRegistry', addresses.walletRegistry);
     vm.serializeAddress(json, 'allowedControllers', addresses.allowedControllers);
+    vm.serializeAddress(json, 'reserveOracle', addresses.reserveOracle);
+    vm.serializeAddress(json, 'adapter', addresses.adapter);
 
-    string memory output = vm.serializeAddress(json, 'mockNFT', addresses.mockNFT);
+    string memory output = vm.serializeAddress(json, 'strategy', addresses.strategy);
 
     vm.writeJson(output, getFilePath());
   }

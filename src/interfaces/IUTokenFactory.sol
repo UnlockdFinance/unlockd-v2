@@ -23,7 +23,7 @@ interface IUTokenFactory {
     uint256 variableBorrowIndex
   );
 
-  event Supply(
+  event Deposit(
     address indexed user,
     address indexed onBehalfOf,
     address indexed underlyingAsset,
@@ -86,7 +86,7 @@ interface IUTokenFactory {
   //////////////////////////////////
   // PUBLIC
 
-  function supply(address underlyingAsset, uint256 amount, address onBehalf) external;
+  function deposit(address underlyingAsset, uint256 amount, address onBehalf) external;
 
   function withdraw(address underlyingAsset, uint256 amount, address onBehalf) external;
 

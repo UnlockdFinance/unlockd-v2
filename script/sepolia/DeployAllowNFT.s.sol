@@ -100,6 +100,5 @@ contract DeployAllowNFTScript is DeployerHelper {
         Constants.ReserveType.ALL
       );
     }
-    ACLManager(addresses.aclManager).removeGovernanceAdmin(msg.sender);
   }
 }

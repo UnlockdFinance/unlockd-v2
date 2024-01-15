@@ -536,7 +536,7 @@ contract Setup is Base, ActorsBase, NFTBase {
     // DEPOSIT
     writeTokenBalance(makeAddr('founder'), underlyingAsset, amount);
     IERC20(underlyingAsset).approve(address(_uTokenFactory), amount);
-    _uTokenFactory.supply(underlyingAsset, amount, makeAddr('founder'));
+    _uTokenFactory.deposit(underlyingAsset, amount, makeAddr('founder'));
 
     vm.stopPrank();
   }

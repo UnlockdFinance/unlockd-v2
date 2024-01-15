@@ -19,13 +19,22 @@ contract DeployACLManagerScript is DeployerHelper {
 
     aclManager.addGovernanceAdmin(msg.sender);
     // Add the admin address in all the places
-    aclManager.grantRole(0x00, DeployConfig.ADMIN);
-    aclManager.addUTokenAdmin(DeployConfig.ADMIN);
-    aclManager.addProtocolAdmin(DeployConfig.ADMIN);
-    aclManager.addGovernanceAdmin(DeployConfig.ADMIN);
-    aclManager.addAuctionAdmin(DeployConfig.ADMIN);
-    aclManager.addEmergencyAdmin(DeployConfig.ADMIN);
-    aclManager.addPriceUpdater(DeployConfig.ADMIN);
+
+    aclManager.addUTokenAdmin(msg.sender);
+    aclManager.addProtocolAdmin(msg.sender);
+    aclManager.addGovernanceAdmin(msg.sender);
+    aclManager.addAuctionAdmin(msg.sender);
+    aclManager.addEmergencyAdmin(msg.sender);
+    aclManager.addPriceUpdater(msg.sender);
+
+    /*
+      aclManager.addUTokenAdmin(DeployConfig.ADMIN);
+      aclManager.addProtocolAdmin(DeployConfig.ADMIN);
+      aclManager.addGovernanceAdmin(DeployConfig.ADMIN);
+      aclManager.addAuctionAdmin(DeployConfig.ADMIN);
+      aclManager.addEmergencyAdmin(DeployConfig.ADMIN);
+      aclManager.addPriceUpdater(DeployConfig.ADMIN);
+    */
 
     addresses.aclManager = address(aclManager);
     addresses.deployer = msg.sender;

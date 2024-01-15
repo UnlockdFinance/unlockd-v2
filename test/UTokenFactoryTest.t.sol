@@ -22,11 +22,11 @@ contract UTokenFactoryTest is Setup {
     vm.stopPrank();
   }
 
-  function test_basic_supply() public {
+  function test_basic_deposit() public {
     // DEPOSIT
     vm.startPrank(_actor);
     super.approveAsset(_WETH, address(_uTokenFactory), 2 ether);
-    _uTokenFactory.supply(_WETH, 1 ether, _actor);
+    _uTokenFactory.deposit(_WETH, 1 ether, _actor);
     vm.stopPrank();
     // Get DATA
     // DataTypes.MarketBalance memory balance = _uTokenFactory.getBalances(_WETH);
@@ -37,7 +37,7 @@ contract UTokenFactoryTest is Setup {
     // DEPOSIT
     vm.startPrank(_actor);
     super.approveAsset(_WETH, address(_uTokenFactory), 1 ether);
-    _uTokenFactory.supply(_WETH, 1 ether, _actor);
+    _uTokenFactory.deposit(_WETH, 1 ether, _actor);
     vm.stopPrank();
 
     assertEq(_uTokenFactory.totalSupplyNotInvested(_WETH), 1 ether);
@@ -55,7 +55,7 @@ contract UTokenFactoryTest is Setup {
   }
 
   function test_basic_borrow() public {
-    test_basic_supply();
+    test_basic_deposit();
     bytes32 loanId = 'new_loan';
     vm.startPrank(_actor);
     _uTokenFactory.borrow(_WETH, loanId, 0.5 ether, makeAddr('paco'), makeAddr('paco'));

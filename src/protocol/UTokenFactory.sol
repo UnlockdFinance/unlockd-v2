@@ -89,7 +89,7 @@ contract UTokenFactory is
     );
   }
 
-  function supply(address underlyingAsset, uint256 amount, address onBehalfOf) external {
+  function deposit(address underlyingAsset, uint256 amount, address onBehalfOf) external {
     Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(onBehalfOf);
     Errors.verifyNotZero(amount);
@@ -114,7 +114,7 @@ contract UTokenFactory is
 
     reserve.strategyInvest(balance, amount);
 
-    emit Supply(msg.sender, onBehalfOf, reserve.underlyingAsset, amount);
+    emit Deposit(msg.sender, onBehalfOf, reserve.underlyingAsset, amount);
   }
 
   function withdraw(address underlyingAsset, uint256 amount, address to) external {

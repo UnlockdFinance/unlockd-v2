@@ -29,9 +29,6 @@ contract DeployModulesScript is DeployerHelper {
     Addresses memory addresses = _decodeJson();
 
     {
-      ACLManager(addresses.aclManager).addProtocolAdmin(msg.sender);
-      ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
-
       // INSTALL
 
       {
@@ -57,9 +54,6 @@ contract DeployModulesScript is DeployerHelper {
         );
         Installer(installer).installModules(modules);
       }
-
-      ACLManager(addresses.aclManager).removeUTokenAdmin(msg.sender);
-      ACLManager(addresses.aclManager).removeGovernanceAdmin(msg.sender);
     }
   }
 }
