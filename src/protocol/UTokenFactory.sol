@@ -272,6 +272,25 @@ contract UTokenFactory is
     reserves[underlyingAsset].reserveState = reserveState;
   }
 
+  function disableStrategy(address underlyingAsset) external onlyEmergencyAdmin {
+    if (reserves[underlyingAsset].strategyAddress != address(0)) {
+      reserves[underlyingAsset].strategyWithdrawAll(balances[underlyingAsset]);
+      reserves[underlyingAsset].updateState(balances[underlyingAsset]);
+      reserves[underlyingAsset].strategyAddress = address(0);
+    }
+  }
+
+  function updateReserveStrategy(
+    address underlyingAsset,
+    address newStrategy
+  ) external onlyEmergencyAdmin {
+    if (reserves[underlyingAsset].strategyAddress != address(0)) {
+      revert Errors.StrategyNotEmpty();
+    }
+    Errors.verifyNotZero(newStrategy);
+    reserves[underlyingAsset].strategyAddress = newStrategy;
+  }
+
   /////////////////////////////////////////////////////////
   // GET
   /////////////////////////////////////////////////////////

@@ -80,8 +80,7 @@ library Errors {
   error EmergencyAccessDenied();
   error RoleAccessDenied();
   error MarketPriceNotCoverDebt();
-  error LoanNotUpdated();
-  error LoanBlocked();
+  error StrategyNotEmpty();
   ///////////////////////////////////////////
   ///   UTOKEN
   ///////////////////////////////////////////
@@ -116,6 +115,8 @@ library Errors {
   error LoanNotActive();
   error LowCollateral();
   error InvalidLoanId();
+  error LoanNotUpdated();
+  error LoanBlocked();
 
   ///////////////////////////////////////////
   ///   ORDER

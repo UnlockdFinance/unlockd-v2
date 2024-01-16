@@ -113,12 +113,6 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balance
   ) internal {
-    ////////////////////7
-    // ESTA MAAAAAAAAAAAAAAAAAAAAAAAL
-    ////
-    // totalSupplyScaledNotInvested -> Parte no invertida que tendria que tener en cuenta el borrow
-    // BORROWED
-
     // We calculate the current value based on the current scaled
     uint256 totalBalance = balance.totalSupplyScaledNotInvested; // + balance.borrow
     uint256 totalBorrow = balance.totalBorrowScaled;
@@ -415,5 +409,28 @@ library ReserveLogic {
         .rayDiv(reserve.liquidityIndex)
         .toUint128();
     }
+  }
+
+  function strategyWithdrawAll(
+    DataTypes.ReserveData storage reserve,
+    DataTypes.MarketBalance storage balances
+  ) {
+    IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
+
+    bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
+      abi.encodeWithSelector(
+        IStrategy.withdraw.selector,
+        config.vault,
+        address(this),
+        IStrategy(reserve.strategyAddress).balanceOf(address(this))
+      )
+    );
+
+    // Because of the slippage we need to ensure the exact withdraw
+    uint256 amountWithdrawed = abi.decode(returnData, (uint256));
+
+    balances.totalSupplyScaledNotInvested += amountWithdrawed
+      .rayDiv(reserve.liquidityIndex)
+      .toUint128();
   }
 }
