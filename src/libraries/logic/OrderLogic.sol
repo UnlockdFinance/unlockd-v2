@@ -94,6 +94,7 @@ library OrderLogic {
   struct BorrowByBidderParams {
     bytes32 loanId;
     address owner;
+    address to;
     address underlyingAsset;
     address uTokenFactory;
     uint256 amountOfDebt;
@@ -116,7 +117,7 @@ library OrderLogic {
       params.underlyingAsset,
       params.loanId,
       params.amountOfDebt,
-      address(this),
+      params.to,
       params.owner
     );
   }

@@ -169,7 +169,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         revert Errors.LoanNotUpdated();
       }
 
-  
       IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
 
       ValidationLogic.validateFutureLoanState(
@@ -359,6 +358,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         OrderLogic.BorrowByBidderParams({
           loanId: loanId,
           owner: msgSender,
+          to: address(this),
           amountOfDebt: amountOfDebt,
           underlyingAsset: reserve.underlyingAsset,
           uTokenFactory: _uTokenFactory,
@@ -741,6 +741,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           OrderLogic.BorrowByBidderParams({
             loanId: newLoanId,
             owner: msgSender,
+            to: address(this),
             underlyingAsset: reserve.underlyingAsset,
             uTokenFactory: _uTokenFactory,
             amountOfDebt: amountOfDebt,

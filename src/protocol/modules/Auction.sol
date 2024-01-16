@@ -252,6 +252,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         OrderLogic.BorrowByBidderParams({
           loanId: loanId,
           owner: msgSender,
+          to: address(this),
           underlyingAsset: reserve.underlyingAsset,
           uTokenFactory: _uTokenFactory,
           amountOfDebt: amountOfDebt,

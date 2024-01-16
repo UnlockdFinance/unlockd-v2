@@ -65,12 +65,15 @@ contract OrderLogicTest is Setup {
         assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
         startAmount: 0,
         endAmount: 1 ether,
-        debtToSell: 10,
+        debtToSell: 1000,
         startTime: uint40(block.timestamp),
         endTime: uint40(block.timestamp)
       })
     );
     assertEq(uint(order.orderType), uint(Constants.OrderType.TYPE_AUCTION));
+    assertEq(order.orderId, 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f);
+    assertEq(order.offer.endAmount, 1 ether);
+    assertEq(order.offer.debtToSell, 1000);
   }
 
   function test_orderLogic_updateToLiquidationOrder() public {
@@ -95,6 +98,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 0.2 ether,
@@ -102,7 +106,7 @@ contract OrderLogicTest is Setup {
         assetLtv: 6000
       })
     );
-    // TODO : Check new balance
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 0.2 ether);
     vm.stopPrank();
   }
 
@@ -112,6 +116,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 1 ether,
@@ -119,7 +124,8 @@ contract OrderLogicTest is Setup {
         assetLtv: 6000
       })
     );
-    // TODO : Check new balance
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 0);
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 1 ether);
     vm.stopPrank();
   }
 
@@ -129,6 +135,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 10,
@@ -145,6 +152,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 0.9 ether,
@@ -162,6 +170,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: 0,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 0.1 ether,
@@ -169,6 +178,7 @@ contract OrderLogicTest is Setup {
         assetLtv: 6000
       })
     );
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 99000000000000000000);
     vm.stopPrank();
   }
 
@@ -189,13 +199,14 @@ contract OrderLogicTest is Setup {
         reserve: _uTokenFactory.getReserveData(makeAsset('WETH'))
       })
     );
-    // TODO: Check amount sended
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 98800000000000000000);
     vm.stopPrank();
   }
 
   function test_orderLogic_refundBidder_no_debt() public {
     test_orderLogic_borrowByBidder();
     writeTokenBalance(makeAddr('protocol'), makeAsset('WETH'), 100 ether);
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 100 ether);
     vm.startPrank(makeAddr('protocol'));
     OrderLogic.refundBidder(
       OrderLogic.RefundBidderParams({
@@ -210,6 +221,7 @@ contract OrderLogicTest is Setup {
         reserve: _uTokenFactory.getReserveData(makeAsset('WETH'))
       })
     );
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 99000000000000000000);
     vm.stopPrank();
   }
 
@@ -230,6 +242,7 @@ contract OrderLogicTest is Setup {
         reserve: _uTokenFactory.getReserveData(makeAsset('WETH'))
       })
     );
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 99800000000000000000);
     vm.stopPrank();
   }
 
@@ -248,7 +261,7 @@ contract OrderLogicTest is Setup {
         amount: 1 ether
       })
     );
-    // TODO: Check if the deb is repayed
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 99000000000000000000);
     vm.stopPrank();
   }
 
@@ -279,6 +292,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: loanId,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 1 ether,
@@ -332,6 +346,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: loanId,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 1 ether,
@@ -384,6 +399,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: loanId,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 1 ether,
@@ -438,6 +454,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.BorrowByBidderParams({
         loanId: loanId,
         owner: makeAddr('filipe'),
+        to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
         amountOfDebt: 3 ether,
