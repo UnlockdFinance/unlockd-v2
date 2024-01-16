@@ -414,7 +414,7 @@ library ReserveLogic {
   function strategyWithdrawAll(
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balances
-  ) {
+  ) internal {
     IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
 
     bytes memory returnData = reserve.strategyAddress.functionDelegateCall(

@@ -270,6 +270,7 @@ contract UTokenFactory is
     Constants.ReserveState reserveState
   ) external onlyEmergencyAdmin {
     reserves[underlyingAsset].reserveState = reserveState;
+    emit UpdateReserveState(underlyingAsset, uint256(reserveState));
   }
 
   function disableStrategy(address underlyingAsset) external onlyEmergencyAdmin {
@@ -277,6 +278,7 @@ contract UTokenFactory is
       reserves[underlyingAsset].strategyWithdrawAll(balances[underlyingAsset]);
       reserves[underlyingAsset].updateState(balances[underlyingAsset]);
       reserves[underlyingAsset].strategyAddress = address(0);
+      emit DisableReserveStrategy(underlyingAsset);
     }
   }
 
@@ -289,6 +291,7 @@ contract UTokenFactory is
     }
     Errors.verifyNotZero(newStrategy);
     reserves[underlyingAsset].strategyAddress = newStrategy;
+    emit UpdateReserveStrategy(underlyingAsset, newStrategy);
   }
 
   /////////////////////////////////////////////////////////

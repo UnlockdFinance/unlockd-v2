@@ -54,6 +54,11 @@ interface IUTokenFactory {
     uint256 borrowRate
   );
 
+  event UpdateReserveState(address indexed underlyingAsset, uint256 newState);
+
+  event DisableReserveStrategy(address indexed underlyingAsset);
+
+  event UpdateReserveStrategy(address indexed underlyingAsset, address indexed newStrategy);
   /**
    * @dev Emitted when the pause is triggered.
    */

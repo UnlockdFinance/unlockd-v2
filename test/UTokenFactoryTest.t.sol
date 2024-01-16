@@ -78,4 +78,33 @@ contract UTokenFactoryTest is Setup {
     assertEq(_uTokenFactory.getScaledTotalDebtFromUser(_WETH, makeAddr('paco')), 0);
     assertEq(IERC20(_WETH).balanceOf(makeAddr('paco')), 0.5 ether);
   }
+
+  function test_disable_strategy() public {
+    vm.startPrank(_actor);
+    super.approveAsset(_WETH, address(_uTokenFactory), 10 ether);
+    _uTokenFactory.deposit(_WETH, 10 ether, _actor);
+    assertEq(_uTokenFactory.totalSupplyNotInvested(_WETH), 1 ether);
+    vm.stopPrank();
+    vm.startPrank(_admin);
+    _uTokenFactory.disableStrategy(_WETH);
+    vm.stopPrank();
+    assertEq(_uTokenFactory.totalSupplyNotInvested(_WETH), 10 ether);
+  }
+
+  function test_update_strategy() public {
+    vm.startPrank(_actor);
+    super.approveAsset(_WETH, address(_uTokenFactory), 10 ether);
+    _uTokenFactory.deposit(_WETH, 10 ether, _actor);
+    assertEq(_uTokenFactory.totalSupplyNotInvested(_WETH), 1 ether);
+    vm.stopPrank();
+
+    vm.startPrank(_admin);
+    vm.expectRevert(abi.encodeWithSelector(Errors.StrategyNotEmpty.selector));
+    _uTokenFactory.updateReserveStrategy(_WETH, makeAddr('new_strategy'));
+    _uTokenFactory.disableStrategy(_WETH);
+    _uTokenFactory.updateReserveStrategy(_WETH, makeAddr('new_strategy'));
+    DataTypes.ReserveData memory data = _uTokenFactory.getReserveData(_WETH);
+    assertEq(data.strategyAddress, makeAddr('new_strategy'));
+    vm.stopPrank();
+  }
 }
