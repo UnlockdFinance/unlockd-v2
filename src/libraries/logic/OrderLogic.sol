@@ -310,20 +310,23 @@ library OrderLogic {
       params.uTokenFactory,
       reserveData.underlyingAsset
     );
-
     totalAmount = params.totalAmount;
 
-    if (totalDebt > 0) {
+    if (totalDebt > 0 && order.offer.debtToSell > 0) {
       uint256 minAmountNeeded = GenericLogic.calculateAmountToArriveToLTV(
         params.aggLoanPrice,
         totalDebt,
         params.aggLtv
       );
-
-      if (order.offer.debtToSell > 0) {
-        // Calculate the % of the owner want to repay the debt
-        uint256 amounToRepay = minAmountNeeded.percentMul(order.offer.debtToSell);
-
+      // We need to choose between the debt or the % selected by the user to repay.
+      uint256 amounToRepay = MathUtils.maxOf(
+        totalDebt.percentMul(order.offer.debtToSell),
+        minAmountNeeded
+      );
+      if (amounToRepay > 0) {
+        if (amounToRepay > totalAmount) {
+          revert Errors.DebtExceedsAmount();
+        }
         // Repay the debt
         repayDebt(
           RepayDebtParams({

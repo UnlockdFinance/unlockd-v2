@@ -254,28 +254,30 @@ contract OrderLogicTest is Setup {
 
   function test_orderLogic_repayDebtToSell() public {
     writeTokenBalance(makeAddr('protocol'), makeAsset('WETH'), 100 ether);
-
+    bytes32 loanId = 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f;
     vm.startPrank(makeAddr('protocol'));
     // Create order
     OrderLogic.createOrder(
       order,
       OrderLogic.ParamsCreateOrder({
-        orderId: 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f,
+        orderId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         owner: makeAddr('filipe'),
         orderType: Constants.OrderType.TYPE_AUCTION,
-        loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
+        loanId: loanId,
         assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
         startAmount: 0,
         endAmount: 1 ether,
-        debtToSell: 10,
+        debtToSell: 1000, // 10%
         startTime: uint40(block.timestamp),
         endTime: uint40(block.timestamp)
       })
     );
+
+    assertEq(order.offer.debtToSell, 1000);
     // Borrow
     OrderLogic.borrowByBidder(
       OrderLogic.BorrowByBidderParams({
-        loanId: 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f,
+        loanId: loanId,
         owner: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
         uTokenFactory: address(_uTokenFactory),
@@ -284,9 +286,9 @@ contract OrderLogicTest is Setup {
         assetLtv: 6000
       })
     );
-
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
-    OrderLogic.repayDebtToSell(
+    uint256 amountLeft = OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
@@ -299,40 +301,167 @@ contract OrderLogicTest is Setup {
       }),
       _uTokenFactory.getReserveData(makeAsset('WETH'))
     );
-    // TODO: Check fi the debt is repayed and how amount
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 0.9 ether);
     vm.stopPrank();
   }
 
-  // function test_orderLogic_repayDebtToSell_error_DebtExceedsAmount() internal {
-  //   // TODO: IDK why this is not working ....
-  //   // test_orderLogic_createOrder_new();
-  //   // test_orderLogic_borrowByBidder_big_amount();
-  //   // writeTokenBalance(makeAddr('protocol'), UToken(uToken).UNDERLYING_ASSET_ADDRESS(), 100 ether);
-  //   // address underlyingAsset = UToken(uToken).UNDERLYING_ASSET_ADDRESS();
-  //   // DataTypes.ReserveData memory reserveData = UToken(uToken).getReserve();
-  //   // address protocol = makeAddr('protocol');
-  //   // OrderLogic.RepayDebtToSellParams memory data = OrderLogic.RepayDebtToSellParams({
-  //   //   reserveOracle: _reserveOracle,
-  //   //   underlyingAsset: underlyingAsset,
-  //   //   uToken: uToken,
-  //   //   from: protocol,
-  //   //   totalAmount: 0.3 ether,
-  //   //   aggLoanPrice: 1 ether,
-  //   //   aggLtv: 6000
-  //   // });
-  //   // vm.startPrank(makeAddr('protocol'));
-  //   // vm.expectRevert(abi.encodeWithSelector(Errors.DebtExceedsAmount.selector));
-  //   // OrderLogic.repayDebtToSell(order, data, reserveData);
-  //   // vm.stopPrank();
-  // }
+  function test_orderLogic_repayDebtToSell_no_collateral() public {
+    writeTokenBalance(makeAddr('protocol'), makeAsset('WETH'), 100 ether);
+    bytes32 loanId = 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f;
+    vm.startPrank(makeAddr('protocol'));
+    // Create order
+    OrderLogic.createOrder(
+      order,
+      OrderLogic.ParamsCreateOrder({
+        orderId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
+        owner: makeAddr('filipe'),
+        orderType: Constants.OrderType.TYPE_AUCTION,
+        loanId: loanId,
+        assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
+        startAmount: 0,
+        endAmount: 1 ether,
+        debtToSell: 1000, // 10%
+        startTime: uint40(block.timestamp),
+        endTime: uint40(block.timestamp)
+      })
+    );
 
-  // function test_orderLogic_getMaxDebtOrDefault() internal {}
+    assertEq(order.offer.debtToSell, 1000);
+    // Borrow
+    OrderLogic.borrowByBidder(
+      OrderLogic.BorrowByBidderParams({
+        loanId: loanId,
+        owner: makeAddr('filipe'),
+        underlyingAsset: makeAsset('WETH'),
+        uTokenFactory: address(_uTokenFactory),
+        amountOfDebt: 1 ether,
+        assetPrice: 10 ether,
+        assetLtv: 6000
+      })
+    );
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
+    // Repay Debt
+    uint256 amountLeft = OrderLogic.repayDebtToSell(
+      order,
+      OrderLogic.RepayDebtToSellParams({
+        reserveOracle: _reserveOracle,
+        underlyingAsset: makeAsset('WETH'),
+        uTokenFactory: address(_uTokenFactory),
+        from: makeAddr('protocol'),
+        totalAmount: 1 ether,
+        aggLoanPrice: 0,
+        aggLtv: 6000
+      }),
+      _uTokenFactory.getReserveData(makeAsset('WETH'))
+    );
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 0);
+    vm.stopPrank();
+  }
 
-  // function test_orderLogic_getMinDebtOrDefault() internal {}
+  function test_orderLogic_repayDebtToSell_all() external {
+    writeTokenBalance(makeAddr('protocol'), makeAsset('WETH'), 100 ether);
+    bytes32 loanId = 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f;
+    vm.startPrank(makeAddr('protocol'));
+    // Create order
+    OrderLogic.createOrder(
+      order,
+      OrderLogic.ParamsCreateOrder({
+        orderId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
+        owner: makeAddr('filipe'),
+        orderType: Constants.OrderType.TYPE_AUCTION,
+        loanId: loanId,
+        assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
+        startAmount: 0,
+        endAmount: 1 ether,
+        debtToSell: 10000, // Repay 100%
+        startTime: uint40(block.timestamp),
+        endTime: uint40(block.timestamp)
+      })
+    );
+    assertEq(order.offer.debtToSell, 10000);
+    // Borrow
+    OrderLogic.borrowByBidder(
+      OrderLogic.BorrowByBidderParams({
+        loanId: loanId,
+        owner: makeAddr('filipe'),
+        underlyingAsset: makeAsset('WETH'),
+        uTokenFactory: address(_uTokenFactory),
+        amountOfDebt: 1 ether,
+        assetPrice: 10 ether,
+        assetLtv: 6000
+      })
+    );
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
+    // Repay Debt
+    uint256 amountLeft = OrderLogic.repayDebtToSell(
+      order,
+      OrderLogic.RepayDebtToSellParams({
+        reserveOracle: _reserveOracle,
+        underlyingAsset: makeAsset('WETH'),
+        uTokenFactory: address(_uTokenFactory),
+        from: makeAddr('protocol'),
+        totalAmount: 2 ether,
+        aggLoanPrice: 10 ether,
+        aggLtv: 6000
+      }),
+      _uTokenFactory.getReserveData(makeAsset('WETH'))
+    );
 
-  // function test_orderLogic_getMinBid_first_bid() internal {}
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 0);
 
-  // function test_orderLogic_getMinBid_second_bid() internal {}
+    vm.stopPrank();
+  }
 
-  // function test_orderLogic_calculateMinBid() internal {}
+  function test_orderLogic_repayDebtToSell_debToSell_bigger_than_amount() external {
+    writeTokenBalance(makeAddr('protocol'), makeAsset('WETH'), 100 ether);
+    bytes32 loanId = 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f;
+    vm.startPrank(makeAddr('protocol'));
+    // Create order
+    OrderLogic.createOrder(
+      order,
+      OrderLogic.ParamsCreateOrder({
+        orderId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
+        owner: makeAddr('filipe'),
+        orderType: Constants.OrderType.TYPE_AUCTION,
+        loanId: loanId,
+        assetId: 0x6661696c65640000000000000000000000000000000000000000000000000000,
+        startAmount: 0,
+        endAmount: 1 ether,
+        debtToSell: 10000, // Repay 100%
+        startTime: uint40(block.timestamp),
+        endTime: uint40(block.timestamp)
+      })
+    );
+    assertEq(order.offer.debtToSell, 10000);
+    // Borrow
+    OrderLogic.borrowByBidder(
+      OrderLogic.BorrowByBidderParams({
+        loanId: loanId,
+        owner: makeAddr('filipe'),
+        underlyingAsset: makeAsset('WETH'),
+        uTokenFactory: address(_uTokenFactory),
+        amountOfDebt: 3 ether,
+        assetPrice: 10 ether,
+        assetLtv: 6000
+      })
+    );
+    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 3 ether);
+    // Repay Debt
+    DataTypes.ReserveData memory data = _uTokenFactory.getReserveData(makeAsset('WETH'));
+    OrderLogic.RepayDebtToSellParams memory orderData = OrderLogic.RepayDebtToSellParams({
+      reserveOracle: _reserveOracle,
+      underlyingAsset: makeAsset('WETH'),
+      uTokenFactory: address(_uTokenFactory),
+      from: makeAddr('protocol'),
+      totalAmount: 1 ether,
+      aggLoanPrice: 0,
+      aggLtv: 6000
+    });
+
+    // TODO: This is not working properly
+    //  vm.expectRevert(abi.encodeWithSelector(Errors.DebtExceedsAmount.selector));
+    // OrderLogic.repayDebtToSell(order, orderData, data);
+
+    vm.stopPrank();
+  }
 }

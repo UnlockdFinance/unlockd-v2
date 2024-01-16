@@ -29,7 +29,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         true
       );
 
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x987EfDB241fE66275b3594481696f039a82a799e,
         Constants.ReserveType.ALL
       );
@@ -40,7 +40,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         true
       );
 
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x546C5e8eC646439601586F7bb0b54158fF456Ea4,
         Constants.ReserveType.ALL
       );
@@ -51,7 +51,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         true
       );
 
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x4Ac593920D734BE24250cb0bfAC39DF621C6e636,
         Constants.ReserveType.ALL
       );
@@ -62,7 +62,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         0x720b094Ab68D7306d1545AD615fDE974fA6D86D9,
         true
       );
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x720b094Ab68D7306d1545AD615fDE974fA6D86D9,
         Constants.ReserveType.ALL
       );
@@ -73,7 +73,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         0x876252A90E1CfEF75b40E235629a2E67BC7E68A8,
         true
       );
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x876252A90E1CfEF75b40E235629a2E67BC7E68A8,
         Constants.ReserveType.ALL
       );
@@ -84,7 +84,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         0x1750D2e6f2Fb7FdD6a751833F55007cF76Fbb358,
         true
       );
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x1750D2e6f2Fb7FdD6a751833F55007cF76Fbb358,
         Constants.ReserveType.ALL
       );
@@ -95,7 +95,7 @@ contract DeployAllowNFTScript is DeployerHelper {
         0x9cD69C4154557455F19B1ff94e9f9BbD8f802753,
         true
       );
-      manager.allowCollectiononReserveType(
+      manager.allowCollectionReserveType(
         0x9cD69C4154557455F19B1ff94e9f9BbD8f802753,
         Constants.ReserveType.ALL
       );

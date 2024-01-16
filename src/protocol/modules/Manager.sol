@@ -17,12 +17,13 @@ contract Manager is BaseCoreModule, IManagerModule {
   }
 
   /**
-   * @dev Is a helper where you can get some params in a standard way
+   * @dev Is a helper where aggregate the function to be standard
    * @param safeERC721 Address of the SafeERC721
    */
   function setSafeERC721(address safeERC721) external onlyAdmin {
     if (safeERC721 == address(0)) revert Errors.ZeroAddress();
     _safeERC721 = safeERC721;
+    emit SetSafeERC721(safeERC721);
   }
 
   function getSafeERC721() external view returns (address) {
@@ -85,15 +86,21 @@ contract Manager is BaseCoreModule, IManagerModule {
     return _allowedControllers;
   }
 
-  function allowCollectiononReserveType(
+  /**
+   * @dev Set the allowed controller
+   * @param collection Address of the allowed collection
+   * @param reserveType type of the reserve that we allow to borrow.
+   */
+  function allowCollectionReserveType(
     address collection,
     Constants.ReserveType reserveType
   ) external onlyAdmin {
     if (collection == address(0)) revert Errors.ZeroAddress();
     _allowedCollections[collection] = reserveType;
+    emit AllowCollectionReserveType(collection, uint256(reserveType));
   }
 
-  function getCollectiononReserveType(
+  function getCollectionReserveType(
     address collection
   ) external view returns (Constants.ReserveType) {
     return _allowedCollections[collection];
@@ -102,6 +109,7 @@ contract Manager is BaseCoreModule, IManagerModule {
   function setUTokenFactory(address uTokenFactory) external onlyAdmin {
     if (uTokenFactory == address(0)) revert Errors.ZeroAddress();
     _uTokenFactory = uTokenFactory;
+    emit SetUTokenFactory(uTokenFactory);
   }
 
   function getUTokenFactory() external view returns (address) {
@@ -134,6 +142,7 @@ contract Manager is BaseCoreModule, IManagerModule {
   function emergencyFreezeLoan(bytes32 loanId) external onlyEmergency {
     if (loanId == bytes32(0)) revert Errors.InvalidLoanId();
     _loans[loanId].freeze();
+    emit EmergencyFreezeLoan(loanId);
   }
 
   /**
@@ -143,6 +152,7 @@ contract Manager is BaseCoreModule, IManagerModule {
   function emergencyActivateLoan(bytes32 loanId) external onlyEmergency {
     if (loanId == bytes32(0)) revert Errors.InvalidLoanId();
     _loans[loanId].activate();
+    emit EmergencyActivateLoan(loanId);
   }
 
   /**
@@ -152,6 +162,7 @@ contract Manager is BaseCoreModule, IManagerModule {
   function emergencyBlockLoan(bytes32 loanId) external onlyEmergency {
     if (loanId == bytes32(0)) revert Errors.InvalidLoanId();
     _loans[loanId].blocked();
+    emit EmergencyBlockLoan(loanId);
   }
 
   /**
@@ -165,5 +176,6 @@ contract Manager is BaseCoreModule, IManagerModule {
   ) external onlyEmergency {
     if (orderId == bytes32(0)) revert Errors.InvalidOrderId();
     _orders[orderId].timeframe.endTime = newEndTime;
+    emit EmergencyUpdateEndTimeAuction(orderId, newEndTime);
   }
 }

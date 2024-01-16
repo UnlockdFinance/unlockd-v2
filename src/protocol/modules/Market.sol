@@ -169,6 +169,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         revert Errors.LoanNotUpdated();
       }
 
+  
       IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
 
       ValidationLogic.validateFutureLoanState(

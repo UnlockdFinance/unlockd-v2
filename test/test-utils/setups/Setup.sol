@@ -401,10 +401,10 @@ contract Setup is Base, ActorsBase, NFTBase {
       */
 
       // ADD COLLECTIONS
-      manager.allowCollectiononReserveType(_nfts.get('PUNK'), Constants.ReserveType.ALL);
-      manager.allowCollectiononReserveType(_nfts.get('KITTY'), Constants.ReserveType.COMMON);
-      manager.allowCollectiononReserveType(_nfts.get('ROLEX'), Constants.ReserveType.STABLE);
-      manager.allowCollectiononReserveType(_nfts.get('POKEMON'), Constants.ReserveType.SPECIAL);
+      manager.allowCollectionReserveType(_nfts.get('PUNK'), Constants.ReserveType.ALL);
+      manager.allowCollectionReserveType(_nfts.get('KITTY'), Constants.ReserveType.COMMON);
+      manager.allowCollectionReserveType(_nfts.get('ROLEX'), Constants.ReserveType.STABLE);
+      manager.allowCollectionReserveType(_nfts.get('POKEMON'), Constants.ReserveType.SPECIAL);
 
       // Configure Adapters
       uint256 x = 0;

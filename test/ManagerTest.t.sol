@@ -133,37 +133,37 @@ contract ManagerTest is Setup {
     vm.startPrank(_admin);
 
     assertEq(
-      uint(Manager(_manager).getCollectiononReserveType(address(0x10001))),
+      uint(Manager(_manager).getCollectionReserveType(address(0x10001))),
       uint(Constants.ReserveType.DISABLED)
     );
 
-    Manager(_manager).allowCollectiononReserveType(address(0x1), Constants.ReserveType.DISABLED);
+    Manager(_manager).allowCollectionReserveType(address(0x1), Constants.ReserveType.DISABLED);
     assertEq(
-      uint(Manager(_manager).getCollectiononReserveType(address(0x1))),
+      uint(Manager(_manager).getCollectionReserveType(address(0x1))),
       uint(Constants.ReserveType.DISABLED)
     );
 
-    Manager(_manager).allowCollectiononReserveType(address(0x2), Constants.ReserveType.ALL);
+    Manager(_manager).allowCollectionReserveType(address(0x2), Constants.ReserveType.ALL);
     assertEq(
-      uint(Manager(_manager).getCollectiononReserveType(address(0x2))),
+      uint(Manager(_manager).getCollectionReserveType(address(0x2))),
       uint(Constants.ReserveType.ALL)
     );
 
-    Manager(_manager).allowCollectiononReserveType(address(0x3), Constants.ReserveType.STABLE);
+    Manager(_manager).allowCollectionReserveType(address(0x3), Constants.ReserveType.STABLE);
     assertEq(
-      uint(Manager(_manager).getCollectiononReserveType(address(0x3))),
+      uint(Manager(_manager).getCollectionReserveType(address(0x3))),
       uint(Constants.ReserveType.STABLE)
     );
 
-    Manager(_manager).allowCollectiononReserveType(address(0x4), Constants.ReserveType.COMMON);
+    Manager(_manager).allowCollectionReserveType(address(0x4), Constants.ReserveType.COMMON);
     assertEq(
-      uint(Manager(_manager).getCollectiononReserveType(address(0x4))),
+      uint(Manager(_manager).getCollectionReserveType(address(0x4))),
       uint(Constants.ReserveType.COMMON)
     );
 
-    Manager(_manager).allowCollectiononReserveType(address(0x5), Constants.ReserveType.SPECIAL);
+    Manager(_manager).allowCollectionReserveType(address(0x5), Constants.ReserveType.SPECIAL);
     assertEq(
-      uint(Manager(_manager).getCollectiononReserveType(address(0x5))),
+      uint(Manager(_manager).getCollectionReserveType(address(0x5))),
       uint(Constants.ReserveType.SPECIAL)
     );
     vm.stopPrank();
