@@ -14,6 +14,7 @@ import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 
 import {IMarketAdapter} from '../../src/interfaces/adapter/IMarketAdapter.sol';
+import {IEmergency} from '../../src/interfaces/IEmergency.sol';
 
 import {Action, ActionSign} from '../../src/protocol/modules/Action.sol';
 import {Auction, AuctionSign, IAuctionModule} from '../../src/protocol/modules/Auction.sol';
@@ -43,8 +44,8 @@ contract MaxApyTest is Setup {
 
     // Create wallet and mint to the safe wallet
     (_wallet, , _protocolOwner, ) = createWalletAndMintTokens(_actor, 'PUNK');
-    // writeTokenBalance(_actor, _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
-    // writeTokenBalance(address(_market), _uTokens['WETH'].UNDERLYING_ASSET_ADDRESS(), 100 ether);
+    writeTokenBalance(_actor, makeAsset('WETH'), 100 ether);
+    writeTokenBalance(address(_market), makeAsset('WETH'), 100 ether);
 
     _nft = _nfts.get('PUNK');
 
@@ -57,112 +58,112 @@ contract MaxApyTest is Setup {
   // // RESERVOIR
   // /////////////////////////////////////////////////////////////////////////////////
 
-  // function test_reservoirAdapter_preSell() public {
-  //   hoax(_actor);
-  //   IProtocolOwner(_protocolOwner).delegateOneExecution(_reservoirAdapter, true);
+  function test_reservoirAdapter_preSell() public {
+    hoax(_actor);
+    IProtocolOwner(_protocolOwner).delegateOneExecution(_reservoirAdapter, true);
 
-  //   hoax(_actor);
-  //   IMarketAdapter(_reservoirAdapter).preSell(
-  //     IMarketAdapter.PreSellParams({
-  //       loanId: 0,
-  //       collection: address(_nft),
-  //       tokenId: 1,
-  //       underlyingAsset: makeAsset('WETH'),
-  //       marketPrice: 1 ether,
-  //       marketApproval: address(_market),
-  //       protocolOwner: _protocolOwner
-  //     })
-  //   );
-  // }
+    hoax(_actor);
+    IMarketAdapter(_reservoirAdapter).preSell(
+      IMarketAdapter.PreSellParams({
+        loanId: 0,
+        collection: address(_nft),
+        tokenId: 1,
+        underlyingAsset: makeAsset('WETH'),
+        marketPrice: 1 ether,
+        marketApproval: address(_market),
+        protocolOwner: _protocolOwner
+      })
+    );
+  }
 
-  // function test_reservoirAdapter_sell() public {
-  //   test_reservoirAdapter_preSell();
+  function test_reservoirAdapter_sell() public {
+    test_reservoirAdapter_preSell();
 
-  //   IMarketAdapter.SellParams memory sellParams = IMarketAdapter.SellParams({
-  //     wallet: _wallet,
-  //     protocolOwner: _protocolOwner,
-  //     underlyingAsset: makeAsset('WETH'),
-  //     marketPrice: 1 ether,
-  //     to: address(_market),
-  //     value: 0,
-  //     data: abi.encodeWithSelector(
-  //       NFTMarket.sell.selector,
-  //       address(_nft),
-  //       1,
-  //       makeAsset('WETH'),
-  //       1 ether
-  //     )
-  //   });
+    IMarketAdapter.SellParams memory sellParams = IMarketAdapter.SellParams({
+      wallet: _wallet,
+      protocolOwner: _protocolOwner,
+      underlyingAsset: makeAsset('WETH'),
+      marketPrice: 1 ether,
+      to: address(_market),
+      value: 0,
+      data: abi.encodeWithSelector(
+        NFTMarket.sell.selector,
+        address(_nft),
+        1,
+        makeAsset('WETH'),
+        1 ether
+      )
+    });
 
-  //   hoax(_actor);
-  //   IProtocolOwner(_protocolOwner).delegateOneExecution(_reservoirAdapter, true);
+    hoax(_actor);
+    IProtocolOwner(_protocolOwner).delegateOneExecution(_reservoirAdapter, true);
 
-  //   hoax(_actor);
-  //   IMarketAdapter(_reservoirAdapter).sell(sellParams);
+    hoax(_actor);
+    IMarketAdapter(_reservoirAdapter).sell(sellParams);
 
-  //   assertEq(ERC721(_nft).ownerOf(1), address(_market));
-  // }
+    assertEq(ERC721(_nft).ownerOf(1), address(_market));
+  }
 
-  // function test_reservoirAdapter_preBuy() public {
-  //   hoax(_actor);
-  //   IMarketAdapter(_reservoirAdapter).preBuy(
-  //     IMarketAdapter.PreBuyParams({
-  //       loanId: 0,
-  //       collection: address(_nft),
-  //       tokenId: 1,
-  //       underlyingAsset: makeAsset('WETH'),
-  //       marketPrice: 1 ether,
-  //       marketApproval: address(_market),
-  //       protocolOwner: _protocolOwner
-  //     })
-  //   );
-  // }
+  function test_reservoirAdapter_preBuy() public {
+    hoax(_actor);
+    IMarketAdapter(_reservoirAdapter).preBuy(
+      IMarketAdapter.PreBuyParams({
+        loanId: 0,
+        collection: address(_nft),
+        tokenId: 1,
+        underlyingAsset: makeAsset('WETH'),
+        marketPrice: 1 ether,
+        marketApproval: address(_market),
+        protocolOwner: _protocolOwner
+      })
+    );
+  }
 
-  // function test_reservoirAdapter_buy() public {
-  //   // Mint the asset on the market
-  //   MintableERC20(_nft).mintToAddress(111, address(_market));
-  //   // Send amount to the adapter
-  //   hoax(_actor);
-  //   IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
-  //   // Execute buy
-  //   hoax(_actor);
-  //   IMarketAdapter(_reservoirAdapter).buy(
-  //     IMarketAdapter.BuyParams({
-  //       wallet: _wallet,
-  //       underlyingAsset: makeAsset('WETH'),
-  //       marketPrice: 1 ether,
-  //       marketApproval: address(_market),
-  //       to: address(_market),
-  //       value: 0,
-  //       data: abi.encodeWithSelector(
-  //         NFTMarket.buy.selector,
-  //         _actor,
-  //         address(_nft),
-  //         111,
-  //         makeAsset('WETH'),
-  //         1 ether
-  //       )
-  //     })
-  //   );
-  //   // We check that the current owner is the wallet
-  //   assertEq(ERC721(_nft).ownerOf(111), _actor);
-  // }
+  function test_reservoirAdapter_buy() public {
+    // Mint the asset on the market
+    MintableERC20(_nft).mintToAddress(111, address(_market));
+    // Send amount to the adapter
+    hoax(_actor);
+    IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
+    // Execute buy
+    hoax(_actor);
+    IMarketAdapter(_reservoirAdapter).buy(
+      IMarketAdapter.BuyParams({
+        wallet: _wallet,
+        underlyingAsset: makeAsset('WETH'),
+        marketPrice: 1 ether,
+        marketApproval: address(_market),
+        to: address(_market),
+        value: 0,
+        data: abi.encodeWithSelector(
+          NFTMarket.buy.selector,
+          _actor,
+          address(_nft),
+          111,
+          makeAsset('WETH'),
+          1 ether
+        )
+      })
+    );
+    // We check that the current owner is the wallet
+    assertEq(ERC721(_nft).ownerOf(111), _actor);
+  }
 
-  // function test_reservoirAdapter_emergency_withdraw() public {
-  //   // PREPARE
-  //   hoax(_actor);
-  //   payable(_reservoirAdapter).call{value: 1 ether}('');
-  //   hoax(_actor);
-  //   IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
-  //   assertEq(makeAddr('filipe').balance, 0);
-  //   hoax(_admin);
-  //   IMarketAdapter(_reservoirAdapter).emergencyWithdraw(payable(makeAddr('filipe')));
+  function test_reservoirAdapter_emergency_withdraw() public {
+    // PREPARE
+    hoax(_actor);
+    payable(_reservoirAdapter).call{value: 1 ether}('');
+    hoax(_actor);
+    IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
+    assertEq(makeAddr('filipe').balance, 0);
+    hoax(_admin);
+    IEmergency(_reservoirAdapter).emergencyWithdraw(payable(makeAddr('filipe')));
 
-  //   assertEq(makeAddr('filipe').balance, 1 ether);
-  //   assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 0);
-  //   hoax(_admin);
-  //   IMarketAdapter(_reservoirAdapter).emergencyWithdrawERC20(makeAsset('WETH'), makeAddr('filipe'));
+    assertEq(makeAddr('filipe').balance, 1 ether);
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 0);
+    hoax(_admin);
+    IEmergency(_reservoirAdapter).emergencyWithdrawERC20(makeAsset('WETH'), makeAddr('filipe'));
 
-  //   assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 1 ether);
-  // }
+    assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('filipe')), 1 ether);
+  }
 }
