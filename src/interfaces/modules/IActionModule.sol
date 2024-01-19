@@ -12,7 +12,8 @@ interface IActionModule is ILoan {
     bytes32 indexed loanId,
     uint256 amount,
     uint256 totalAssets,
-    address token
+    address token,
+    DataTypes.Asset[] indexed assets
   );
   event Repay(address indexed user, bytes32 indexed loanId, uint256 amount, bytes32[] assets);
 

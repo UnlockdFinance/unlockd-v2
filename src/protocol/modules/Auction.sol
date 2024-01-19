@@ -322,7 +322,15 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       buyer: msgSender
     });
 
-    emit AuctionBid(loanId, order.orderId, order.offer.assetId, totalAmount, msgSender);
+    emit AuctionBid(
+      loanId,
+      order.orderId,
+      order.offer.assetId,
+      amountToPay,
+      amountOfDebt,
+      totalAmount,
+      msgSender
+    );
   }
 
   /**

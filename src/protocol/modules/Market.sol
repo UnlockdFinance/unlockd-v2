@@ -115,6 +115,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
 
     DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
+
+    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
     DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
       underlyingAsset
     );
@@ -168,8 +170,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       if (signMarket.loan.totalAssets == loan.totalAssets) {
         revert Errors.LoanNotUpdated();
       }
-
-      IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
 
       ValidationLogic.validateFutureLoanState(
         ValidationLogic.ValidateLoanStateParams({
@@ -413,7 +413,15 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // Freeze owner LOAN position
     _loans[order.offer.loanId].freeze();
 
-    emit MarketBid(loanId, order.orderId, order.offer.assetId, totalAmount, msgSender);
+    emit MarketBid(
+      loanId,
+      order.orderId,
+      order.offer.assetId,
+      amountToPay,
+      amountOfDebt,
+      totalAmount,
+      msgSender
+    );
   }
 
   /**

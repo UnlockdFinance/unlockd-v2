@@ -15,6 +15,8 @@ interface IMarketModule {
     bytes32 indexed loanId,
     bytes32 indexed orderId,
     bytes32 indexed assetId,
+    uint256 amountToPay,
+    uint256 amountOfDebt,
     uint256 amount,
     address user
   );

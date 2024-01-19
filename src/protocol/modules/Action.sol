@@ -73,6 +73,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
     uint256 cachedAssets = assets.length;
 
+    // We have to update the index BEFORE obtaining the borrowed amount.
+    UTokenFactory(_uTokenFactory).updateState(signAction.underlyingAsset);
+
     DataTypes.ReserveData memory reserve = UTokenFactory(_uTokenFactory).getReserveData(
       signAction.underlyingAsset
     );
@@ -180,9 +183,6 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         revert Errors.LoanNotActive();
       }
 
-      // We have to update the index BEFORE obtaining the borrowed amount.
-      UTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
-
       UTokenFactory(_uTokenFactory).borrow(
         loan.underlyingAsset,
         loan.loanId,
@@ -196,7 +196,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       revert Errors.LoanNotUpdated();
     }
 
-    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.underlyingAsset);
+    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.underlyingAsset, assets);
   }
 
   /**
@@ -231,8 +231,8 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       amount = uTokenFactory.getScaledDebtFromLoanId(loan.underlyingAsset, loan.loanId);
     }
 
-    DataTypes.ReserveData memory reserve = uTokenFactory.getReserveData(loan.underlyingAsset);
     uTokenFactory.updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = uTokenFactory.getReserveData(loan.underlyingAsset);
 
     if (amount != 0) {
       ValidationLogic.validateRepay(signAction.loan.loanId, _uTokenFactory, amount, reserve);
