@@ -13,6 +13,8 @@ import {Installer} from '../../src/protocol/modules/Installer.sol';
 import {MaxApyStrategy} from '../../src/protocol/strategies/MaxApy.sol';
 import {ReservoirAdapter} from '../../src/protocol/adapters/ReservoirAdapter.sol';
 
+import {IWETHGateway} from '../../src/interfaces/IWETHGateway.sol';
+
 import {ScaledToken} from '../../src/libraries/tokens/ScaledToken.sol';
 import {IUTokenFactory} from '../../src/interfaces/IUTokenFactory.sol';
 import {InterestRate} from '../../src/libraries/base/InterestRate.sol';
@@ -61,6 +63,11 @@ contract DeployProtocolScript is DeployerHelper {
           Constants.MODULEID__INSTALLER
         );
         Installer(installer).installModules(modules);
+      }
+      // ALLOW WETHGATEWEY
+      if (addresses.wethGateway != address(0)) {
+        // Authorize protocol
+        IWETHGateway(addresses.wethGateway).authorizeProtocol(addresses.unlockd);
       }
 
       /*** CONFIGURE PROTOCOL */

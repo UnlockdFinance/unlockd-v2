@@ -11,6 +11,8 @@ import {UTokenFactory} from '../../src/protocol/UTokenFactory.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../src/protocol/modules/Installer.sol';
 import {MaxApyStrategy} from '../../src/protocol/strategies/MaxApy.sol';
+import {WETHGateway} from '../../src/protocol/gateway/WETHGateway.sol';
+
 import {ReservoirAdapter} from '../../src/protocol/adapters/ReservoirAdapter.sol';
 
 import {ScaledToken} from '../../src/libraries/tokens/ScaledToken.sol';
@@ -46,6 +48,7 @@ contract DeployPeripheryScript is DeployerHelper {
       );
       addresses.strategy = _maxApyStrategy;
     }
+
     /******************** UTokenFactory ********************/
     {
       UTokenFactory uTokenFactoryImp = new UTokenFactory(addresses.aclManager);
@@ -123,6 +126,10 @@ contract DeployPeripheryScript is DeployerHelper {
           0x0000000000000000000000000000000000000000
         )
       );
+    }
+    /******************** WETHGATEWAY ********************/
+    {
+      addresses.wethGateway = address(new WETHGateway(DeployConfig.WETH, addresses.uTokenFactory));
     }
 
     _encodeJson(addresses);

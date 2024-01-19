@@ -17,6 +17,7 @@ contract DeployerHelper is Script {
     address walletFactory;
     address walletRegistry;
     address allowedControllers;
+    address wethGateway;
     address reserveOracle;
     address adapter;
     address strategy;
@@ -44,6 +45,7 @@ contract DeployerHelper is Script {
         unlockd: abi.decode(persistedJson.parseRaw('.unlockd'), (address)),
         walletFactory: abi.decode(persistedJson.parseRaw('.walletFactory'), (address)),
         walletRegistry: abi.decode(persistedJson.parseRaw('.walletRegistry'), (address)),
+        wethGateway: abi.decode(persistedJson.parseRaw('.wethGateway'), (address)),
         allowedControllers: abi.decode(persistedJson.parseRaw('.allowedControllers'), (address)),
         reserveOracle: abi.decode(persistedJson.parseRaw('.reserveOracle'), (address)),
         adapter: abi.decode(persistedJson.parseRaw('.adapter'), (address)),
@@ -59,6 +61,7 @@ contract DeployerHelper is Script {
         unlockd: address(0),
         walletFactory: address(0),
         walletRegistry: address(0),
+        wethGateway: address(0),
         allowedControllers: address(0),
         reserveOracle: address(0),
         adapter: address(0),
@@ -78,6 +81,7 @@ contract DeployerHelper is Script {
     vm.serializeAddress(json, 'unlockd', addresses.unlockd);
     vm.serializeAddress(json, 'walletFactory', addresses.walletFactory);
     vm.serializeAddress(json, 'walletRegistry', addresses.walletRegistry);
+    vm.serializeAddress(json, 'wethGateway', addresses.walletRegistry);
     vm.serializeAddress(json, 'allowedControllers', addresses.allowedControllers);
     vm.serializeAddress(json, 'reserveOracle', addresses.reserveOracle);
     vm.serializeAddress(json, 'adapter', addresses.adapter);

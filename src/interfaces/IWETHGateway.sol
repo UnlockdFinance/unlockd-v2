@@ -5,4 +5,6 @@ interface IWETHGateway {
   function depositETH(address onBehalfOf) external payable;
 
   function withdrawETH(uint256 amount, address to) external;
+
+  function authorizeProtocol(address uTokenFactory) external;
 }

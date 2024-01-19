@@ -107,7 +107,6 @@ contract UTokenFactory is
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
     reserve.updateState(balance);
-
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
 
     reserve.mintScaled(balance, onBehalfOf, amount);
@@ -141,7 +140,6 @@ contract UTokenFactory is
     reserve.strategyWithdraw(balance, amount);
 
     reserve.updateState(balance);
-
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
 
     // Burn scaled tokens
@@ -188,7 +186,6 @@ contract UTokenFactory is
 
     // Update balances
     borrowScaledBalanceByLoanId[underlyingAsset][loanId] += scaledAmount;
-
     borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] += scaledAmount;
 
     IERC20(underlyingAsset).safeTransfer(to, amount);
@@ -239,9 +236,9 @@ contract UTokenFactory is
     // User can't repay more thant the current debt
     if (currentDebt == 0 || currentDebt < scaledAmount) revert Errors.AmountExceedsDebt();
     // Update balances
-
     borrowScaledBalanceByLoanId[underlyingAsset][loanId] -= scaledAmount;
     borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] -= scaledAmount;
+
     IERC20(underlyingAsset).safeTransferFrom(from, address(this), amount);
     reserve.updateState(balance);
 
