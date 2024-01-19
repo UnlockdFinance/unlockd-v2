@@ -584,39 +584,44 @@ contract AuctionTest is Setup {
     }
   }
 
-  // function test_auction_redeem_expired_liquidation_auction() public {
-  //   vm.recordLogs();
-  //   bytes32 loanId = test_auction_bid_liquidation_auction();
-  //   Vm.Log[] memory entries = vm.getRecordedLogs();
+  function test_auction_redeem_expired_liquidation_auction() public {
+    vm.recordLogs();
+    bytes32 loanId = test_auction_bid_liquidation_auction();
+    Vm.Log[] memory entries = vm.getRecordedLogs();
 
-  //   bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
 
-  //   vm.warp(block.timestamp + 3000);
-  //   writeTokenBalance(_actor, _WETH, 2 ether);
-  //   {
-  //     (
-  //       DataTypes.SignAuction memory signAuction,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = auction_signature(
-  //         _auction,
-  //         AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
+    vm.warp(block.timestamp + 3000);
+    writeTokenBalance(_actor, _WETH, 2 ether);
+    {
+      (
+        DataTypes.SignAuction memory signAuction,
+        DataTypes.EIP712Signature memory sig
+      ) = auction_signature(
+          _auction,
+          AuctionSignParams({user: _actor, loanId: loanId, price: 1 ether, totalAssets: 2}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
 
-  //     hoax(_actor);
-  //     approveAsset(_WETH, address(getUnlockd()), 757500000000097574); // APPROVE AMOUNT
+      bytes32[] memory assets = new bytes32[](2);
 
-  //     hoax(_actor);
-  //     vm.expectRevert(Errors.TimestampExpired.selector);
-  //     Auction(_auction).redeem(orderId, 757500000000097574, signAuction, sig);
-  //   }
-  // }
+      assets[0] = AssetLogic.assetId(_nft, 0);
+      assets[1] = AssetLogic.assetId(_nft, 1);
+
+      hoax(_actor);
+      approveAsset(_WETH, address(getUnlockd()), 757500000000097574); // APPROVE AMOUNT
+
+      hoax(_actor);
+      vm.expectRevert(Errors.TimestampExpired.selector);
+      Auction(_auction).redeem(757500000000097574, assets, signAuction, sig);
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////////////
   // FINALIZE
