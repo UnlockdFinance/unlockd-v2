@@ -100,7 +100,7 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 0.2 ether,
         assetPrice: 1 ether,
         assetLtv: 6000
@@ -118,7 +118,7 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 1 ether,
         assetPrice: 10 ether,
         assetLtv: 6000
@@ -137,7 +137,7 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 10,
         assetPrice: 1 ether,
         assetLtv: 6000
@@ -154,7 +154,7 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 0.9 ether,
         assetPrice: 1 ether,
         assetLtv: 6000
@@ -172,7 +172,7 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 0.1 ether,
         assetPrice: 1 ether,
         assetLtv: 6000
@@ -190,13 +190,13 @@ contract OrderLogicTest is Setup {
       OrderLogic.RefundBidderParams({
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         owner: makeAddr('filipe'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         underlyingAsset: makeAsset('WETH'),
         reserveOracle: _reserveOracle,
         amountToPay: 0.2 ether,
         amountOfDebt: 1 ether,
-        reserve: _uTokenFactory.getReserveData(makeAsset('WETH'))
+        reserve: _uTokenVault.getReserveData(makeAsset('WETH'))
       })
     );
     assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 98800000000000000000);
@@ -212,13 +212,13 @@ contract OrderLogicTest is Setup {
       OrderLogic.RefundBidderParams({
         loanId: 0,
         owner: makeAddr('filipe'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         underlyingAsset: makeAsset('WETH'),
         reserveOracle: _reserveOracle,
         amountToPay: 1 ether,
         amountOfDebt: 0,
-        reserve: _uTokenFactory.getReserveData(makeAsset('WETH'))
+        reserve: _uTokenVault.getReserveData(makeAsset('WETH'))
       })
     );
     assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 99000000000000000000);
@@ -233,13 +233,13 @@ contract OrderLogicTest is Setup {
       OrderLogic.RefundBidderParams({
         loanId: 0xd162c4fbc1f5c172e955d240e018e6eb6b3dfdd9fb4b66ebb33f749262b40c3a,
         owner: makeAddr('filipe'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         underlyingAsset: makeAsset('WETH'),
         reserveOracle: _reserveOracle,
         amountToPay: 0.2 ether,
         amountOfDebt: 0,
-        reserve: _uTokenFactory.getReserveData(makeAsset('WETH'))
+        reserve: _uTokenVault.getReserveData(makeAsset('WETH'))
       })
     );
     assertEq(IERC20(makeAsset('WETH')).balanceOf(makeAddr('protocol')), 99800000000000000000);
@@ -255,7 +255,7 @@ contract OrderLogicTest is Setup {
       OrderLogic.RepayDebtParams({
         loanId: 0xff7a1e776049eff68797fa267f8359fdef4658ccd2794220032729778966754f,
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         owner: makeAddr('filipe'),
         amount: 1 ether
@@ -294,28 +294,28 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 1 ether,
         assetPrice: 10 ether,
         assetLtv: 6000
       })
     );
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
     uint256 amountLeft = OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         totalAmount: 2 ether,
         aggLoanPrice: 10 ether,
         aggLtv: 6000
       }),
-      _uTokenFactory.getReserveData(makeAsset('WETH'))
+      _uTokenVault.getReserveData(makeAsset('WETH'))
     );
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 0.9 ether);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 0.9 ether);
     vm.stopPrank();
   }
 
@@ -348,28 +348,28 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 1 ether,
         assetPrice: 10 ether,
         assetLtv: 6000
       })
     );
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
     uint256 amountLeft = OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         totalAmount: 1 ether,
         aggLoanPrice: 0,
         aggLtv: 6000
       }),
-      _uTokenFactory.getReserveData(makeAsset('WETH'))
+      _uTokenVault.getReserveData(makeAsset('WETH'))
     );
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 0);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 0);
     vm.stopPrank();
   }
 
@@ -401,29 +401,29 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 1 ether,
         assetPrice: 10 ether,
         assetLtv: 6000
       })
     );
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
     uint256 amountLeft = OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         from: makeAddr('protocol'),
         totalAmount: 2 ether,
         aggLoanPrice: 10 ether,
         aggLtv: 6000
       }),
-      _uTokenFactory.getReserveData(makeAsset('WETH'))
+      _uTokenVault.getReserveData(makeAsset('WETH'))
     );
 
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 0);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 0);
 
     vm.stopPrank();
   }
@@ -456,19 +456,19 @@ contract OrderLogicTest is Setup {
         owner: makeAddr('filipe'),
         to: makeAddr('filipe'),
         underlyingAsset: makeAsset('WETH'),
-        uTokenFactory: address(_uTokenFactory),
+        uTokenVault: address(_uTokenVault),
         amountOfDebt: 3 ether,
         assetPrice: 10 ether,
         assetLtv: 6000
       })
     );
-    assertEq(_uTokenFactory.getDebtFromLoanId(makeAsset('WETH'), loanId), 3 ether);
+    assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 3 ether);
     // Repay Debt
-    DataTypes.ReserveData memory data = _uTokenFactory.getReserveData(makeAsset('WETH'));
+    DataTypes.ReserveData memory data = _uTokenVault.getReserveData(makeAsset('WETH'));
     OrderLogic.RepayDebtToSellParams memory orderData = OrderLogic.RepayDebtToSellParams({
       reserveOracle: _reserveOracle,
       underlyingAsset: makeAsset('WETH'),
-      uTokenFactory: address(_uTokenFactory),
+      uTokenVault: address(_uTokenVault),
       from: makeAddr('protocol'),
       totalAmount: 1 ether,
       aggLoanPrice: 0,

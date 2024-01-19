@@ -34,7 +34,7 @@ library ValidationLogic {
     uint256 amount;
     uint256 price;
     address reserveOracle;
-    address uTokenFactory;
+    address uTokenVault;
     DataTypes.ReserveData reserve;
     DataTypes.SignLoanConfig loanConfig;
   }
@@ -58,7 +58,7 @@ library ValidationLogic {
         params.amount,
         params.price,
         params.reserveOracle,
-        params.uTokenFactory,
+        params.uTokenVault,
         params.reserve,
         params.loanConfig
       );
@@ -101,7 +101,7 @@ library ValidationLogic {
         params.amount,
         params.price,
         params.reserveOracle,
-        params.uTokenFactory,
+        params.uTokenVault,
         params.reserve,
         params.loanConfig
       );
@@ -128,16 +128,12 @@ library ValidationLogic {
 
   function validateRepay(
     bytes32 loanId,
-    address uTokenFactory,
+    address uTokenVault,
     uint256 amount,
     DataTypes.ReserveData memory reserve
   ) internal view {
     // Check allowance to perform the payment to the UToken
-    uint256 loanDebt = GenericLogic.calculateLoanDebt(
-      loanId,
-      uTokenFactory,
-      reserve.underlyingAsset
-    );
+    uint256 loanDebt = GenericLogic.calculateLoanDebt(loanId, uTokenVault, reserve.underlyingAsset);
 
     if (amount > loanDebt) {
       revert Errors.AmountExceedsDebt();

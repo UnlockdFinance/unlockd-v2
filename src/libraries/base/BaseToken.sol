@@ -17,7 +17,7 @@ abstract contract BaseToken is ERC20Upgradeable {
   //  CONFIGURATION
   /////////////////////////////////////////
   address internal _aclManager;
-  address internal _uTokenFactory;
+  address internal _uTokenVault;
   uint8 internal _decimals;
   /////////////////////////////////////////
   //  Status
@@ -60,8 +60,8 @@ abstract contract BaseToken is ERC20Upgradeable {
     _;
   }
 
-  modifier onlyUTokenFactory() {
-    if (_uTokenFactory != _msgSender()) revert Errors.UTokenAccessDenied();
+  modifier onlyUTokenVault() {
+    if (_uTokenVault != _msgSender()) revert Errors.UTokenAccessDenied();
     _;
   }
 
@@ -79,13 +79,13 @@ abstract contract BaseToken is ERC20Upgradeable {
 
   function __BaseToken_init(
     address aclManager_,
-    address uTokenFactory_,
+    address uTokenVault_,
     uint8 decimals_,
     string calldata name_,
     string calldata symbol_
   ) internal initializer {
     _aclManager = aclManager_;
-    _uTokenFactory = uTokenFactory_;
+    _uTokenVault = uTokenVault_;
     _decimals = decimals_;
     __ERC20_init(name_, symbol_);
 

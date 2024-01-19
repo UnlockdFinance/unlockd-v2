@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import {DataTypes} from '../types/DataTypes.sol';
 import {Constants} from '../libraries/helpers/Constants.sol';
 
-interface IUTokenFactory {
+interface IUTokenVault {
   //////////////////////////////////
   // EVENS
 

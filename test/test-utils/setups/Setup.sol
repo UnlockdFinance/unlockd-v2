@@ -34,7 +34,7 @@ import {Source} from '../mock/chainlink/Source.sol';
 
 import {DeployProtocol} from '../../../src/deployer/DeployProtocol.sol';
 
-import {IUTokenFactory} from '../../../src/interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../../src/interfaces/IUTokenVault.sol';
 
 import {Constants} from '../../../src/libraries/helpers/Constants.sol';
 import {ScaledToken} from '../../../src/libraries/tokens/ScaledToken.sol';
@@ -93,7 +93,7 @@ contract Setup is Base, ActorsBase, NFTBase {
     // Deploy strategies
     deploy_strategy(makeAsset('WETH'));
 
-    deploy_uTokenFactory();
+    deploy_uTokenVault();
     // Deploy protocol
     deploy_protocol();
   }
@@ -244,25 +244,23 @@ contract Setup is Base, ActorsBase, NFTBase {
     );
   }
 
-  function deploy_uTokenFactory() public returns (address) {
+  function deploy_uTokenVault() public returns (address) {
     vm.startPrank(_admin);
 
-    UTokenFactory uTokenFactoryImp = new UTokenFactory(address(_aclManager));
+    UTokenVault uTokenVaultImp = new UTokenVault(address(_aclManager));
 
     bytes memory data = abi.encodeWithSelector(
-      UTokenFactory.initialize.selector,
+      UTokenVault.initialize.selector,
       address(new ScaledToken())
     );
 
-    address uTokenFactoryProxy = address(
-      new UnlockdUpgradeableProxy(address(uTokenFactoryImp), data)
-    );
+    address uTokenVaultProxy = address(new UnlockdUpgradeableProxy(address(uTokenVaultImp), data));
 
-    _uTokenFactory = UTokenFactory(address(uTokenFactoryProxy));
+    _uTokenVault = UTokenVault(address(uTokenVaultProxy));
 
     // Deploy weth pool
-    _uTokenFactory.createMarket(
-      IUTokenFactory.CreateMarketParams({
+    _uTokenVault.createMarket(
+      IUTokenVault.CreateMarketParams({
         interestRateAddress: address(
           new InterestRate(address(_aclManager), 1 ether, 1 ether, 1 ether, 1 ether)
         ),
@@ -276,8 +274,8 @@ contract Setup is Base, ActorsBase, NFTBase {
       })
     );
 
-    _uTokenFactory.createMarket(
-      IUTokenFactory.CreateMarketParams({
+    _uTokenVault.createMarket(
+      IUTokenVault.CreateMarketParams({
         interestRateAddress: address(
           new InterestRate(address(_aclManager), 1 ether, 1 ether, 1 ether, 1 ether)
         ),
@@ -291,8 +289,8 @@ contract Setup is Base, ActorsBase, NFTBase {
       })
     );
 
-    _uTokenFactory.createMarket(
-      IUTokenFactory.CreateMarketParams({
+    _uTokenVault.createMarket(
+      IUTokenVault.CreateMarketParams({
         interestRateAddress: address(
           new InterestRate(address(_aclManager), 1 ether, 1 ether, 1 ether, 1 ether)
         ),
@@ -306,8 +304,8 @@ contract Setup is Base, ActorsBase, NFTBase {
       })
     );
 
-    _uTokenFactory.createMarket(
-      IUTokenFactory.CreateMarketParams({
+    _uTokenVault.createMarket(
+      IUTokenVault.CreateMarketParams({
         interestRateAddress: address(
           new InterestRate(address(_aclManager), 1 ether, 1 ether, 1 ether, 1 ether)
         ),
@@ -322,14 +320,14 @@ contract Setup is Base, ActorsBase, NFTBase {
     );
 
     // Activate Pools
-    _uTokenFactory.updateReserveState(makeAsset('WETH'), Constants.ReserveState.ACTIVE);
-    _uTokenFactory.updateReserveState(makeAsset('DAI'), Constants.ReserveState.ACTIVE);
-    _uTokenFactory.updateReserveState(makeAsset('USDC'), Constants.ReserveState.ACTIVE);
-    _uTokenFactory.updateReserveState(makeAsset('SPECIAL'), Constants.ReserveState.ACTIVE);
+    _uTokenVault.updateReserveState(makeAsset('WETH'), Constants.ReserveState.ACTIVE);
+    _uTokenVault.updateReserveState(makeAsset('DAI'), Constants.ReserveState.ACTIVE);
+    _uTokenVault.updateReserveState(makeAsset('USDC'), Constants.ReserveState.ACTIVE);
+    _uTokenVault.updateReserveState(makeAsset('SPECIAL'), Constants.ReserveState.ACTIVE);
 
     vm.stopPrank();
 
-    return address(_uTokenFactory);
+    return address(_uTokenVault);
   }
 
   function deploy_protocol() public {
@@ -390,7 +388,7 @@ contract Setup is Base, ActorsBase, NFTBase {
       manager.setReserveOracle(_reserveOracle);
       manager.setWalletRegistry(_walletRegistry);
       manager.setAllowedControllers(_allowedControllers);
-      manager.setUTokenFactory(address(_uTokenFactory));
+      manager.setUTokenVault(address(_uTokenVault));
       manager.setSafeERC721(address(safeERC721));
       /*
         DISABLED, // Disabled collection
@@ -535,8 +533,8 @@ contract Setup is Base, ActorsBase, NFTBase {
     vm.startPrank(makeAddr('founder'));
     // DEPOSIT
     writeTokenBalance(makeAddr('founder'), underlyingAsset, amount);
-    IERC20(underlyingAsset).approve(address(_uTokenFactory), amount);
-    _uTokenFactory.deposit(underlyingAsset, amount, makeAddr('founder'));
+    IERC20(underlyingAsset).approve(address(_uTokenVault), amount);
+    _uTokenVault.deposit(underlyingAsset, amount, makeAddr('founder'));
 
     vm.stopPrank();
   }

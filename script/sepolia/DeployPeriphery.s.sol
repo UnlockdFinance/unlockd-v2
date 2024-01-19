@@ -7,7 +7,7 @@ import '../helpers/DeployerHelper.sol';
 import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
-import {UTokenFactory} from '../../src/protocol/UTokenFactory.sol';
+import {UTokenVault} from '../../src/protocol/UTokenVault.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../src/protocol/modules/Installer.sol';
 import {MaxApyStrategy} from '../../src/protocol/strategies/MaxApy.sol';
@@ -16,7 +16,7 @@ import {WETHGateway} from '../../src/protocol/gateway/WETHGateway.sol';
 import {ReservoirAdapter} from '../../src/protocol/adapters/ReservoirAdapter.sol';
 
 import {ScaledToken} from '../../src/libraries/tokens/ScaledToken.sol';
-import {IUTokenFactory} from '../../src/interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../src/interfaces/IUTokenVault.sol';
 import {InterestRate} from '../../src/libraries/base/InterestRate.sol';
 import {ReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
 
@@ -49,25 +49,25 @@ contract DeployPeripheryScript is DeployerHelper {
       addresses.strategy = _maxApyStrategy;
     }
 
-    /******************** UTokenFactory ********************/
+    /******************** UTokenVault ********************/
     {
-      UTokenFactory uTokenFactoryImp = new UTokenFactory(addresses.aclManager);
+      UTokenVault uTokenVaultImp = new UTokenVault(addresses.aclManager);
 
       bytes memory data = abi.encodeWithSelector(
-        UTokenFactory.initialize.selector,
+        UTokenVault.initialize.selector,
         address(new ScaledToken())
       );
 
-      address uTokenFactoryProxy = address(
-        new UnlockdUpgradeableProxy(address(uTokenFactoryImp), data)
+      address uTokenVaultProxy = address(
+        new UnlockdUpgradeableProxy(address(uTokenVaultImp), data)
       );
 
-      UTokenFactory _uTokenFactory = UTokenFactory(uTokenFactoryProxy);
-      addresses.uTokenFactory = uTokenFactoryProxy;
+      UTokenVault _uTokenVault = UTokenVault(uTokenVaultProxy);
+      addresses.uTokenVault = uTokenVaultProxy;
 
       // Deploy weth pool
-      _uTokenFactory.createMarket(
-        IUTokenFactory.CreateMarketParams({
+      _uTokenVault.createMarket(
+        IUTokenVault.CreateMarketParams({
           interestRateAddress: address(
             new InterestRate(addresses.aclManager, 1 ether, 1 ether, 1 ether, 1 ether)
           ),
@@ -82,8 +82,8 @@ contract DeployPeripheryScript is DeployerHelper {
       );
 
       // Deploy weth usdc
-      _uTokenFactory.createMarket(
-        IUTokenFactory.CreateMarketParams({
+      _uTokenVault.createMarket(
+        IUTokenVault.CreateMarketParams({
           interestRateAddress: address(
             new InterestRate(addresses.aclManager, 1 ether, 1 ether, 1 ether, 1 ether)
           ),
@@ -98,8 +98,8 @@ contract DeployPeripheryScript is DeployerHelper {
       );
 
       // Activate Pools
-      _uTokenFactory.updateReserveState(DeployConfig.WETH, Constants.ReserveState.ACTIVE);
-      _uTokenFactory.updateReserveState(DeployConfig.USDC, Constants.ReserveState.ACTIVE);
+      _uTokenVault.updateReserveState(DeployConfig.WETH, Constants.ReserveState.ACTIVE);
+      _uTokenVault.updateReserveState(DeployConfig.USDC, Constants.ReserveState.ACTIVE);
     }
 
     {
@@ -129,7 +129,7 @@ contract DeployPeripheryScript is DeployerHelper {
     }
     /******************** WETHGATEWAY ********************/
     {
-      addresses.wethGateway = address(new WETHGateway(DeployConfig.WETH, addresses.uTokenFactory));
+      addresses.wethGateway = address(new WETHGateway(DeployConfig.WETH, addresses.uTokenVault));
     }
 
     _encodeJson(addresses);

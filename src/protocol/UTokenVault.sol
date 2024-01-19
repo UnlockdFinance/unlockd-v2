@@ -9,7 +9,7 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
-import {IUTokenFactory} from '../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../interfaces/IUTokenVault.sol';
 import {UFactoryStorage} from '../libraries/storage/UFactoryStorage.sol';
 import {BaseEmergency} from '../libraries/base/BaseEmergency.sol';
 import {MathUtils} from '../libraries/math/MathUtils.sol';
@@ -26,12 +26,12 @@ import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProx
 
 import {console} from 'forge-std/console.sol';
 
-contract UTokenFactory is
+contract UTokenVault is
   Initializable,
   UUPSUpgradeable,
   UFactoryStorage,
   BaseEmergency,
-  IUTokenFactory
+  IUTokenVault
 {
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
@@ -66,7 +66,7 @@ contract UTokenFactory is
     _sharesTokenImp = sharesTokenImp;
   }
 
-  function createMarket(IUTokenFactory.CreateMarketParams calldata params) external onlyAdmin {
+  function createMarket(IUTokenVault.CreateMarketParams calldata params) external onlyAdmin {
     if (reserves[params.underlyingAsset].lastUpdateTimestamp != 0) {
       revert Errors.UnderlyingMarketAlreadyExist();
     }

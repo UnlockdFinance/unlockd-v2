@@ -13,9 +13,9 @@ import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 
 import {IActionModule} from '../../interfaces/modules/IActionModule.sol';
-import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
-import {UTokenFactory} from '../UTokenFactory.sol';
+import {UTokenVault} from '../UTokenVault.sol';
 import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
@@ -45,7 +45,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
    */
   function getAmountToRepay(bytes32 loanId) external view returns (uint256 amount) {
     DataTypes.Loan memory loan = _loans[loanId];
-    return GenericLogic.calculateLoanDebt(loanId, _uTokenFactory, loan.underlyingAsset);
+    return GenericLogic.calculateLoanDebt(loanId, _uTokenVault, loan.underlyingAsset);
   }
 
   /**
@@ -74,9 +74,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     uint256 cachedAssets = assets.length;
 
     // We have to update the index BEFORE obtaining the borrowed amount.
-    UTokenFactory(_uTokenFactory).updateState(signAction.underlyingAsset);
+    UTokenVault(_uTokenVault).updateState(signAction.underlyingAsset);
 
-    DataTypes.ReserveData memory reserve = UTokenFactory(_uTokenFactory).getReserveData(
+    DataTypes.ReserveData memory reserve = UTokenVault(_uTokenVault).getReserveData(
       signAction.underlyingAsset
     );
     // Generate the loanID
@@ -140,7 +140,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         }
 
         if (
-          UTokenFactory(_uTokenFactory).validateReserveType(
+          UTokenVault(_uTokenVault).validateReserveType(
             reserve.reserveType,
             _allowedCollections[asset.collection]
           ) == false
@@ -173,7 +173,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           amount: amount,
           price: 0,
           reserveOracle: _reserveOracle,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           reserve: reserve,
           loanConfig: signAction.loan
         })
@@ -183,7 +183,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         revert Errors.LoanNotActive();
       }
 
-      UTokenFactory(_uTokenFactory).borrow(
+      UTokenVault(_uTokenVault).borrow(
         loan.underlyingAsset,
         loan.loanId,
         amount,
@@ -224,20 +224,20 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       revert Errors.InvalidUnderlyingAsset();
     }
 
-    UTokenFactory uTokenFactory = UTokenFactory(_uTokenFactory);
+    UTokenVault uTokenVault = UTokenVault(_uTokenVault);
 
     if (type(uint256).max == amount) {
       // If the amount is uint max we return the full amount
-      amount = uTokenFactory.getScaledDebtFromLoanId(loan.underlyingAsset, loan.loanId);
+      amount = uTokenVault.getScaledDebtFromLoanId(loan.underlyingAsset, loan.loanId);
     }
 
-    uTokenFactory.updateState(loan.underlyingAsset);
-    DataTypes.ReserveData memory reserve = uTokenFactory.getReserveData(loan.underlyingAsset);
+    uTokenVault.updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = uTokenVault.getReserveData(loan.underlyingAsset);
 
     if (amount != 0) {
-      ValidationLogic.validateRepay(signAction.loan.loanId, _uTokenFactory, amount, reserve);
+      ValidationLogic.validateRepay(signAction.loan.loanId, _uTokenVault, amount, reserve);
 
-      uTokenFactory.repay(loan.underlyingAsset, loan.loanId, amount, msgSender, msgSender);
+      uTokenVault.repay(loan.underlyingAsset, loan.loanId, amount, msgSender, msgSender);
     }
 
     if (signAction.assets.length != 0) {
@@ -250,7 +250,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           amount: amount,
           price: 0,
           reserveOracle: _reserveOracle,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           reserve: reserve,
           loanConfig: signAction.loan
         })

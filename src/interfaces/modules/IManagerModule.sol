@@ -60,12 +60,12 @@ interface IManagerModule {
   ) external view returns (Constants.ReserveType);
 
   ////////////////////////////////////
-  // UTokenFactory
-  event SetUTokenFactory(address indexed uToken);
+  // UTokenVault
+  event SetUTokenVault(address indexed uToken);
 
-  function setUTokenFactory(address uTokenFactory) external;
+  function setUTokenVault(address uTokenVault) external;
 
-  function getUTokenFactory() external view returns (address);
+  function getUTokenVault() external view returns (address);
 
   ////////////////////////////////////
   // Adapters

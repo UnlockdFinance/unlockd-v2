@@ -6,7 +6,7 @@ import {FixedPointMathLib} from '@solady/utils/FixedPointMathLib.sol';
 
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {IReserveOracle} from '../../interfaces/oracles/IReserveOracle.sol';
-import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
@@ -45,7 +45,7 @@ library GenericLogic {
     uint256 amount,
     uint256 price,
     address reserveOracle,
-    address uTokenFactory,
+    address uTokenVault,
     DataTypes.ReserveData memory reserveData,
     DataTypes.SignLoanConfig memory loanConfig
   ) internal view returns (uint256, uint256, uint256, uint256) {
@@ -62,7 +62,7 @@ library GenericLogic {
     vars.totalDebtInReserve = getUserDebtInBaseCurrency(
       loanId,
       reserveData.underlyingAsset,
-      uTokenFactory,
+      uTokenVault,
       vars.reserveUnitPrice,
       vars.reserveUnit
     );
@@ -96,7 +96,7 @@ library GenericLogic {
   function calculateLoanDebtInBase(
     bytes32 loanId,
     address reserveOracle,
-    address uTokenFactory,
+    address uTokenVault,
     DataTypes.ReserveData memory reserveData
   ) internal view returns (uint256) {
     CalculateLoanDataVars memory vars;
@@ -110,7 +110,7 @@ library GenericLogic {
     vars.totalDebtInReserve = getUserDebtInBaseCurrency(
       loanId,
       reserveData.underlyingAsset,
-      uTokenFactory,
+      uTokenVault,
       vars.reserveUnitPrice,
       vars.reserveUnit
     );
@@ -120,12 +120,12 @@ library GenericLogic {
 
   function calculateLoanDebt(
     bytes32 loanId,
-    address uTokenFactory,
+    address uTokenVault,
     address underlyingAsset
   ) internal view returns (uint256) {
     if (loanId == 0) return 0;
     // fetching variable debt
-    uint256 userTotalDebt = IUTokenFactory(uTokenFactory).getScaledDebtFromLoanId(
+    uint256 userTotalDebt = IUTokenVault(uTokenVault).getScaledDebtFromLoanId(
       underlyingAsset,
       loanId
     );
@@ -190,7 +190,7 @@ library GenericLogic {
    * fetching `balanceOf`
    * @param loanId Id of the loan
    * @param underlyingAsset address underlying
-   * @param uTokenFactory address of the uToken factory
+   * @param uTokenVault address of the uToken factory
    * @param assetPrice The price of the asset for which the total debt of the user is being calculated
    * @param assetUnit The value representing one full unit of the asset (10^decimals)
    * @return The total debt of the user normalized to the base currency
@@ -198,13 +198,13 @@ library GenericLogic {
   function getUserDebtInBaseCurrency(
     bytes32 loanId,
     address underlyingAsset,
-    address uTokenFactory,
+    address uTokenVault,
     uint256 assetPrice,
     uint256 assetUnit
   ) internal view returns (uint256) {
     if (loanId == 0) return 0;
     // fetching variable debt
-    uint256 userTotalDebt = IUTokenFactory(uTokenFactory).getScaledDebtFromLoanId(
+    uint256 userTotalDebt = IUTokenVault(uTokenVault).getScaledDebtFromLoanId(
       underlyingAsset,
       loanId
     );

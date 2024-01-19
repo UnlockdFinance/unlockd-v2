@@ -94,7 +94,7 @@ contract RepayTest is Setup {
     }
 
     hoax(_actor);
-    approveAsset(_WETH, address(_uTokenFactory), amountToBorrow);
+    approveAsset(_WETH, address(_uTokenVault), amountToBorrow);
 
     hoax(_actor);
     Action(_action).repay(amountToBorrow, signAction, sig);
@@ -283,7 +283,7 @@ contract RepayTest is Setup {
     }
 
     hoax(_actor);
-    approveAsset(_WETH, address(_uTokenFactory), amountToBorrow);
+    approveAsset(_WETH, address(_uTokenVault), amountToBorrow);
 
     hoax(_actor);
     Action(_action).repay(amountToBorrow, signAction, sig);
@@ -334,7 +334,7 @@ contract RepayTest is Setup {
     }
 
     vm.startPrank(_actor);
-    approveAsset(_WETH, address(_uTokenFactory), amountToBorrow);
+    approveAsset(_WETH, address(_uTokenVault), amountToBorrow);
 
     vm.expectRevert(Errors.LoanNotActive.selector);
     Action(_action).repay(amountToBorrow, signAction, sig);
@@ -390,7 +390,7 @@ contract RepayTest is Setup {
     }
 
     vm.startPrank(_actorTwo);
-    approveAsset(_WETH, address(_uTokenFactory), amount);
+    approveAsset(_WETH, address(_uTokenVault), amount);
     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualSender.selector));
     Action(_action).repay(amount, signAction, sig);
     vm.stopPrank();
@@ -435,7 +435,7 @@ contract RepayTest is Setup {
     // HERE We change the address of the ACTOR different from the loan and the signature
     vm.startPrank(_actorThree);
 
-    approveAsset(_WETH, address(_uTokenFactory), amount);
+    approveAsset(_WETH, address(_uTokenVault), amount);
     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualSender.selector));
     Action(_action).repay(amount, signAction, sig);
 

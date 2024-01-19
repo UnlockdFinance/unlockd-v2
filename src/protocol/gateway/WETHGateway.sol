@@ -9,7 +9,7 @@ import {WadRayMath} from '../../libraries/math/WadRayMath.sol';
 
 import {IWETH} from '../../interfaces/tokens/IWETH.sol';
 import {IWETHGateway} from '../../interfaces/IWETHGateway.sol';
-import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
 
@@ -17,21 +17,21 @@ contract WETHGateway is IWETHGateway, Ownable {
   using SafeERC20 for IERC20;
   using WadRayMath for uint256;
   IWETH internal immutable WETH;
-  IUTokenFactory internal immutable IUTOKEN;
+  IUTokenVault internal immutable IUTOKEN;
   address internal immutable SCALEDTOKEN;
 
   /**
    * @dev Sets the WETH address and the LendingPoolAddressesProvider address. Infinite approves lending pool.
    * @param weth Address of the Wrapped Ether contract
    **/
-  constructor(address weth, address uTokenFactory) {
+  constructor(address weth, address uTokenVault) {
     WETH = IWETH(weth);
-    IUTOKEN = IUTokenFactory(uTokenFactory);
+    IUTOKEN = IUTokenVault(uTokenVault);
     SCALEDTOKEN = IUTOKEN.getScaledToken(weth);
   }
 
-  function authorizeProtocol(address uTokenFactory) external onlyOwner {
-    WETH.approve(uTokenFactory, type(uint256).max);
+  function authorizeProtocol(address uTokenVault) external onlyOwner {
+    WETH.approve(uTokenVault, type(uint256).max);
   }
 
   function depositETH(address onBehalfOf) external payable override {

@@ -26,7 +26,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
-import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {console} from 'forge-std/console.sol';
 
@@ -62,10 +62,10 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
   ) external view returns (uint256 minBid) {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
-      _uTokenFactory,
+      _uTokenVault,
       aggLoanPrice,
       aggLTV,
-      IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
+      IUTokenVault(_uTokenVault).getReserveData(underlyingAsset)
     );
   }
 
@@ -85,11 +85,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     DataTypes.Order memory order = _orders[orderId];
     amount = OrderLogic.getMaxDebtOrDefault(
       order.offer.loanId,
-      _uTokenFactory,
+      _uTokenVault,
       order.offer.endAmount,
       aggLoanPrice,
       aggLTV,
-      IUTokenFactory(_uTokenFactory).getReserveData(underlyingAsset)
+      IUTokenVault(_uTokenVault).getReserveData(underlyingAsset)
     );
   }
 
@@ -116,8 +116,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
 
-    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       underlyingAsset
     );
 
@@ -140,7 +140,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       );
 
       if (
-        IUTokenFactory(_uTokenFactory).validateReserveType(
+        IUTokenVault(_uTokenVault).validateReserveType(
           reserve.reserveType,
           _allowedCollections[signMarket.collection]
         ) == false
@@ -176,7 +176,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           amount: config.startAmount,
           price: signMarket.assetPrice,
           reserveOracle: _reserveOracle,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           reserve: reserve,
           loanConfig: signMarket.loan
         })
@@ -252,8 +252,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     //Refund bid
     if (bidData.buyer != address(0)) {
-      IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
-      DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      IUTokenVault(_uTokenVault).updateState(loan.underlyingAsset);
+      DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
         loan.underlyingAsset
       );
       // We assuming that the ltv is enought to cover the growing interest of this bid
@@ -264,7 +264,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           reserveOracle: _reserveOracle,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           amountOfDebt: bidData.amountOfDebt,
           amountToPay: bidData.amountToPay,
           reserve: reserve
@@ -322,8 +322,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // Cache UToken address
 
     //Validate if the loan is healthy and starts and auction
-    IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       loan.underlyingAsset
     );
 
@@ -332,7 +332,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       uint256 nextBid = OrderLogic.getMinBid(
         order,
-        _uTokenFactory,
+        _uTokenVault,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
         reserve
@@ -361,7 +361,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           to: address(this),
           amountOfDebt: amountOfDebt,
           underlyingAsset: reserve.underlyingAsset,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           assetPrice: signMarket.assetPrice,
           assetLtv: signMarket.assetLtv
         })
@@ -389,7 +389,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
           reserveOracle: _reserveOracle,
           from: address(this),
           underlyingAsset: loan.underlyingAsset,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           amountOfDebt: order.bid.amountOfDebt,
           amountToPay: order.bid.amountToPay,
           reserve: reserve
@@ -464,8 +464,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     address underlyingAsset = loan.underlyingAsset;
 
-    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       underlyingAsset
     );
 
@@ -479,7 +479,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         amount: totalAmount,
         price: signMarket.assetPrice,
         reserveOracle: _reserveOracle,
-        uTokenFactory: _uTokenFactory,
+        uTokenVault: _uTokenVault,
         reserve: reserve,
         loanConfig: signMarket.loan
       })
@@ -491,7 +491,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
-        uTokenFactory: _uTokenFactory,
+        uTokenVault: _uTokenVault,
         from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,
@@ -601,8 +601,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     // Cache uToken and underlying asset addresses
     address underlyingAsset = loan.underlyingAsset;
 
-    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       underlyingAsset
     );
 
@@ -611,7 +611,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     {
       uint256 minBid = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
-        _uTokenFactory,
+        _uTokenVault,
         totalAmount,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
@@ -632,7 +632,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         reserveOracle: _reserveOracle,
         from: address(this),
         underlyingAsset: loan.underlyingAsset,
-        uTokenFactory: _uTokenFactory,
+        uTokenVault: _uTokenVault,
         amountOfDebt: order.bid.amountOfDebt,
         amountToPay: order.bid.amountToPay,
         reserve: reserve
@@ -701,8 +701,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
     address underlyingAsset = loan.underlyingAsset;
 
-    IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       underlyingAsset
     );
 
@@ -712,7 +712,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       // Check what is the correct pricing for this asset
       uint256 assetPrice = OrderLogic.getMaxDebtOrDefault(
         order.offer.loanId,
-        _uTokenFactory,
+        _uTokenVault,
         order.offer.endAmount,
         signMarket.loan.aggLoanPrice,
         signMarket.loan.aggLtv,
@@ -751,7 +751,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
             owner: msgSender,
             to: address(this),
             underlyingAsset: reserve.underlyingAsset,
-            uTokenFactory: _uTokenFactory,
+            uTokenVault: _uTokenVault,
             amountOfDebt: amountOfDebt,
             assetPrice: signMarket.assetPrice,
             assetLtv: signMarket.assetLtv
@@ -782,7 +782,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
             reserveOracle: _reserveOracle,
             from: address(this),
             underlyingAsset: underlyingAsset,
-            uTokenFactory: _uTokenFactory,
+            uTokenVault: _uTokenVault,
             amountOfDebt: order.bid.amountOfDebt,
             amountToPay: order.bid.amountToPay,
             reserve: reserve
@@ -802,7 +802,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
         underlyingAsset: underlyingAsset,
-        uTokenFactory: _uTokenFactory,
+        uTokenVault: _uTokenVault,
         from: address(this),
         totalAmount: totalAmount,
         aggLoanPrice: signMarket.loan.aggLoanPrice,

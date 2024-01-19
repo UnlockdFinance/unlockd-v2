@@ -12,7 +12,7 @@ contract DeployerHelper is Script {
   struct Addresses {
     address deployer;
     address aclManager;
-    address uTokenFactory;
+    address uTokenVault;
     address unlockd;
     address walletFactory;
     address walletRegistry;
@@ -41,7 +41,7 @@ contract DeployerHelper is Script {
       Addresses memory addresses = Addresses({
         deployer: abi.decode(persistedJson.parseRaw('.deployer'), (address)),
         aclManager: abi.decode(persistedJson.parseRaw('.aclManager'), (address)),
-        uTokenFactory: abi.decode(persistedJson.parseRaw('.uTokenFactory'), (address)),
+        uTokenVault: abi.decode(persistedJson.parseRaw('.uTokenVault'), (address)),
         unlockd: abi.decode(persistedJson.parseRaw('.unlockd'), (address)),
         walletFactory: abi.decode(persistedJson.parseRaw('.walletFactory'), (address)),
         walletRegistry: abi.decode(persistedJson.parseRaw('.walletRegistry'), (address)),
@@ -57,7 +57,7 @@ contract DeployerHelper is Script {
       Addresses memory newaddresses = Addresses({
         deployer: address(0),
         aclManager: address(0),
-        uTokenFactory: address(0),
+        uTokenVault: address(0),
         unlockd: address(0),
         walletFactory: address(0),
         walletRegistry: address(0),
@@ -77,7 +77,7 @@ contract DeployerHelper is Script {
 
     vm.serializeAddress(json, 'deployer', addresses.deployer);
     vm.serializeAddress(json, 'aclManager', addresses.aclManager);
-    vm.serializeAddress(json, 'uTokenFactory', addresses.uTokenFactory);
+    vm.serializeAddress(json, 'uTokenVault', addresses.uTokenVault);
     vm.serializeAddress(json, 'unlockd', addresses.unlockd);
     vm.serializeAddress(json, 'walletFactory', addresses.walletFactory);
     vm.serializeAddress(json, 'walletRegistry', addresses.walletRegistry);

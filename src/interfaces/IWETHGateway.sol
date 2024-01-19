@@ -6,5 +6,5 @@ interface IWETHGateway {
 
   function withdrawETH(uint256 amount, address to) external;
 
-  function authorizeProtocol(address uTokenFactory) external;
+  function authorizeProtocol(address uTokenVault) external;
 }

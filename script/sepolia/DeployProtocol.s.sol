@@ -7,7 +7,7 @@ import '../helpers/DeployerHelper.sol';
 import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
-import {UTokenFactory} from '../../src/protocol/UTokenFactory.sol';
+import {UTokenVault} from '../../src/protocol/UTokenVault.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../src/protocol/modules/Installer.sol';
 import {MaxApyStrategy} from '../../src/protocol/strategies/MaxApy.sol';
@@ -16,7 +16,7 @@ import {ReservoirAdapter} from '../../src/protocol/adapters/ReservoirAdapter.sol
 import {IWETHGateway} from '../../src/interfaces/IWETHGateway.sol';
 
 import {ScaledToken} from '../../src/libraries/tokens/ScaledToken.sol';
-import {IUTokenFactory} from '../../src/interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../src/interfaces/IUTokenVault.sol';
 import {InterestRate} from '../../src/libraries/base/InterestRate.sol';
 import {ReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
 
@@ -84,7 +84,7 @@ contract DeployProtocolScript is DeployerHelper {
         manager.setReserveOracle(addresses.reserveOracle);
         manager.setWalletRegistry(addresses.walletRegistry);
         manager.setAllowedControllers(addresses.allowedControllers);
-        manager.setUTokenFactory(addresses.uTokenFactory);
+        manager.setUTokenVault(addresses.uTokenVault);
         // Configure Adapters
         uint256 x = 0;
         while (x < listMarketAdapters.length) {

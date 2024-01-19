@@ -106,17 +106,17 @@ contract ManagerTest is Setup {
     vm.stopPrank();
   }
 
-  function test_setUTokenFactory() external {
+  function test_setUTokenVault() external {
     vm.startPrank(_admin);
-    Manager(_manager).setUTokenFactory(address(0x123));
-    assertEq(Manager(_manager).getUTokenFactory(), address(0x123));
+    Manager(_manager).setUTokenVault(address(0x123));
+    assertEq(Manager(_manager).getUTokenVault(), address(0x123));
     vm.stopPrank();
   }
 
-  function test_setUTokenFactory_zero() external {
+  function test_setUTokenVault_zero() external {
     vm.startPrank(_admin);
     vm.expectRevert(abi.encodeWithSelector(Errors.ZeroAddress.selector));
-    Manager(_manager).setUTokenFactory(address(0));
+    Manager(_manager).setUTokenVault(address(0));
     vm.stopPrank();
   }
 

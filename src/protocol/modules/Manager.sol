@@ -106,14 +106,14 @@ contract Manager is BaseCoreModule, IManagerModule {
     return _allowedCollections[collection];
   }
 
-  function setUTokenFactory(address uTokenFactory) external onlyAdmin {
-    if (uTokenFactory == address(0)) revert Errors.ZeroAddress();
-    _uTokenFactory = uTokenFactory;
-    emit SetUTokenFactory(uTokenFactory);
+  function setUTokenVault(address uTokenVault) external onlyAdmin {
+    if (uTokenVault == address(0)) revert Errors.ZeroAddress();
+    _uTokenVault = uTokenVault;
+    emit SetUTokenVault(uTokenVault);
   }
 
-  function getUTokenFactory() external view returns (address) {
-    return _uTokenFactory;
+  function getUTokenVault() external view returns (address) {
+    return _uTokenVault;
   }
 
   /**

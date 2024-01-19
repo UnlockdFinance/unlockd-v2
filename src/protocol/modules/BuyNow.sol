@@ -13,7 +13,7 @@ import {LoanLogic} from '../../libraries/logic/LoanLogic.sol';
 import {ValidationLogic} from '../../libraries/logic/ValidationLogic.sol';
 import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 import {BuyNowLogic} from '../../libraries/logic/BuyNowLogic.sol';
-import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {IBuyNowModule} from '../../interfaces/modules/IBuyNowModule.sol';
 import {BuyNowSign} from '../../libraries/signatures/BuyNowSign.sol';
@@ -67,8 +67,8 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
       msgSender
     );
     // Update pool liquidity
-    IUTokenFactory(_uTokenFactory).updateState(signBuyMarket.underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(signBuyMarket.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       signBuyMarket.underlyingAsset
     );
     // We move the funds from user to the Adapter
@@ -77,7 +77,7 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
     // If the user don't pay the full amount we create a loan
     if (amount < signBuyMarket.marketPrice) {
       if (
-        IUTokenFactory(_uTokenFactory).validateReserveType(
+        IUTokenVault(_uTokenVault).validateReserveType(
           reserve.reserveType,
           _allowedCollections[signBuyMarket.asset.collection]
         ) == false
@@ -147,7 +147,7 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
       })
     );
     // We borrow on belhalf of the user and sent the money to the Adapter.
-    IUTokenFactory(_uTokenFactory).borrow(
+    IUTokenVault(_uTokenVault).borrow(
       signBuyMarket.underlyingAsset,
       loanId,
       amountNeeded,

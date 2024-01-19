@@ -20,7 +20,7 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 
 import {SellNowSign} from '../../libraries/signatures/SellNowSign.sol';
 import {ISellNowModule} from '../../interfaces/modules/ISellNowModule.sol';
-import {IUTokenFactory} from '../../interfaces/IUTokenFactory.sol';
+import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 
 // import {IUToken} from '../../interfaces/tokens/IUToken.sol';
 
@@ -64,11 +64,11 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
 
     DataTypes.Loan memory loan = _loans[signSellNow.loan.loanId];
 
-    IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
-    DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+    IUTokenVault(_uTokenVault).updateState(loan.underlyingAsset);
+    DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       loan.underlyingAsset
     );
-    uint256 totalDebt = IUTokenFactory(_uTokenFactory).getScaledDebtFromLoanId(
+    uint256 totalDebt = IUTokenVault(_uTokenVault).getScaledDebtFromLoanId(
       loan.underlyingAsset,
       loan.loanId
     );
@@ -78,7 +78,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         amount: 0,
         price: signSellNow.marketPrice,
         reserveOracle: _reserveOracle,
-        uTokenFactory: _uTokenFactory,
+        uTokenVault: _uTokenVault,
         reserve: reserve,
         loanConfig: signSellNow.loan
       })
@@ -117,7 +117,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         totalDebt: totalDebt,
         marketPrice: signSellNow.marketPrice,
         underlyingAsset: loan.underlyingAsset,
-        uTokenFactory: _uTokenFactory,
+        uTokenVault: _uTokenVault,
         owner: loan.owner
       })
     );
@@ -186,8 +186,8 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         revert Errors.LoanNotActive();
       }
 
-      IUTokenFactory(_uTokenFactory).updateState(loan.underlyingAsset);
-      DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
+      IUTokenVault(_uTokenVault).updateState(loan.underlyingAsset);
+      DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
         loan.underlyingAsset
       );
 
@@ -196,13 +196,13 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           amount: signSellNow.marketPrice,
           price: signSellNow.marketPrice,
           reserveOracle: _reserveOracle,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           reserve: reserve,
           loanConfig: signSellNow.loan
         })
       );
 
-      totalDebt = IUTokenFactory(_uTokenFactory).getScaledDebtFromLoanId(
+      totalDebt = IUTokenVault(_uTokenVault).getScaledDebtFromLoanId(
         loan.underlyingAsset,
         loan.loanId
       );
@@ -229,7 +229,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           totalDebt: totalDebt,
           marketPrice: signSellNow.marketPrice,
           underlyingAsset: signSellNow.underlyingAsset,
-          uTokenFactory: _uTokenFactory,
+          uTokenVault: _uTokenVault,
           owner: msgSender
         })
       );

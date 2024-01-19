@@ -5,7 +5,7 @@ import '../mock/asset/MintableERC20.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
 import {ReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
-import {UTokenFactory} from '../../../src/protocol/UTokenFactory.sol';
+import {UTokenVault} from '../../../src/protocol/UTokenVault.sol';
 import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
 import {DataTypes, Constants} from '../../../src/types/DataTypes.sol';
 import {stdStorage, StdStorage, Test} from 'forge-std/Test.sol';
@@ -37,7 +37,7 @@ contract Base is Test {
   address internal _adminUpdater = vm.addr(_adminUpdaterPK);
 
   ACLManager internal _aclManager;
-  UTokenFactory internal _uTokenFactory;
+  UTokenVault internal _uTokenVault;
 
   Unlockd internal _unlock;
 
