@@ -59,9 +59,6 @@ library LoanLogic {
    * @dev Activate loan
    */
   function activate(DataTypes.Loan storage loan) internal {
-    if (loan.amountToRepay != 0) {
-      revert Errors.LoanWithDebtRepayed();
-    }
     loan.state = Constants.LoanState.ACTIVE;
   }
 

@@ -116,9 +116,7 @@ library DataTypes {
     // Slot 2
     address underlyingAsset;
     // Slot 3
-    address owner;
-    // 
-    uint256 amountToRepay;
+    address owner; 
   }
 
 
