@@ -13,13 +13,7 @@ interface IAuctionModule {
     address user
   );
 
-  event AuctionRedeem(
-    bytes32 indexed loanId,
-    bytes32 indexed orderId,
-    bytes32 indexed assetId,
-    uint256 amount,
-    address user
-  );
+  event AuctionRedeem(bytes32 indexed loanId, uint256 indexed amount, address indexed user);
 
   event AuctionFinalize(
     bytes32 indexed loanId,

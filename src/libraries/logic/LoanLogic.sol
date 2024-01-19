@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {DataTypes} from '../../types/DataTypes.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {Constants} from '../helpers/Constants.sol';
+import {Errors} from '../helpers/Errors.sol';
 
 library LoanLogic {
   event LoanCreated(address indexed user, bytes32 indexed loanId, uint256 totalAssets);
@@ -58,6 +59,9 @@ library LoanLogic {
    * @dev Activate loan
    */
   function activate(DataTypes.Loan storage loan) internal {
+    if (loan.amountToRepay != 0) {
+      revert Errors.LoanWithDebtRepayed();
+    }
     loan.state = Constants.LoanState.ACTIVE;
   }
 

@@ -92,6 +92,9 @@ library DataTypes {
     address owner;
     Constants.OrderType orderType;
     uint88 countBids;
+
+    uint256 bidderDebtPayed;
+    uint256 bidderBonus;
     // Slot 2
     OfferItem offer;
     // Slot 3
@@ -114,6 +117,8 @@ library DataTypes {
     address underlyingAsset;
     // Slot 3
     address owner;
+    // 
+    uint256 amountToRepay;
   }
 
 

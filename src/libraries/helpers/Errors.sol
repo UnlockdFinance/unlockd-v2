@@ -46,7 +46,7 @@ library Errors {
   error InvalidBidAmount();
   error InvalidLoanOwner();
   error InvalidUnderlyingAsset();
-
+  error InvalidAssets();
   error InvalidEndAmount();
   error InvalidStartAmount();
   error InvalidEndTime();
@@ -117,7 +117,7 @@ library Errors {
   error InvalidLoanId();
   error LoanNotUpdated();
   error LoanBlocked();
-
+  error LoanWithDebtRepayed();
   ///////////////////////////////////////////
   ///   ORDER
   ///////////////////////////////////////////

@@ -10,7 +10,7 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {Constants} from '../helpers/Constants.sol';
 import {MathUtils} from '../math/MathUtils.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 library OrderLogic {
   using SafeERC20 for IERC20;
@@ -161,7 +161,7 @@ library OrderLogic {
     uint256 totalAmount = params.amountToPay + params.amountOfDebt;
     // Check if there is a loan asociated
 
-    if (params.loanId != 0) {
+    if (params.amountOfDebt > 0 && params.loanId != 0) {
       uint256 currentDebt = GenericLogic.calculateLoanDebt(
         params.loanId,
         params.uTokenFactory,
@@ -192,12 +192,15 @@ library OrderLogic {
         );
       }
     }
-    // Return the amount to the first bidder
-    IERC20(params.underlyingAsset).safeTransfer(
-      params.owner,
-      // We return the amount payed minus the interest of the debt
-      totalAmount
-    );
+
+    if (totalAmount > 0) {
+      // Return the amount to the first bidder
+      IERC20(params.underlyingAsset).safeTransfer(
+        params.owner,
+        // We return the amount payed minus the interest of the debt
+        totalAmount
+      );
+    }
   }
 
   function getMaxDebtOrDefault(

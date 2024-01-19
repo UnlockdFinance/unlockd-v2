@@ -24,7 +24,7 @@ import {DataTypes} from '../types/DataTypes.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 contract UTokenFactory is
   Initializable,
@@ -188,6 +188,7 @@ contract UTokenFactory is
 
     // Update balances
     borrowScaledBalanceByLoanId[underlyingAsset][loanId] += scaledAmount;
+
     borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] += scaledAmount;
 
     IERC20(underlyingAsset).safeTransfer(to, amount);
@@ -231,15 +232,16 @@ contract UTokenFactory is
     if (borrowScaledBalanceByLoanId[underlyingAsset][loanId] < amount) {
       revert Errors.AmountExceedsDebt();
     }
+
     uint256 scaledAmount = reserve.decreaseDebt(balance, amount);
     uint256 currentDebt = borrowScaledBalanceByLoanId[underlyingAsset][loanId];
 
     // User can't repay more thant the current debt
     if (currentDebt == 0 || currentDebt < scaledAmount) revert Errors.AmountExceedsDebt();
     // Update balances
+
     borrowScaledBalanceByLoanId[underlyingAsset][loanId] -= scaledAmount;
     borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] -= scaledAmount;
-
     IERC20(underlyingAsset).safeTransferFrom(from, address(this), amount);
     reserve.updateState(balance);
 

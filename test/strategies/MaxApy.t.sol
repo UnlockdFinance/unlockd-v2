@@ -152,7 +152,8 @@ contract MaxApyTest is Setup {
   function test_reservoirAdapter_emergency_withdraw() public {
     // PREPARE
     hoax(_actor);
-    payable(_reservoirAdapter).call{value: 1 ether}('');
+    (bool success, ) = payable(_reservoirAdapter).call{value: 1 ether}('');
+    require(success, 'Address: unable to send value, recipient may have reverted');
     hoax(_actor);
     IERC20(makeAsset('WETH')).transfer(_reservoirAdapter, 1 ether);
     assertEq(makeAddr('filipe').balance, 0);

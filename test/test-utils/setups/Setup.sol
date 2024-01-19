@@ -682,8 +682,8 @@ contract Setup is Base, ActorsBase, NFTBase {
         loan: DataTypes.SignLoanConfig({
           loanId: params.loanId, // Because is new need to be 0
           aggLoanPrice: params.price,
-          aggLtv: 6000,
-          aggLiquidationThreshold: 6000,
+          aggLtv: asset.assetLtv,
+          aggLiquidationThreshold: asset.assetLtv,
           totalAssets: uint88(params.totalAssets),
           nonce: nonce,
           deadline: deadline
@@ -692,7 +692,7 @@ contract Setup is Base, ActorsBase, NFTBase {
         collection: asset.collection,
         tokenId: asset.tokenId,
         assetPrice: asset.assetPrice,
-        assetLtv: 6000,
+        assetLtv: asset.assetLtv,
         endTime: uint40(block.timestamp + 2000),
         nonce: nonce,
         deadline: deadline

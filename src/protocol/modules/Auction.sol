@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
-
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeTransferLib} from '@solady/utils/SafeTransferLib.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
@@ -25,9 +25,10 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
+  using EnumerableSet for EnumerableSet.Bytes32Set;
   using PercentageMath for uint256;
   using SafeTransferLib for address;
   using SafeCastLib for uint256;
@@ -40,40 +41,19 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   ) BaseCoreModule(moduleId_, moduleVersion_) {}
 
   function getAmountToReedem(
-    AmountToRedeemParams memory params
-  )
-    public
-    view
-    returns (uint256 totalAmount, uint256 totalDebt, uint256 minDebt, uint256 bidderBonus)
-  {
-    totalDebt = GenericLogic.calculateLoanDebt(
-      params.loanId,
+    bytes32 loanId,
+    address owner,
+    bytes32[] calldata assets
+  ) public view returns (uint256, uint256, uint256) {
+    DataTypes.Loan storage loan = _loans[loanId];
+
+    uint256 totalDebt = GenericLogic.calculateLoanDebt(
+      loan.loanId,
       _uTokenFactory,
-      params.underlyingAsset
+      loan.underlyingAsset
     );
-    // The user need to recover at least until the LTV
-    minDebt = GenericLogic.calculateAmountToArriveToLTV(
-      params.aggLoanPrice,
-      totalDebt,
-      params.aggLtv
-    );
-
-    if (params.countBids == 1) {
-      // The first bidder gets 2.5% of benefit over the second bidder
-      // We increate the amount to repay
-      bidderBonus = (params.totalAmountBid).percentMul(GenericLogic.FIRST_BID_INCREMENT);
-    }
-
-    totalAmount = params.startAmount + minDebt + bidderBonus;
-
-    // ........................ DEBUG MODE ....................................
-    // console.log('-----------------------------------------------');
-    // console.log('START AMOUNT      : ', params.startAmount);
-    // console.log('MIN DEBT          : ', minDebt);
-    // console.log('BONUS             : ', bidderBonus);
-    // console.log('TOTAL DEBT        : ', totalDebt);
-    // console.log('CALCULATED AMOUNT : ', totalAmount);
-    // console.log('-----------------------------------------------');
+    (uint256 totalAmount, uint256 totalBidderBonus, , ) = _calculateRedeemAmount(loan, assets);
+    return (totalAmount + totalDebt, totalDebt, totalBidderBonus);
   }
 
   /**
@@ -292,6 +272,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       );
       // The protocol freeze the loan repayed until end of the auction
       // to protect against borrow again
+      order.bidderDebtPayed = minBid;
       _loans[loan.loanId].freeze();
     } else {
       // Cancel debt from old bidder and refund
@@ -299,9 +280,13 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       if (order.countBids == 1) {
         // The first bidder gets 2.5% of benefit over the second bidder
         // We increate the amount to repay
-        amountToPayBuyer =
-          amountToPayBuyer +
-          (amountToPayBuyer + order.bid.amountOfDebt).percentMul(GenericLogic.FIRST_BID_INCREMENT);
+        uint256 bonusAmount = (amountToPayBuyer + order.bid.amountOfDebt).percentMul(
+          GenericLogic.FIRST_BID_INCREMENT
+        );
+        // BONUS AMOUNT
+        order.bidderBonus = bonusAmount;
+
+        amountToPayBuyer = amountToPayBuyer + bonusAmount;
       }
       // We assuming that the ltv is enought to cover the growing interest of this bid
       OrderLogic.refundBidder(
@@ -342,93 +327,104 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   /**
    * @dev Unlock the Loan, recover the asset only if the auction is still active
-   * @param orderId Order identifier to redeem the asset and pay the debt related
+  
    * @param amount amount of dept to pay
+   * @param assets list of assets on the loan
    * @param signAuction struct of the data needed
    * @param sig validation of this struct
    * */
   function redeem(
-    bytes32 orderId,
     uint256 amount,
+    bytes32[] calldata assets,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
   ) external {
     address msgSender = unpackTrailingParamMsgSender();
+
     _checkHasUnlockdWallet(msgSender);
 
     _validateSignature(msgSender, signAuction, sig);
-    DataTypes.Order memory order = _orders[orderId];
-    if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
-      revert Errors.OrderNotAllowed();
-    }
-    if (order.owner != msgSender) {
+
+    // Validate signature
+    DataTypes.Loan storage loan = _loans[signAuction.loan.loanId];
+
+    if (loan.owner != msgSender) {
       revert Errors.InvalidOrderOwner();
     }
-    if (order.offer.loanId != signAuction.loan.loanId) {
-      revert Errors.InvalidLoanId();
-    }
-    // Validate signature
-    DataTypes.Loan storage loan = _loans[order.offer.loanId];
     address underlyingAsset = loan.underlyingAsset;
-
     IUTokenFactory(_uTokenFactory).updateState(underlyingAsset);
     DataTypes.ReserveData memory reserve = IUTokenFactory(_uTokenFactory).getReserveData(
       underlyingAsset
     );
 
-    Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
-    // Check pending debt
-    (uint256 totalAmount, , uint256 minDebt, uint256 bidderBonus) = getAmountToReedem(
-      AmountToRedeemParams({
-        underlyingAsset: underlyingAsset,
-        loanId: order.offer.loanId,
-        owner: order.owner,
-        aggLoanPrice: signAuction.loan.aggLoanPrice,
-        aggLtv: signAuction.loan.aggLtv,
-        countBids: order.countBids,
-        totalAmountBid: order.bid.amountToPay + order.bid.amountOfDebt,
-        startAmount: order.offer.startAmount
-      })
-    );
-    if (totalAmount != amount) revert Errors.InvalidAmount();
-    // Transfer all the amount to the contract
-    underlyingAsset.safeTransferFrom(msgSender, address(this), amount);
-
-    // We assuming that the ltv is enought to cover the growing interest of this bid
-    OrderLogic.refundBidder(
-      OrderLogic.RefundBidderParams({
-        loanId: order.bid.loanId,
-        owner: order.bid.buyer,
-        reserveOracle: _reserveOracle,
-        from: address(this),
-        underlyingAsset: underlyingAsset,
-        uTokenFactory: _uTokenFactory,
-        amountOfDebt: order.bid.amountOfDebt,
-        amountToPay: order.offer.startAmount + bidderBonus,
-        reserve: reserve
-      })
-    );
-
-    if (order.bid.loanId != 0) {
-      // Remove old loan
-      delete _loans[order.bid.loanId];
+    if (assets.length != signAuction.loan.totalAssets || loan.totalAssets != assets.length) {
+      revert Errors.LoanNotUpdated();
     }
 
-    if (minDebt > 0) {
-      underlyingAsset.safeApprove(_uTokenFactory, minDebt);
+    uint256 totalDebt = GenericLogic.calculateLoanDebt(
+      loan.loanId,
+      _uTokenFactory,
+      loan.underlyingAsset
+    );
+
+    (
+      uint256 totalAmount,
+      uint256 totalBidderBonus,
+      uint256 assetsToRepay,
+      bytes32[] memory ordersToUpdate
+    ) = _calculateRedeemAmount(loan, assets);
+    // We add the current debt
+    totalAmount += totalDebt;
+    if (totalAmount != amount) revert Errors.InvalidAmount();
+    if (assetsToRepay == 0) revert Errors.InvalidAssets();
+
+    underlyingAsset.safeTransferFrom(msgSender, address(this), totalAmount);
+
+    // payments
+    for (uint256 i; i < ordersToUpdate.length; i++) {
+      {
+        if (ordersToUpdate[i] == 0) continue;
+        DataTypes.Order memory cacheOrder = _orders[ordersToUpdate[i]];
+
+        if (cacheOrder.owner == address(0)) revert Errors.InvalidOrderOwner();
+        uint256 amountToPayBuyer = cacheOrder.bid.amountToPay;
+
+        if (cacheOrder.countBids == 1) {
+          amountToPayBuyer = amountToPayBuyer + cacheOrder.bidderBonus;
+        }
+
+        OrderLogic.refundBidder(
+          OrderLogic.RefundBidderParams({
+            loanId: cacheOrder.bid.loanId,
+            owner: cacheOrder.bid.buyer,
+            reserveOracle: _reserveOracle,
+            from: address(this),
+            underlyingAsset: underlyingAsset,
+            uTokenFactory: _uTokenFactory,
+            amountOfDebt: cacheOrder.bid.amountOfDebt,
+            amountToPay: amountToPayBuyer,
+            reserve: reserve
+          })
+        );
+
+        delete _orders[cacheOrder.orderId];
+      }
+    }
+
+    if (totalDebt > 0) {
+      underlyingAsset.safeApprove(_uTokenFactory, totalDebt);
+      // We repay all the debt
       IUTokenFactory(_uTokenFactory).repay(
         underlyingAsset,
-        order.offer.loanId,
-        minDebt,
+        loan.loanId,
+        totalDebt,
         address(this),
         msgSender
       );
+
+      _loans[loan.loanId].activate();
     }
-
-    delete _orders[orderId];
-    _loans[order.offer.loanId].activate();
-
-    emit AuctionRedeem(order.offer.loanId, orderId, order.offer.assetId, totalAmount, msgSender);
+    emit AuctionRedeem(loan.loanId, totalAmount, msgSender);
   }
 
   /**
@@ -489,8 +485,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loans[order.bid.loanId].activate();
     }
 
+    uint256 startAmount = order.offer.startAmount;
     // The start amount it was payed as a debt
-    uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) - order.offer.startAmount;
+    uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) -
+      (startAmount + startAmount.percentMul(GenericLogic.FIRST_BID_INCREMENT));
 
     loan.underlyingAsset.safeTransfer(order.owner, amount);
     // Remove the order
@@ -528,5 +526,63 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       order.bid.buyer,
       order.owner
     );
+  }
+
+  function _calculateRedeemAmount(
+    DataTypes.Loan memory loan,
+    bytes32[] calldata assets
+  ) internal view returns (uint256, uint256, uint256, bytes32[] memory) {
+    if (loan.totalAssets != assets.length) {
+      revert Errors.LoanNotUpdated();
+    }
+    address owner = loan.owner;
+    bytes32 loanId = loan.loanId;
+    uint256 totalBidderBonus;
+    uint256 assetsToRepay;
+    uint256 totalAmount;
+
+    address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, owner);
+    bytes32[] memory ordersIds = new bytes32[](assets.length); // TODO : Aqui esta el problema no todos seran
+    for (uint256 i; i < assets.length; i++) {
+      {
+        bytes32 assetId = assets[i];
+
+        bytes32 assetLoanId = IProtocolOwner(protocolOwner).getLoanId(assetId);
+
+        if (assetLoanId != loanId) {
+          revert Errors.InvalidLoanId();
+        }
+
+        bytes32 orderId = OrderLogic.generateId(assetId, assetLoanId);
+        DataTypes.Order memory order = _orders[orderId];
+        if (order.owner == address(0)) {
+          // If there is no order created
+          continue;
+        }
+
+        if (order.owner != owner) {
+          // throw error in case that the loan is not the owner of the order
+          revert Errors.InvalidLoanId();
+        }
+
+        // Only if the assets they had a pending order
+        if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
+          // We skip this scenario
+          continue;
+        }
+
+        if (order.offer.loanId != loanId) {
+          revert Errors.InvalidLoanId();
+        }
+        Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
+
+        totalBidderBonus += order.bidderBonus;
+        totalAmount += order.bidderDebtPayed + order.bidderBonus;
+        ordersIds[i] = orderId;
+        assetsToRepay++;
+      }
+    }
+    // We asign the list
+    return (totalAmount, totalBidderBonus, assetsToRepay, ordersIds);
   }
 }

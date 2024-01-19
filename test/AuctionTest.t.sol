@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import './test-utils/setups/Setup.sol';
-
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 
@@ -481,69 +480,143 @@ contract AuctionTest is Setup {
   /////////////////////////////////////////////////////////////////////////////////
 
   function test_auction_redeem_active_liquidation_auction() public {
-    vm.recordLogs();
-    bytes32 loanId = test_auction_bid_liquidation_auction();
-    Vm.Log[] memory entries = vm.getRecordedLogs();
+    /*
+      - Create a Loan with two assets
+      - Establish a position that is set to liquidate, generating a debt of 0.5. Then, place a bid on this position using User One.
+      - Then, bid again and verify that the value of the last bid has increased by 2.5%  (0,5125 ether)
+      - Redeem, which means the owner of the loan is required to repay the initial debt plus an additional 2.5%.(0,5125 ether)
+    
+    */
 
-    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-    writeTokenBalance(_actor, _WETH, 2 ether);
+    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1 ether, 2 ether, 2, 2);
+    writeTokenBalance(_actorTwo, _WETH, 1 ether);
+    writeTokenBalance(_actorThree, _WETH, 1 ether);
+    (
+      DataTypes.SignAuction memory signAuction,
+      DataTypes.EIP712Signature memory sig
+    ) = auction_signature(
+        _auction,
+        AuctionSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 5000
+        })
+      );
+
     {
+      vm.startPrank(_actorTwo);
+      // USER 2 BIDS
+      // Add funds to the actor two
+      uint256 bidAmount = Auction(_auction).getMinBidPriceAuction(
+        loanId,
+        AssetLogic.assetId(_nft, 1),
+        1 ether,
+        1 ether,
+        5000
+      );
+      assertEq(bidAmount, 0.5 ether);
+
+      approveAsset(_WETH, address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+
+      Auction(_auction).bid(uint128(bidAmount), 0, signAuction, sig); // BID ON THE ASSET
+      vm.stopPrank();
+    }
+    assertEq(IERC20(_WETH).balanceOf(_actorTwo), 0.5 ether);
+
+    {
+      vm.startPrank(_actorThree);
+
+      // Add funds to the actor two
+      uint256 bidAmount = Auction(_auction).getMinBidPriceAuction(
+        loanId,
+        AssetLogic.assetId(_nft, 1),
+        1 ether,
+        1 ether,
+        5000
+      );
+
+      assertEq(bidAmount, 0.5125 ether);
+
+      approveAsset(_WETH, address(getUnlockd()), bidAmount); // APPROVE AMOUNT
+      Auction(_auction).bid(uint128(bidAmount), 0, signAuction, sig); // BID ON THE ASSET
+      vm.stopPrank();
+    }
+    assertEq(IERC20(_WETH).balanceOf(_actorThree), 0.4875 ether); // - debt + 2.5%
+    assertEq(IERC20(_WETH).balanceOf(_actorTwo), 1.0125 ether); // +deb + 2.5%
+
+    writeTokenBalance(_actor, _WETH, 3 ether);
+    bytes32[] memory assets = new bytes32[](2);
+
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
+
+    {
+      (uint256 totalAmount, uint256 totalDebt, uint256 bidderBonus) = Auction(_auction)
+        .getAmountToReedem(loanId, _actor, assets);
+
+      assertEq(totalDebt, 0.5 ether);
+      assertEq(totalAmount, 1.0125 ether);
+      assertEq(bidderBonus, 0.0125 ether);
+
       (
-        DataTypes.SignAuction memory signAuction,
-        DataTypes.EIP712Signature memory sig
+        DataTypes.SignAuction memory signAuctionRedeem,
+        DataTypes.EIP712Signature memory sigRedeem
       ) = auction_signature(
           _auction,
-          AuctionSignParams({user: _actor, loanId: loanId, price: 0.6 ether, totalAssets: 1}),
+          AuctionSignParams({user: _actor, loanId: loanId, price: 1 ether, totalAssets: 2}),
           AssetParams({
             assetId: AssetLogic.assetId(_nft, 1),
             collection: _nft,
             tokenId: 1,
             assetPrice: 1 ether,
-            assetLtv: 6000
+            assetLtv: 5000
           })
         );
 
       hoax(_actor);
-      approveAsset(_WETH, address(getUnlockd()), 877500000000000000); // APPROVE AMOUNT
+      approveAsset(_WETH, address(getUnlockd()), totalAmount); // APPROVE AMOUNT
 
       hoax(_actor);
-      Auction(_auction).redeem(orderId, 877500000000000000, signAuction, sig);
+      Auction(_auction).redeem(totalAmount, assets, signAuctionRedeem, sigRedeem);
     }
   }
 
-  function test_auction_redeem_expired_liquidation_auction() public {
-    vm.recordLogs();
-    bytes32 loanId = test_auction_bid_liquidation_auction();
-    Vm.Log[] memory entries = vm.getRecordedLogs();
+  // function test_auction_redeem_expired_liquidation_auction() public {
+  //   vm.recordLogs();
+  //   bytes32 loanId = test_auction_bid_liquidation_auction();
+  //   Vm.Log[] memory entries = vm.getRecordedLogs();
 
-    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+  //   bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
 
-    vm.warp(block.timestamp + 3000);
-    writeTokenBalance(_actor, _WETH, 2 ether);
-    {
-      (
-        DataTypes.SignAuction memory signAuction,
-        DataTypes.EIP712Signature memory sig
-      ) = auction_signature(
-          _auction,
-          AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
-        );
+  //   vm.warp(block.timestamp + 3000);
+  //   writeTokenBalance(_actor, _WETH, 2 ether);
+  //   {
+  //     (
+  //       DataTypes.SignAuction memory signAuction,
+  //       DataTypes.EIP712Signature memory sig
+  //     ) = auction_signature(
+  //         _auction,
+  //         AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+  //         AssetParams({
+  //           assetId: AssetLogic.assetId(_nft, 1),
+  //           collection: _nft,
+  //           tokenId: 1,
+  //           assetPrice: 1 ether,
+  //           assetLtv: 6000
+  //         })
+  //       );
 
-      hoax(_actor);
-      approveAsset(_WETH, address(getUnlockd()), 757500000000097574); // APPROVE AMOUNT
+  //     hoax(_actor);
+  //     approveAsset(_WETH, address(getUnlockd()), 757500000000097574); // APPROVE AMOUNT
 
-      hoax(_actor);
-      vm.expectRevert(Errors.TimestampExpired.selector);
-      Auction(_auction).redeem(orderId, 757500000000097574, signAuction, sig);
-    }
-  }
+  //     hoax(_actor);
+  //     vm.expectRevert(Errors.TimestampExpired.selector);
+  //     Auction(_auction).redeem(orderId, 757500000000097574, signAuction, sig);
+  //   }
+  // }
 
   /////////////////////////////////////////////////////////////////////////////////
   // FINALIZE

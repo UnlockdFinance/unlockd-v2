@@ -28,8 +28,8 @@ library GenericLogic {
   // HEALTH FACTOR 1
   uint256 internal constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
 
-  uint256 internal constant FIRST_BID_INCREMENT = 250;
-  uint256 internal constant NEXT_BID_INCREMENT = 100;
+  uint256 internal constant FIRST_BID_INCREMENT = 250; // 2.5 %
+  uint256 internal constant NEXT_BID_INCREMENT = 100; // 1 %
 
   struct CalculateLoanDataVars {
     uint256 reserveUnitPrice;
