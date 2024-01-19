@@ -62,14 +62,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
    * @param assetId assetId of the asset
    * @param assetPrice price of this asset on the market
    * @param aggLoanPrice aggregated loan colaterized on the Loan
-   * @param aggLTV aggregated ltv between assets on the Loan
+   * @param aggLtv aggregated ltv between assets on the Loan
    */
   function getMinBidPriceAuction(
     bytes32 loanId,
     bytes32 assetId,
     uint256 assetPrice,
     uint256 aggLoanPrice,
-    uint256 aggLTV
+    uint256 aggLtv
   ) external view returns (uint256 minBid) {
     DataTypes.Loan memory loan = _loans[loanId];
 
@@ -87,11 +87,11 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         _uTokenVault,
         assetPrice,
         aggLoanPrice,
-        aggLTV,
+        aggLtv,
         reserve
       );
     } else {
-      minBid = OrderLogic.getMinBid(order, _uTokenVault, aggLoanPrice, aggLTV, reserve);
+      minBid = OrderLogic.getMinBid(order, _uTokenVault, aggLoanPrice, aggLtv, reserve);
     }
   }
 

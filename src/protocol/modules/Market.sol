@@ -52,19 +52,19 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    * @param orderId identifier of the order
    * @param underlyingAsset token asset of the loan
    * @param aggLoanPrice aggregated loan colaterized on the Loan
-   * @param aggLTV aggregated ltv between assets on the Loan
+   * @param aggLtv aggregated ltv between assets on the Loan
    */
   function getMinBidPrice(
     bytes32 orderId,
     address underlyingAsset,
     uint256 aggLoanPrice,
-    uint256 aggLTV
+    uint256 aggLtv
   ) external view returns (uint256 minBid) {
     minBid = OrderLogic.getMinBid(
       _orders[orderId],
       _uTokenVault,
       aggLoanPrice,
-      aggLTV,
+      aggLtv,
       IUTokenVault(_uTokenVault).getReserveData(underlyingAsset)
     );
   }
@@ -74,13 +74,13 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    * @param orderId identifier of the order
    * @param underlyingAsset token asset of the loan
    * @param aggLoanPrice aggregated loan colaterized on the Loan
-   * @param aggLTV aggregated ltv between assets on the Loan
+   * @param aggLtv aggregated ltv between assets on the Loan
    */
   function getBuyNowPrice(
     bytes32 orderId,
     address underlyingAsset,
     uint256 aggLoanPrice,
-    uint256 aggLTV
+    uint256 aggLtv
   ) external view returns (uint256 amount) {
     DataTypes.Order memory order = _orders[orderId];
     amount = OrderLogic.getMaxDebtOrDefault(
@@ -88,7 +88,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       _uTokenVault,
       order.offer.endAmount,
       aggLoanPrice,
-      aggLTV,
+      aggLtv,
       IUTokenVault(_uTokenVault).getReserveData(underlyingAsset)
     );
   }
