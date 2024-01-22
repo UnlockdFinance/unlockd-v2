@@ -626,10 +626,16 @@ contract Setup is Base, ActorsBase, NFTBase {
   /////////////////////////////////////////////////////////////////////
   // HELPERS
   /////////////////////////////////////////////////////////////////////
+  struct AssetAuctionParams {
+    bytes32[] assets;
+    uint128 assetPrice;
+    uint256 assetLtv;
+  }
+
   struct AssetParams {
     bytes32 assetId;
     address collection;
-    uint32 tokenId;
+    uint256 tokenId;
     uint128 assetPrice;
     uint256 assetLtv;
   }
@@ -666,7 +672,7 @@ contract Setup is Base, ActorsBase, NFTBase {
   function auction_signature(
     address action,
     AuctionSignParams memory params,
-    AssetParams memory asset
+    AssetAuctionParams memory asset
   ) internal view returns (DataTypes.SignAuction memory, DataTypes.EIP712Signature memory) {
     // Get nonce from the user
     uint256 nonce = AuctionSign(action).getNonce(params.user);
@@ -686,9 +692,7 @@ contract Setup is Base, ActorsBase, NFTBase {
           nonce: nonce,
           deadline: deadline
         }),
-        assetId: asset.assetId,
-        collection: asset.collection,
-        tokenId: asset.tokenId,
+        assets: asset.assets,
         assetPrice: asset.assetPrice,
         assetLtv: asset.assetLtv,
         endTime: uint40(block.timestamp + 2000),

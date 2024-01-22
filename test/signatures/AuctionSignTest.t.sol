@@ -233,9 +233,7 @@ contract AuctionSignTest is Setup {
           nonce: nonce,
           deadline: deadline
         }),
-        assetId: AssetLogic.assetId(_nft, 1),
-        collection: _nft,
-        tokenId: 1,
+        assets: assets,
         assetPrice: 0.5 ether,
         assetLtv: 60000,
         endTime: uint40(block.timestamp + 1 days),

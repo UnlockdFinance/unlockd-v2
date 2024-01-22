@@ -135,19 +135,16 @@ contract AuctionTest is Setup {
   function test_auction_bid_zero_liquidation_auction() public {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1.2 ether, 2 ether, 2, 2);
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
     (
       DataTypes.SignAuction memory signAuction,
       DataTypes.EIP712Signature memory sig
     ) = auction_signature(
         _auction,
         AuctionSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-        AssetParams({
-          assetId: AssetLogic.assetId(_nft, 1),
-          collection: _nft,
-          tokenId: 1,
-          assetPrice: 1 ether,
-          assetLtv: 6000
-        })
+        AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
       );
     // Add funds to the actor two
 
@@ -162,7 +159,9 @@ contract AuctionTest is Setup {
 
   function test_auction_bid_liquidation_auction() public returns (bytes32) {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1.2 ether, 2 ether, 2, 2);
-
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
     (
       DataTypes.SignAuction memory signAuction,
@@ -170,13 +169,7 @@ contract AuctionTest is Setup {
     ) = auction_signature(
         _auction,
         AuctionSignParams({user: _actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-        AssetParams({
-          assetId: AssetLogic.assetId(_nft, 1),
-          collection: _nft,
-          tokenId: 1,
-          assetPrice: 1 ether,
-          assetLtv: 6000
-        })
+        AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
       );
     // Add funds to the actor two
 
@@ -203,7 +196,7 @@ contract AuctionTest is Setup {
   //   ) = auction_signature(
   //       _auction,
   //       AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-  //       AssetParams({
+  //       AssetAuctionParams({
   //         assetId: AssetLogic.assetId(_nft, 1),
   //         collection: _nft,
   //         tokenId: 1,
@@ -233,7 +226,7 @@ contract AuctionTest is Setup {
   //   ) = auction_signature(
   //       _auction,
   //       AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-  //       AssetParams({
+  //       AssetAuctionParams({
   //         assetId: AssetLogic.assetId(_nft, 1),
   //         collection: _nft,
   //         tokenId: 1,
@@ -263,7 +256,7 @@ contract AuctionTest is Setup {
   //   ) = auction_signature(
   //       _auction,
   //       AuctionSignParams({user: actorTwo, loanId: loanId, price: 0.3 ether, totalAssets: 1}),
-  //       AssetParams({
+  //       AssetAuctionParams({
   //         assetId: AssetLogic.assetId(_nft, 1),
   //         collection: _nft,
   //         tokenId: 1,
@@ -286,6 +279,10 @@ contract AuctionTest is Setup {
   function test_auction_bid_on_expired_liquidation_auction() public returns (bytes32) {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1.2 ether, 2 ether, 2, 2);
 
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
+
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
     writeTokenBalance(_actorThree, _WETH, 2 ether);
 
@@ -296,13 +293,7 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actorTwo, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
       // Add funds to the actor two
 
@@ -323,13 +314,7 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actorThree, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
       // Add funds to the actor two
 
@@ -346,19 +331,18 @@ contract AuctionTest is Setup {
   function test_auction_bid_healty_liquidation_auction() public {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1.2 ether, 2 ether, 2, 2);
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
+
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
+
     (
       DataTypes.SignAuction memory signAuction,
       DataTypes.EIP712Signature memory sig
     ) = auction_signature(
         _auction,
         AuctionSignParams({user: _actorTwo, loanId: loanId, price: 3 ether, totalAssets: 1}),
-        AssetParams({
-          assetId: AssetLogic.assetId(_nft, 1),
-          collection: _nft,
-          tokenId: 1,
-          assetPrice: 1 ether,
-          assetLtv: 6000
-        })
+        AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
       );
     // Add funds to the actor two
 
@@ -371,7 +355,7 @@ contract AuctionTest is Setup {
     Auction(_auction).bid(0, 0, signAuction, sig); // BID ON THE ASSET
   }
 
-  function test_auction_bid_with_market_auction_ongoing() public {
+  function test_auction_bid_with_market_auction_active() public {
     /**
       - Borrow with one asset 0.2 ether
       - Create a reguar auction in market
@@ -402,6 +386,9 @@ contract AuctionTest is Setup {
       0,
       6000
     );
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
 
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
     (
@@ -410,10 +397,8 @@ contract AuctionTest is Setup {
     ) = auction_signature(
         _auction,
         AuctionSignParams({user: _actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
-        AssetParams({
-          assetId: AssetLogic.assetId(_nft, 1),
-          collection: _nft,
-          tokenId: 1,
+        AssetAuctionParams({
+          assets: assets,
           // We reduce the price of the asset to force the liquidation
           assetPrice: 0.3 ether,
           assetLtv: 6000
@@ -451,6 +436,9 @@ contract AuctionTest is Setup {
     );
 
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
 
     (
       DataTypes.SignAuction memory signAuction,
@@ -458,13 +446,7 @@ contract AuctionTest is Setup {
     ) = auction_signature(
         _auction,
         AuctionSignParams({user: _actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
-        AssetParams({
-          assetId: AssetLogic.assetId(_nft, 1),
-          collection: _nft,
-          tokenId: 1,
-          assetPrice: 1 ether,
-          assetLtv: 6000
-        })
+        AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
       );
 
     hoax(_actorTwo);
@@ -491,19 +473,18 @@ contract AuctionTest is Setup {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1 ether, 2 ether, 2, 2);
     writeTokenBalance(_actorTwo, _WETH, 1 ether);
     writeTokenBalance(_actorThree, _WETH, 1 ether);
+
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
+
     (
       DataTypes.SignAuction memory signAuction,
       DataTypes.EIP712Signature memory sig
     ) = auction_signature(
         _auction,
         AuctionSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-        AssetParams({
-          assetId: AssetLogic.assetId(_nft, 1),
-          collection: _nft,
-          tokenId: 1,
-          assetPrice: 1 ether,
-          assetLtv: 5000
-        })
+        AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 5000})
       );
 
     {
@@ -512,7 +493,7 @@ contract AuctionTest is Setup {
       // Add funds to the actor two
       uint256 bidAmount = Auction(_auction).getMinBidPriceAuction(
         loanId,
-        AssetLogic.assetId(_nft, 1),
+        AssetLogic.assetId(_nft, 0),
         1 ether,
         1 ether,
         5000
@@ -532,7 +513,7 @@ contract AuctionTest is Setup {
       // Add funds to the actor two
       uint256 bidAmount = Auction(_auction).getMinBidPriceAuction(
         loanId,
-        AssetLogic.assetId(_nft, 1),
+        AssetLogic.assetId(_nft, 0),
         1 ether,
         1 ether,
         5000
@@ -548,14 +529,10 @@ contract AuctionTest is Setup {
     assertEq(IERC20(_WETH).balanceOf(_actorTwo), 1.0125 ether); // +deb + 2.5%
 
     writeTokenBalance(_actor, _WETH, 3 ether);
-    bytes32[] memory assets = new bytes32[](2);
-
-    assets[0] = AssetLogic.assetId(_nft, 0);
-    assets[1] = AssetLogic.assetId(_nft, 1);
 
     {
       (uint256 totalAmount, uint256 totalDebt, uint256 bidderBonus) = Auction(_auction)
-        .getAmountToReedem(loanId, _actor, assets);
+        .getAmountToReedem(loanId, assets);
 
       assertEq(totalDebt, 0.5 ether);
       assertEq(totalAmount, 1.0125 ether);
@@ -567,13 +544,7 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 1 ether, totalAssets: 2}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 5000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 5000})
         );
 
       hoax(_actor);
@@ -592,6 +563,11 @@ contract AuctionTest is Setup {
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
 
     vm.warp(block.timestamp + 3000);
+
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
+
     writeTokenBalance(_actor, _WETH, 2 ether);
     {
       (
@@ -600,19 +576,8 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 1 ether, totalAssets: 2}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
-
-      bytes32[] memory assets = new bytes32[](2);
-
-      assets[0] = AssetLogic.assetId(_nft, 0);
-      assets[1] = AssetLogic.assetId(_nft, 1);
 
       hoax(_actor);
       approveAsset(_WETH, address(getUnlockd()), 757500000000097574); // APPROVE AMOUNT
@@ -627,7 +592,7 @@ contract AuctionTest is Setup {
   // FINALIZE
   /////////////////////////////////////////////////////////////////////////////////
 
-  function test_auction_finalize_liquidation_auction() public {
+  function test_auction_finalize_liquidation_auction_success() public {
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
@@ -636,23 +601,26 @@ contract AuctionTest is Setup {
     vm.warp(block.timestamp + 3000);
     writeTokenBalance(_actor, _WETH, 2 ether);
     {
+      bytes32[] memory assets = new bytes32[](2);
+      assets[0] = AssetLogic.assetId(_nft, 0);
+      assets[1] = AssetLogic.assetId(_nft, 1);
       (
         DataTypes.SignAuction memory signAuction,
         DataTypes.EIP712Signature memory sig
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
     }
   }
 
@@ -664,7 +632,9 @@ contract AuctionTest is Setup {
 
     // END AUCTION
     vm.warp(block.timestamp + 3000);
-
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
     {
       writeTokenBalance(_actor, _WETH, 2 ether);
       (
@@ -672,19 +642,19 @@ contract AuctionTest is Setup {
         DataTypes.EIP712Signature memory sig
       ) = auction_signature(
           _auction,
-          AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 2}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 3}),
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
       vm.expectRevert(Errors.LoanNotUpdated.selector);
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
     }
   }
 
@@ -694,6 +664,8 @@ contract AuctionTest is Setup {
     Vm.Log[] memory entries = vm.getRecordedLogs();
 
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    bytes32[] memory assets = new bytes32[](1);
+    assets[0] = AssetLogic.assetId(_nft, 0);
 
     // END AUCTION
     vm.warp(block.timestamp + 3000);
@@ -705,17 +677,17 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
 
       DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
       assertEq(uint(loan.state), uint(Constants.LoanState.ACTIVE));
@@ -725,7 +697,8 @@ contract AuctionTest is Setup {
   function test_auction_finalize_error_OrderNotAllowed() public {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 0.2 ether, 1 ether, 1, 1);
     bytes32 orderId = _create_market_auction(loanId, 0.2 ether);
-
+    bytes32[] memory assets = new bytes32[](1);
+    assets[0] = AssetLogic.assetId(_nft, 0);
     // END AUCTION
     vm.warp(block.timestamp + 3000);
     writeTokenBalance(_actor, _WETH, 2 ether);
@@ -736,18 +709,18 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
       vm.expectRevert(Errors.OrderNotAllowed.selector);
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
     }
   }
 
@@ -756,7 +729,9 @@ contract AuctionTest is Setup {
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
     {
       writeTokenBalance(_actor, _WETH, 2 ether);
       (
@@ -765,18 +740,18 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
       vm.expectRevert(Errors.TimestampNotExpired.selector);
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
     }
   }
 
@@ -784,6 +759,9 @@ contract AuctionTest is Setup {
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    bytes32[] memory assets = new bytes32[](2);
+    assets[0] = AssetLogic.assetId(_nft, 0);
+    assets[1] = AssetLogic.assetId(_nft, 1);
     // END AUCTION
     vm.warp(block.timestamp + 3000);
 
@@ -796,17 +774,17 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
     }
 
     {
@@ -816,18 +794,18 @@ contract AuctionTest is Setup {
       ) = auction_signature(
           _auction,
           AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
-          AssetParams({
-            assetId: AssetLogic.assetId(_nft, 1),
-            collection: _nft,
-            tokenId: 1,
-            assetPrice: 1 ether,
-            assetLtv: 6000
-          })
+          AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 
       hoax(_actor);
       vm.expectRevert(abi.encodeWithSelector(Errors.InvalidOrderOwner.selector));
-      Auction(_auction).finalize(true, orderId, signAuction, sig);
+      Auction(_auction).finalize(
+        true,
+        orderId,
+        DataTypes.Asset({collection: _nft, tokenId: 0}),
+        signAuction,
+        sig
+      );
     }
   }
 }

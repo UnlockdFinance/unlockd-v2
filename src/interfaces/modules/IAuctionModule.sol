@@ -11,7 +11,6 @@ interface IAuctionModule {
     bytes32 indexed assetId,
     uint256 amountToPay,
     uint256 amountOfDebt,
-    uint256 amount,
     address user
   );
 

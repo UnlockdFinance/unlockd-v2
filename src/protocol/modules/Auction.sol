@@ -7,6 +7,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
 import {IDelegationOwner} from '@unlockd-wallet/src/interfaces/IDelegationOwner.sol';
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {SafeCastLib} from '@solady/utils/SafeCastLib.sol';
+import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 
 import {BaseCoreModule, IACLManager} from '../../libraries/base/BaseCoreModule.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
@@ -25,7 +26,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -42,7 +43,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   function getAmountToReedem(
     bytes32 loanId,
-    address owner,
     bytes32[] calldata assets
   ) public view returns (uint256, uint256, uint256) {
     DataTypes.Loan storage loan = _loans[loanId];
@@ -119,9 +119,11 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     address msgSender = unpackTrailingParamMsgSender();
 
     _validateSignature(msgSender, signAuction, sig);
+
     // Validate signature
     DataTypes.Loan memory loan = _loans[signAuction.loan.loanId];
-    bytes32 orderId = OrderLogic.generateId(signAuction.assetId, signAuction.loan.loanId);
+
+    bytes32 orderId = OrderLogic.generateId(signAuction.assets[0], signAuction.loan.loanId);
 
     IUTokenVault(_uTokenVault).updateState(loan.underlyingAsset);
     DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
@@ -169,7 +171,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
             orderId: orderId,
             owner: loan.owner,
             loanId: signAuction.loan.loanId,
-            assetId: signAuction.assetId,
+            assetId: signAuction.assets[0],
             debtToSell: 1e4, // PercentageMath.ONE_HUNDRED_PERCENT
             // Start amount price of the current debt or
             startAmount: minBid.toUint128(),
@@ -205,7 +207,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           order.updateToLiquidationOrder(
             OrderLogic.ParamsUpdateOrder({
               loanId: signAuction.loan.loanId,
-              assetId: signAuction.assetId,
+              assetId: signAuction.assets[0],
               endTime: signAuction.endTime,
               minBid: uint128(minBid)
             })
@@ -220,94 +222,97 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     bytes32 loanId;
     // The bidder asks for a debt
     if (amountOfDebt != 0) {
-      // This path needs to be a abstract wallet
-      address owner = GenericLogic.getMainWalletOwner(_walletRegistry, msgSender);
-      if (owner != msgSender) {
-        revert Errors.InvalidWalletOwner();
-      }
-
-      loanId = LoanLogic.generateId(msgSender, signAuction.nonce, signAuction.deadline);
-      // Borrow the debt amount on belhalf of the bidder
-      OrderLogic.borrowByBidder(
-        OrderLogic.BorrowByBidderParams({
-          loanId: loanId,
-          owner: msgSender,
-          to: address(this),
-          underlyingAsset: reserve.underlyingAsset,
-          uTokenVault: _uTokenVault,
-          amountOfDebt: amountOfDebt,
-          assetPrice: signAuction.assetPrice,
-          assetLtv: signAuction.assetLtv
-        })
-      );
-
-      DataTypes.Loan storage _loan = _loans[loanId];
-      // Create the loan associated
-      _loan.createLoan(
-        LoanLogic.ParamsCreateLoan({
-          msgSender: msgSender,
-          underlyingAsset: reserve.underlyingAsset,
-          totalAssets: 1,
-          loanId: loanId
-        })
-      );
-      // Freeze the loan until the auction is finished
-      _loan.freeze();
-    }
-
-    if (order.countBids == 0) {
-      // We repay the debt at the beginning
-      // The ASSET only support a % of the current debt in case of the next bids
-      // we are not repaying more debt until the auction is ended.
-
-      OrderLogic.repayDebt(
-        OrderLogic.RepayDebtParams({
-          loanId: loan.loanId,
-          owner: order.owner,
-          from: address(this),
-          underlyingAsset: loan.underlyingAsset,
-          uTokenVault: _uTokenVault,
-          amount: minBid
-        })
-      );
-      // The protocol freeze the loan repayed until end of the auction
-      // to protect against borrow again
-      order.bidderDebtPayed = minBid;
-      _loans[loan.loanId].freeze();
-    } else {
-      // Cancel debt from old bidder and refund
-      uint256 amountToPayBuyer = order.bid.amountToPay;
-      if (order.countBids == 1) {
-        // The first bidder gets 2.5% of benefit over the second bidder
-        // We increate the amount to repay
-        uint256 bonusAmount = (amountToPayBuyer + order.bid.amountOfDebt).percentMul(
-          GenericLogic.FIRST_BID_INCREMENT
-        );
-        // BONUS AMOUNT
-        order.bidderBonus = bonusAmount;
-
-        amountToPayBuyer = amountToPayBuyer + bonusAmount;
-      }
-      // We assuming that the ltv is enought to cover the growing interest of this bid
-      OrderLogic.refundBidder(
-        OrderLogic.RefundBidderParams({
-          loanId: order.bid.loanId,
-          owner: order.bid.buyer,
-          reserveOracle: _reserveOracle,
-          from: address(this),
-          underlyingAsset: loan.underlyingAsset,
-          uTokenVault: _uTokenVault,
-          amountOfDebt: order.bid.amountOfDebt,
-          amountToPay: amountToPayBuyer,
-          reserve: reserve
-        })
-      );
       {
-        // cache loanId value to prevent a second storage access
-        bytes32 loanId_ = order.bid.loanId;
-        if (loanId_ != 0) {
-          // Remove old loan
-          delete _loans[loanId_];
+        // This path needs to be a abstract wallet
+        address owner = GenericLogic.getMainWalletOwner(_walletRegistry, msgSender);
+        if (owner != msgSender) {
+          revert Errors.InvalidWalletOwner();
+        }
+
+        loanId = LoanLogic.generateId(msgSender, signAuction.nonce, signAuction.deadline);
+        // Borrow the debt amount on belhalf of the bidder
+        OrderLogic.borrowByBidder(
+          OrderLogic.BorrowByBidderParams({
+            loanId: loanId,
+            owner: msgSender,
+            to: address(this),
+            underlyingAsset: reserve.underlyingAsset,
+            uTokenVault: _uTokenVault,
+            amountOfDebt: amountOfDebt,
+            assetPrice: signAuction.assetPrice,
+            assetLtv: signAuction.assetLtv
+          })
+        );
+
+        DataTypes.Loan storage _loan = _loans[loanId];
+        // Create the loan associated
+        _loan.createLoan(
+          LoanLogic.ParamsCreateLoan({
+            msgSender: msgSender,
+            underlyingAsset: reserve.underlyingAsset,
+            totalAssets: 1,
+            loanId: loanId
+          })
+        );
+        // Freeze the loan until the auction is finished
+        _loan.freeze();
+      }
+    }
+    {
+      if (order.countBids == 0) {
+        // We repay the debt at the beginning
+        // The ASSET only support a % of the current debt in case of the next bids
+        // we are not repaying more debt until the auction is ended.
+
+        OrderLogic.repayDebt(
+          OrderLogic.RepayDebtParams({
+            loanId: loan.loanId,
+            owner: order.owner,
+            from: address(this),
+            underlyingAsset: loan.underlyingAsset,
+            uTokenVault: _uTokenVault,
+            amount: minBid
+          })
+        );
+        // The protocol freeze the loan repayed until end of the auction
+        // to protect against borrow again
+        order.bidderDebtPayed = minBid;
+        _loans[loan.loanId].freeze();
+      } else {
+        // Cancel debt from old bidder and refund
+        uint256 amountToPayBuyer = order.bid.amountToPay;
+        if (order.countBids == 1) {
+          // The first bidder gets 2.5% of benefit over the second bidder
+          // We increate the amount to repay
+          uint256 bonusAmount = (amountToPayBuyer + order.bid.amountOfDebt).percentMul(
+            GenericLogic.FIRST_BID_INCREMENT
+          );
+          // BONUS AMOUNT
+          order.bidderBonus = bonusAmount;
+
+          amountToPayBuyer = amountToPayBuyer + bonusAmount;
+        }
+        // We assuming that the ltv is enought to cover the growing interest of this bid
+        OrderLogic.refundBidder(
+          OrderLogic.RefundBidderParams({
+            loanId: order.bid.loanId,
+            owner: order.bid.buyer,
+            reserveOracle: _reserveOracle,
+            from: address(this),
+            underlyingAsset: loan.underlyingAsset,
+            uTokenVault: _uTokenVault,
+            amountOfDebt: order.bid.amountOfDebt,
+            amountToPay: amountToPayBuyer,
+            reserve: reserve
+          })
+        );
+        {
+          // cache loanId value to prevent a second storage access
+          bytes32 loanId_ = order.bid.loanId;
+          if (loanId_ != 0) {
+            // Remove old loan
+            delete _loans[loanId_];
+          }
         }
       }
     }
@@ -322,15 +327,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       buyer: msgSender
     });
 
-    emit AuctionBid(
-      loanId,
-      order.orderId,
-      order.offer.assetId,
-      amountToPay,
-      amountOfDebt,
-      totalAmount,
-      msgSender
-    );
+    emit AuctionBid(loanId, orderId, signAuction.assets[0], amountToPay, amountOfDebt, msgSender);
   }
 
   /**
@@ -377,7 +374,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
     (
       uint256 totalAmount,
-      uint256 totalBidderBonus,
+      ,
       uint256 assetsToRepay,
       bytes32[] memory ordersToUpdate
     ) = _calculateRedeemAmount(loan, assets);
@@ -391,6 +388,9 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     // payments
     for (uint256 i; i < ordersToUpdate.length; i++) {
       {
+        // Check if the assets are correct
+        if (assets[i] != signAuction.assets[i]) revert Errors.AssetsMismatch();
+
         if (ordersToUpdate[i] == 0) continue;
         DataTypes.Order memory cacheOrder = _orders[ordersToUpdate[i]];
 
@@ -437,19 +437,26 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   /**
    * @dev Finalize the liquidation auction once is expired in time.
+   * @param claimOnUWallet Order identifier to redeem the asset and pay the debt related
    * @param orderId Order identifier to redeem the asset and pay the debt related
+   * @param asset asset to liquidate
    * @param signAuction struct of the data needed
    * @param sig validation of this struct
    * */
   function finalize(
     bool claimOnUWallet,
     bytes32 orderId,
+    DataTypes.Asset calldata asset,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
   ) external {
     address msgSender = unpackTrailingParamMsgSender();
     _validateSignature(msgSender, signAuction, sig);
 
+    bytes32 assetId = AssetLogic.assetId(asset.collection, asset.tokenId);
+    if (signAuction.assets[0] != assetId) {
+      revert Errors.AssetsMismatch();
+    }
     DataTypes.Order memory order = _orders[orderId];
 
     if (order.owner == address(0)) revert Errors.InvalidOrderOwner();
@@ -486,7 +493,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         revert Errors.ProtocolOwnerZeroAddress();
       }
       // Block the asset
-      IProtocolOwner(protocolOwnerBuyer).setLoanId(signAuction.assetId, loan.loanId);
+      IProtocolOwner(protocolOwnerBuyer).setLoanId(assetId, loan.loanId);
       // Update the loan
       _loans[order.bid.loanId].totalAssets = 1;
       // Activate the loan from the bidder
@@ -519,8 +526,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
     // We transfer the ownership to the new Owner
     IProtocolOwner(protocolOwner).changeOwner(
-      signAuction.collection,
-      signAuction.tokenId,
+      asset.collection,
+      asset.tokenId,
       // We send the asset to
       buyer
     );
@@ -528,13 +535,147 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     emit AuctionFinalize(
       offerLoanId,
       orderId,
-      signAuction.assetId,
+      assetId,
       order.offer.startAmount,
       amount,
       order.bid.buyer,
       order.owner
     );
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////
+  // PRIVATE
+  /////////////////////////////////////////////////////////////////////////////////////
+
+  // function _createOrderFromBid(
+  //   bytes32 assetId,
+  //   DataTypes.Loan memory loan,
+  //   DataTypes.Order storage order,
+  //   DataTypes.ReserveData memory reserve,
+  //   DataTypes.SignAuction calldata signAuction
+  // ) internal returns (uint256 minBid) {
+  //   // The loan need to be after the changes are success
+  //   // We use the min or default because this asset maybe can't support the full debt and
+  //   // we need to continue the auction with the rest of the elements in the loan.
+  //   minBid = OrderLogic.getMinDebtOrDefault(
+  //     loan.loanId,
+  //     _uTokenVault,
+  //     signAuction.assetPrice,
+  //     signAuction.loan.aggLoanPrice,
+  //     signAuction.loan.aggLtv,
+  //     reserve
+  //   );
+
+  //   // Validate bid in order
+  //   // Check if the Loan is Unhealty
+
+  //   ValidationLogic.validateFutureUnhealtyLoanState(
+  //     ValidationLogic.ValidateLoanStateParams({
+  //       amount: 0,
+  //       price: signAuction.assetPrice,
+  //       reserveOracle: _reserveOracle,
+  //       uTokenVault: _uTokenVault,
+  //       reserve: reserve,
+  //       loanConfig: signAuction.loan
+  //     })
+  //   );
+
+  //   // Creation of the Order
+  //   order.createOrder(
+  //     OrderLogic.ParamsCreateOrder({
+  //       orderType: Constants.OrderType.TYPE_LIQUIDATION_AUCTION,
+  //       orderId: order.orderId,
+  //       owner: loan.owner,
+  //       loanId: signAuction.loan.loanId,
+  //       assetId: assetId,
+  //       debtToSell: 1e4, // PercentageMath.ONE_HUNDRED_PERCENT
+  //       // Start amount price of the current debt or
+  //       startAmount: minBid.toUint128(),
+  //       endAmount: 0,
+  //       startTime: 0,
+  //       endTime: signAuction.endTime
+  //     })
+  //   );
+  // }
+
+  // function _updateOrderFromBid(
+  //   bytes32 assetId,
+  //   DataTypes.Order storage order,
+  //   DataTypes.ReserveData memory reserve,
+  //   DataTypes.SignAuction calldata signAuction
+  // ) internal returns (uint256 minBid) {
+  //   minBid = OrderLogic.getMinBid(
+  //     order,
+  //     _uTokenVault,
+  //     signAuction.loan.aggLoanPrice,
+  //     signAuction.loan.aggLtv,
+  //     reserve
+  //   );
+
+  //   // If the auction is in market, we migrate this type of auction to liquidation
+  //   if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
+  //     ValidationLogic.validateFutureUnhealtyLoanState(
+  //       ValidationLogic.ValidateLoanStateParams({
+  //         amount: order.bid.amountOfDebt + order.bid.amountToPay,
+  //         price: signAuction.assetPrice,
+  //         reserveOracle: _reserveOracle,
+  //         uTokenVault: _uTokenVault,
+  //         reserve: reserve,
+  //         loanConfig: signAuction.loan
+  //       })
+  //     );
+  //     // You only can convert the aution if the lastBid don't cover the debt
+  //     order.updateToLiquidationOrder(
+  //       OrderLogic.ParamsUpdateOrder({
+  //         loanId: signAuction.loan.loanId,
+  //         assetId: assetId,
+  //         endTime: signAuction.endTime,
+  //         minBid: uint128(minBid)
+  //       })
+  //     );
+  //   }
+  // }
+
+  // function _createBidLoan(
+  //   uint256 amountOfDebt,
+  //   address msgSender,
+  //   address underlyingAsset,
+  //   DataTypes.SignAuction calldata signAuction
+  // ) internal returns (bytes32 loanId) {
+  //   // This path needs to be a abstract wallet
+  //   address owner = GenericLogic.getMainWalletOwner(_walletRegistry, msgSender);
+  //   if (owner != msgSender) {
+  //     revert Errors.InvalidWalletOwner();
+  //   }
+
+  //   loanId = LoanLogic.generateId(msgSender, signAuction.nonce, signAuction.deadline);
+  //   // Borrow the debt amount on belhalf of the bidder
+  //   OrderLogic.borrowByBidder(
+  //     OrderLogic.BorrowByBidderParams({
+  //       loanId: loanId,
+  //       owner: msgSender,
+  //       to: address(this),
+  //       underlyingAsset: underlyingAsset,
+  //       uTokenVault: _uTokenVault,
+  //       amountOfDebt: amountOfDebt,
+  //       assetPrice: signAuction.assetPrice,
+  //       assetLtv: signAuction.assetLtv
+  //     })
+  //   );
+
+  //   DataTypes.Loan storage _loan = _loans[loanId];
+  //   // Create the loan associated
+  //   _loan.createLoan(
+  //     LoanLogic.ParamsCreateLoan({
+  //       msgSender: msgSender,
+  //       underlyingAsset: underlyingAsset,
+  //       totalAssets: 1,
+  //       loanId: loanId
+  //     })
+  //   );
+  //   // Freeze the loan until the auction is finished
+  //   _loan.freeze();
+  // }
 
   function _calculateRedeemAmount(
     DataTypes.Loan memory loan,

@@ -217,9 +217,7 @@ library DataTypes {
 
   struct SignAuction {
     SignLoanConfig loan;
-    bytes32 assetId;
-    address collection;
-    uint256 tokenId;
+    bytes32[] assets;
     uint256 assetPrice;
     uint256 assetLtv;
     uint40 endTime; // @audit-info review this

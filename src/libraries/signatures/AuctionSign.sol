@@ -52,9 +52,7 @@ contract AuctionSign is BaseSignature {
       abi.encode(
         TYPEHASH,
         LoanLogic.getLoanStructHash(nonce, signAuction.loan),
-        signAuction.assetId,
-        signAuction.collection,
-        signAuction.tokenId,
+        keccak256(abi.encodePacked(signAuction.assets)),
         signAuction.assetPrice,
         signAuction.assetLtv,
         signAuction.endTime,
