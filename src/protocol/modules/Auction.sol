@@ -222,41 +222,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     bytes32 loanId;
     // The bidder asks for a debt
     if (amountOfDebt != 0) {
-      {
-        // This path needs to be a abstract wallet
-        address owner = GenericLogic.getMainWalletOwner(_walletRegistry, msgSender);
-        if (owner != msgSender) {
-          revert Errors.InvalidWalletOwner();
-        }
-
-        loanId = LoanLogic.generateId(msgSender, signAuction.nonce, signAuction.deadline);
-        // Borrow the debt amount on belhalf of the bidder
-        OrderLogic.borrowByBidder(
-          OrderLogic.BorrowByBidderParams({
-            loanId: loanId,
-            owner: msgSender,
-            to: address(this),
-            underlyingAsset: reserve.underlyingAsset,
-            uTokenVault: _uTokenVault,
-            amountOfDebt: amountOfDebt,
-            assetPrice: signAuction.assetPrice,
-            assetLtv: signAuction.assetLtv
-          })
-        );
-
-        DataTypes.Loan storage _loan = _loans[loanId];
-        // Create the loan associated
-        _loan.createLoan(
-          LoanLogic.ParamsCreateLoan({
-            msgSender: msgSender,
-            underlyingAsset: reserve.underlyingAsset,
-            totalAssets: 1,
-            loanId: loanId
-          })
-        );
-        // Freeze the loan until the auction is finished
-        _loan.freeze();
-      }
+      loanId = _createBidLoan(amountOfDebt, msgSender, loan.underlyingAsset, signAuction);
     }
     {
       if (order.countBids == 0) {
@@ -547,135 +513,46 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   // PRIVATE
   /////////////////////////////////////////////////////////////////////////////////////
 
-  // function _createOrderFromBid(
-  //   bytes32 assetId,
-  //   DataTypes.Loan memory loan,
-  //   DataTypes.Order storage order,
-  //   DataTypes.ReserveData memory reserve,
-  //   DataTypes.SignAuction calldata signAuction
-  // ) internal returns (uint256 minBid) {
-  //   // The loan need to be after the changes are success
-  //   // We use the min or default because this asset maybe can't support the full debt and
-  //   // we need to continue the auction with the rest of the elements in the loan.
-  //   minBid = OrderLogic.getMinDebtOrDefault(
-  //     loan.loanId,
-  //     _uTokenVault,
-  //     signAuction.assetPrice,
-  //     signAuction.loan.aggLoanPrice,
-  //     signAuction.loan.aggLtv,
-  //     reserve
-  //   );
+  function _createBidLoan(
+    uint256 amountOfDebt,
+    address msgSender,
+    address underlyingAsset,
+    DataTypes.SignAuction calldata signAuction
+  ) internal returns (bytes32 loanId) {
+    // This path needs to be a abstract wallet
+    address owner = GenericLogic.getMainWalletOwner(_walletRegistry, msgSender);
+    if (owner != msgSender) {
+      revert Errors.InvalidWalletOwner();
+    }
 
-  //   // Validate bid in order
-  //   // Check if the Loan is Unhealty
+    loanId = LoanLogic.generateId(msgSender, signAuction.nonce, signAuction.deadline);
+    // Borrow the debt amount on belhalf of the bidder
+    OrderLogic.borrowByBidder(
+      OrderLogic.BorrowByBidderParams({
+        loanId: loanId,
+        owner: msgSender,
+        to: address(this),
+        underlyingAsset: underlyingAsset,
+        uTokenVault: _uTokenVault,
+        amountOfDebt: amountOfDebt,
+        assetPrice: signAuction.assetPrice,
+        assetLtv: signAuction.assetLtv
+      })
+    );
 
-  //   ValidationLogic.validateFutureUnhealtyLoanState(
-  //     ValidationLogic.ValidateLoanStateParams({
-  //       amount: 0,
-  //       price: signAuction.assetPrice,
-  //       reserveOracle: _reserveOracle,
-  //       uTokenVault: _uTokenVault,
-  //       reserve: reserve,
-  //       loanConfig: signAuction.loan
-  //     })
-  //   );
-
-  //   // Creation of the Order
-  //   order.createOrder(
-  //     OrderLogic.ParamsCreateOrder({
-  //       orderType: Constants.OrderType.TYPE_LIQUIDATION_AUCTION,
-  //       orderId: order.orderId,
-  //       owner: loan.owner,
-  //       loanId: signAuction.loan.loanId,
-  //       assetId: assetId,
-  //       debtToSell: 1e4, // PercentageMath.ONE_HUNDRED_PERCENT
-  //       // Start amount price of the current debt or
-  //       startAmount: minBid.toUint128(),
-  //       endAmount: 0,
-  //       startTime: 0,
-  //       endTime: signAuction.endTime
-  //     })
-  //   );
-  // }
-
-  // function _updateOrderFromBid(
-  //   bytes32 assetId,
-  //   DataTypes.Order storage order,
-  //   DataTypes.ReserveData memory reserve,
-  //   DataTypes.SignAuction calldata signAuction
-  // ) internal returns (uint256 minBid) {
-  //   minBid = OrderLogic.getMinBid(
-  //     order,
-  //     _uTokenVault,
-  //     signAuction.loan.aggLoanPrice,
-  //     signAuction.loan.aggLtv,
-  //     reserve
-  //   );
-
-  //   // If the auction is in market, we migrate this type of auction to liquidation
-  //   if (order.orderType != Constants.OrderType.TYPE_LIQUIDATION_AUCTION) {
-  //     ValidationLogic.validateFutureUnhealtyLoanState(
-  //       ValidationLogic.ValidateLoanStateParams({
-  //         amount: order.bid.amountOfDebt + order.bid.amountToPay,
-  //         price: signAuction.assetPrice,
-  //         reserveOracle: _reserveOracle,
-  //         uTokenVault: _uTokenVault,
-  //         reserve: reserve,
-  //         loanConfig: signAuction.loan
-  //       })
-  //     );
-  //     // You only can convert the aution if the lastBid don't cover the debt
-  //     order.updateToLiquidationOrder(
-  //       OrderLogic.ParamsUpdateOrder({
-  //         loanId: signAuction.loan.loanId,
-  //         assetId: assetId,
-  //         endTime: signAuction.endTime,
-  //         minBid: uint128(minBid)
-  //       })
-  //     );
-  //   }
-  // }
-
-  // function _createBidLoan(
-  //   uint256 amountOfDebt,
-  //   address msgSender,
-  //   address underlyingAsset,
-  //   DataTypes.SignAuction calldata signAuction
-  // ) internal returns (bytes32 loanId) {
-  //   // This path needs to be a abstract wallet
-  //   address owner = GenericLogic.getMainWalletOwner(_walletRegistry, msgSender);
-  //   if (owner != msgSender) {
-  //     revert Errors.InvalidWalletOwner();
-  //   }
-
-  //   loanId = LoanLogic.generateId(msgSender, signAuction.nonce, signAuction.deadline);
-  //   // Borrow the debt amount on belhalf of the bidder
-  //   OrderLogic.borrowByBidder(
-  //     OrderLogic.BorrowByBidderParams({
-  //       loanId: loanId,
-  //       owner: msgSender,
-  //       to: address(this),
-  //       underlyingAsset: underlyingAsset,
-  //       uTokenVault: _uTokenVault,
-  //       amountOfDebt: amountOfDebt,
-  //       assetPrice: signAuction.assetPrice,
-  //       assetLtv: signAuction.assetLtv
-  //     })
-  //   );
-
-  //   DataTypes.Loan storage _loan = _loans[loanId];
-  //   // Create the loan associated
-  //   _loan.createLoan(
-  //     LoanLogic.ParamsCreateLoan({
-  //       msgSender: msgSender,
-  //       underlyingAsset: underlyingAsset,
-  //       totalAssets: 1,
-  //       loanId: loanId
-  //     })
-  //   );
-  //   // Freeze the loan until the auction is finished
-  //   _loan.freeze();
-  // }
+    DataTypes.Loan storage _loan = _loans[loanId];
+    // Create the loan associated
+    _loan.createLoan(
+      LoanLogic.ParamsCreateLoan({
+        msgSender: msgSender,
+        underlyingAsset: underlyingAsset,
+        totalAssets: 1,
+        loanId: loanId
+      })
+    );
+    // Freeze the loan until the auction is finished
+    _loan.freeze();
+  }
 
   function _calculateRedeemAmount(
     DataTypes.Loan memory loan,
