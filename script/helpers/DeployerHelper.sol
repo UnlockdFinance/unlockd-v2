@@ -81,7 +81,7 @@ contract DeployerHelper is Script {
     vm.serializeAddress(json, 'unlockd', addresses.unlockd);
     vm.serializeAddress(json, 'walletFactory', addresses.walletFactory);
     vm.serializeAddress(json, 'walletRegistry', addresses.walletRegistry);
-    vm.serializeAddress(json, 'wethGateway', addresses.walletRegistry);
+    vm.serializeAddress(json, 'wethGateway', addresses.wethGateway);
     vm.serializeAddress(json, 'allowedControllers', addresses.allowedControllers);
     vm.serializeAddress(json, 'reserveOracle', addresses.reserveOracle);
     vm.serializeAddress(json, 'adapter', addresses.adapter);
