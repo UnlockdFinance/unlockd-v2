@@ -441,6 +441,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
     DataTypes.Order memory order = _orders[orderId];
 
+    if (msgSender != order.owner) {
+      revert Errors.InvalidOrderOwner();
+    }
     // Get the loan asigned to the Order
     DataTypes.Loan storage loan = _loans[order.offer.loanId];
     if (order.offer.loanId != signMarket.loan.loanId) {
@@ -578,6 +581,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
     DataTypes.Order memory order = _orders[orderId];
 
+    if (msgSender != order.owner) {
+      revert Errors.InvalidOrderOwner();
+    }
     // Get the loan asigned to the Order
     DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
 

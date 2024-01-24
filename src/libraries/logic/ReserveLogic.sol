@@ -305,12 +305,13 @@ library ReserveLogic {
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balances,
     address user,
+    address onBehalfOf,
     uint256 amount
   ) internal {
     IERC20(reserve.underlyingAsset).safeTransferFrom(user, address(this), amount);
     // MINT SHARES TO THE USER
     uint256 scaledAmount = ScaledToken(reserve.scaledTokenAddress).mint(
-      user,
+      onBehalfOf,
       amount,
       reserve.liquidityIndex
     );

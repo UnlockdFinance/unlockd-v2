@@ -109,7 +109,7 @@ contract UTokenVault is
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
 
-    reserve.mintScaled(balance, onBehalfOf, amount);
+    reserve.mintScaled(balance, msg.sender, onBehalfOf, amount);
 
     reserve.strategyInvest(balance, amount);
 

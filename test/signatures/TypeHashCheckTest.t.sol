@@ -82,7 +82,7 @@ contract TypeHashCheckTest is Test {
   function test_auction_typehash() public {
     bytes32 TYPEHASH = keccak256(
       abi.encodePacked(
-        'SignAuction(SignLoanConfig loan,bytes32 assetId,address collection,uint256 tokenId,uint256 assetPrice,uint256 assetLtv,uint40 endTime,uint256 nonce,uint256 deadline)',
+        'SignAuction(SignLoanConfig loan,bytes32[] assets,uint256 assetPrice,uint256 assetLtv,uint40 endTime,uint256 nonce,uint256 deadline)',
         LOAN_CONFIG
       )
     );

@@ -381,6 +381,15 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
           })
         );
 
+        emit AuctionOrderRedeemed(
+          loan.loanId,
+          cacheOrder.orderId,
+          cacheOrder.bid.amountOfDebt,
+          cacheOrder.bid.amountToPay,
+          cacheOrder.bidderBonus,
+          cacheOrder.countBids
+        );
+
         delete _orders[cacheOrder.orderId];
       }
     }

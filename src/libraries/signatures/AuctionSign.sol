@@ -12,7 +12,7 @@ contract AuctionSign is BaseSignature {
   string internal constant VERSION = '1';
 
   bytes32 internal constant TYPEHASH =
-    0xf765337c56136015d88e9aee12431631d766e1ef8b3eb436b16e22432e801b6b;
+    0xa1884b461d1e3507c9caa7bdaaf9e92ce900530d5b65659eead7a2b1844bbb43;
 
   constructor() BaseSignature(NAME, VERSION) {
     // NOTHINIG TO DO

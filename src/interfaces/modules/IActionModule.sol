@@ -6,14 +6,19 @@ import '../../types/DataTypes.sol';
 
 interface IActionModule is ILoan {
   // Events
+  event AddCollateral(
+    bytes32 indexed loanId,
+    address indexed collection,
+    uint256 indexed tokenId,
+    bytes32 assetId
+  );
 
   event Borrow(
     address indexed user,
     bytes32 indexed loanId,
     uint256 amount,
     uint256 totalAssets,
-    address token,
-    DataTypes.Asset[] indexed assets
+    address token
   );
   event Repay(address indexed user, bytes32 indexed loanId, uint256 amount, bytes32[] assets);
 

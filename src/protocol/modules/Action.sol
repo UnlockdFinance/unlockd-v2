@@ -157,6 +157,9 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
         }
 
         IProtocolOwner(protocolOwner).setLoanId(assetId, loan.loanId);
+
+        emit AddCollateral(loan.loanId, asset.collection, asset.tokenId, assetId);
+
         unchecked {
           ++i;
         }
@@ -196,7 +199,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       revert Errors.LoanNotUpdated();
     }
 
-    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.underlyingAsset, assets);
+    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.underlyingAsset);
   }
 
   /**
