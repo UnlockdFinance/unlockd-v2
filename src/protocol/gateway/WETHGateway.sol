@@ -53,6 +53,7 @@ contract WETHGateway is IWETHGateway, Ownable {
       scaledAmount = amountToWithdraw.rayDiv(reserve.liquidityIndex);
     }
     IERC20(SCALEDTOKEN).safeTransferFrom(msg.sender, address(this), scaledAmount);
+    IERC20(SCALEDTOKEN).approve(address(IUTOKEN), scaledAmount);
     IUTOKEN.withdraw(address(WETH), amountToWithdraw, address(this));
     WETH.withdraw(amountToWithdraw);
     _safeTransferETH(to, amountToWithdraw);
