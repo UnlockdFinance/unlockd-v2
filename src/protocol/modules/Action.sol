@@ -199,7 +199,13 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
       revert Errors.LoanNotUpdated();
     }
 
-    emit Borrow(msgSender, loan.loanId, amount, loan.totalAssets, loan.underlyingAsset);
+    emit Borrow(
+      msgSender,
+      loan.loanId,
+      amount,
+      _loans[loan.loanId].totalAssets,
+      loan.underlyingAsset
+    );
   }
 
   /**
