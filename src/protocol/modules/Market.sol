@@ -303,7 +303,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
 
     DataTypes.Order storage order = _orders[orderId];
-    DataTypes.Loan storage loan = _loans[order.offer.loanId];
+    DataTypes.Loan storage loan = _loans[signMarket.loan.loanId];
 
     if (order.offer.loanId != signMarket.loan.loanId) {
       revert Errors.InvalidLoanId();
