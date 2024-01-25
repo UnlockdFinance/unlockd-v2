@@ -184,6 +184,10 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     }
 
     bytes32 orderId = OrderLogic.generateId(signMarket.assetId, signMarket.loan.loanId);
+    // If you have already one order you can't create a new one
+    if (_orders[orderId].owner != address(0)) {
+      revert Errors.InvalidOrderId();
+    }
 
     ValidationLogic.validateCreateOrderMarket(
       ValidationLogic.ValidateCreateOrderMarketParams({
@@ -274,7 +278,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         // Remove old loan
         delete _loans[bidData.loanId];
       }
-      _loans[order.offer.loanId].activate();
     }
     delete _orders[orderId];
 
@@ -410,8 +413,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       amountOfDebt: amountOfDebt,
       buyer: msgSender
     });
-    // Freeze owner LOAN position
-    _loans[order.offer.loanId].freeze();
 
     emit MarketBid(
       loanId,
@@ -425,7 +426,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
   }
 
   /**
-   * @dev Claim the assets once the auction is ended. This function can be executed by anyone.
+   * @dev Claim the assets once the auction is ended. This function can be executed by the owner.
    * @param claimOnUWallet force claim on unlockd wallet
    * @param orderId identifier of the order
    * @param signMarket struct with information of the loan and prices
@@ -441,7 +442,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
     DataTypes.Order memory order = _orders[orderId];
 
-    if (msgSender != order.owner) {
+    if (msgSender != order.owner && msgSender != order.bid.buyer) {
       revert Errors.InvalidOrderOwner();
     }
     // Get the loan asigned to the Order
@@ -544,7 +545,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     } else {
       // We update the counter
       _loans[loanId].totalAssets = signMarket.loan.totalAssets;
-      _loans[loanId].activate();
     }
 
     {
@@ -581,7 +581,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     _validateSignature(msgSender, signMarket, sig);
     DataTypes.Order memory order = _orders[orderId];
 
-    if (msgSender != order.owner) {
+    // Only claimable by the owner of the asset and the bidder
+    if (msgSender != order.owner && msgSender != order.bid.buyer) {
       revert Errors.InvalidOrderOwner();
     }
     // Get the loan asigned to the Order
@@ -649,8 +650,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       // Remove old loan
       delete _loans[order.bid.loanId];
     }
-
-    _loans[order.offer.loanId].activate();
 
     delete _orders[order.orderId];
 
@@ -838,7 +837,6 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     } else {
       // We update the counter
       _loans[loan.loanId].totalAssets = signMarket.loan.totalAssets;
-      _loans[loan.loanId].activate();
     }
 
     // We transfer the ownership to the new Owner
