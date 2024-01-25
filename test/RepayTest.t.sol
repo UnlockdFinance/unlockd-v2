@@ -64,11 +64,11 @@ contract RepayTest is Setup {
   /////////////////////////////////////////////////////////////////////////////////
 
   function test_action_repay_full_borrow() public {
-    uint256 amountToBorrow = 0.5 ether;
+    uint256 amountToRepay = 0.5 ether;
     uint256 collateral = 2 ether;
-    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToBorrow, collateral, 2, 2);
+    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToRepay, collateral, 2, 2);
 
-    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToRepay);
     // Price updated
     (
       DataTypes.SignAction memory signAction,
@@ -94,10 +94,10 @@ contract RepayTest is Setup {
     }
 
     hoax(_actor);
-    approveAsset(_WETH, address(_uTokenVault), amountToBorrow);
+    approveAsset(_WETH, address(_uTokenVault), amountToRepay);
 
     hoax(_actor);
-    Action(_action).repay(amountToBorrow, signAction, sig);
+    Action(_action).repay(type(uint256).max, signAction, sig);
 
     for (uint256 i = 0; i < assets.length; ) {
       assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);

@@ -50,18 +50,20 @@ library ValidationLogic {
     ) {
       revert Errors.InvalidCurrentLiquidationThreshold();
     }
-
+    uint256 currentDebt = GenericLogic.calculateLoanDebt(
+      params.loanConfig.loanId,
+      params.uTokenVault,
+      params.reserve.underlyingAsset
+    );
     // We calculate the current debt and the HF
-    (, uint256 baseUserTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
-      .calculateFutureLoanData(
-        params.loanConfig.loanId,
-        params.amount,
-        params.price,
-        params.reserveOracle,
-        params.uTokenVault,
-        params.reserve,
-        params.loanConfig
-      );
+    (, , , uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
+      params.amount,
+      params.price,
+      currentDebt,
+      params.reserveOracle,
+      params.reserve,
+      params.loanConfig
+    );
 
     // ........................ DEBUG MODE ....................................
     // console.log('> validateFutureLoanState ----------------------------------------------- <');
@@ -77,7 +79,9 @@ library ValidationLogic {
       revert Errors.UnhealtyLoan();
     }
 
-    if (params.loanConfig.totalAssets == 0 && baseUserTotalDebt > baseAmount) {
+    uint256 pendingDebt = currentDebt < params.amount ? 0 : currentDebt - params.amount;
+
+    if (params.loanConfig.totalAssets == 0 && pendingDebt > 0) {
       revert Errors.UnhealtyLoan();
     }
   }
@@ -93,18 +97,20 @@ library ValidationLogic {
     ) {
       revert Errors.InvalidCurrentLiquidationThreshold();
     }
-
+    uint256 currentDebt = GenericLogic.calculateLoanDebt(
+      params.loanConfig.loanId,
+      params.uTokenVault,
+      params.reserve.underlyingAsset
+    );
     // We calculate the current debt and the HF
-    (, uint256 baseUserTotalDebt, uint256 baseAmount, uint256 healthFactor) = GenericLogic
-      .calculateFutureLoanData(
-        params.loanConfig.loanId,
-        params.amount,
-        params.price,
-        params.reserveOracle,
-        params.uTokenVault,
-        params.reserve,
-        params.loanConfig
-      );
+    (, , , uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
+      params.amount,
+      params.price,
+      currentDebt,
+      params.reserveOracle,
+      params.reserve,
+      params.loanConfig
+    );
 
     // ........................ DEBUG MODE ....................................
     // console.log(
@@ -121,7 +127,10 @@ library ValidationLogic {
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
     }
-    if (params.loanConfig.totalAssets == 0 && baseUserTotalDebt < baseAmount) {
+
+    uint256 pendingDebt = currentDebt < params.amount ? 0 : currentDebt - params.amount;
+
+    if (params.loanConfig.totalAssets == 0 && pendingDebt == 0) {
       revert Errors.HealtyLoan();
     }
   }

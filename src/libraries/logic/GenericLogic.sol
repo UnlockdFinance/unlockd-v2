@@ -41,11 +41,10 @@ library GenericLogic {
   }
 
   function calculateFutureLoanData(
-    bytes32 loanId,
     uint256 amount,
     uint256 price,
+    uint256 currentDebt,
     address reserveOracle,
-    address uTokenVault,
     DataTypes.ReserveData memory reserveData,
     DataTypes.SignLoanConfig memory loanConfig
   ) internal view returns (uint256, uint256, uint256, uint256) {
@@ -58,16 +57,8 @@ library GenericLogic {
     );
     vars.amount = amount.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
 
-    // Calculate total debt in base currency
-    vars.totalDebtInReserve = getUserDebtInBaseCurrency(
-      loanId,
-      reserveData.underlyingAsset,
-      uTokenVault,
-      vars.reserveUnitPrice,
-      vars.reserveUnit
-    );
-
-    // If the total assets are 0, then we need to calculate the collateral with the current value
+    vars.totalDebtInReserve = currentDebt.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
+    // If the total assets are 0, then we need to calculate the collateral with the current value of the market
     // All the assets are expresed in the amount of the BASE (USD)
     uint256 collateral = loanConfig.totalAssets == 0 ? price : loanConfig.aggLoanPrice;
     // We transform the collateral in BASE currency
@@ -85,37 +76,6 @@ library GenericLogic {
     );
 
     return (vars.totalCollateralInReserve, vars.totalDebtInReserve, vars.amount, vars.healthFactor);
-  }
-
-  struct CalculateLoanDebtDataVars {
-    uint256 reserveUnitPrice;
-    uint256 reserveUnit;
-    uint256 totalDebtInReserve;
-  }
-
-  function calculateLoanDebtInBase(
-    bytes32 loanId,
-    address reserveOracle,
-    address uTokenVault,
-    DataTypes.ReserveData memory reserveData
-  ) internal view returns (uint256) {
-    CalculateLoanDataVars memory vars;
-
-    // Calculate the reserve price
-    vars.reserveUnit = 10 ** reserveData.decimals;
-    vars.reserveUnitPrice = IReserveOracle(reserveOracle).getAssetPrice(
-      reserveData.underlyingAsset
-    );
-    // Calculate total debt in base currency
-    vars.totalDebtInReserve = getUserDebtInBaseCurrency(
-      loanId,
-      reserveData.underlyingAsset,
-      uTokenVault,
-      vars.reserveUnitPrice,
-      vars.reserveUnit
-    );
-
-    return vars.totalDebtInReserve;
   }
 
   function calculateLoanDebt(
@@ -181,35 +141,6 @@ library GenericLogic {
     unchecked {
       amount = availableBorrows < totalDebt ? totalDebt - availableBorrows : 0;
     }
-  }
-
-  /**
-   * @notice Calculates total debt of the user in the based currency used to normalize the values of the assets
-   * @dev This fetches the `balanceOf` of the stable and variable debt tokens for the user. For gas reasons, the
-   * variable debt balance is calculated by fetching `scaledBalancesOf` normalized debt, which is cheaper than
-   * fetching `balanceOf`
-   * @param loanId Id of the loan
-   * @param underlyingAsset address underlying
-   * @param uTokenVault address of the uToken factory
-   * @param assetPrice The price of the asset for which the total debt of the user is being calculated
-   * @param assetUnit The value representing one full unit of the asset (10^decimals)
-   * @return The total debt of the user normalized to the base currency
-   */
-  function getUserDebtInBaseCurrency(
-    bytes32 loanId,
-    address underlyingAsset,
-    address uTokenVault,
-    uint256 assetPrice,
-    uint256 assetUnit
-  ) internal view returns (uint256) {
-    if (loanId == 0) return 0;
-    // fetching variable debt
-    uint256 userTotalDebt = IUTokenVault(uTokenVault).getScaledDebtFromLoanId(
-      underlyingAsset,
-      loanId
-    );
-    if (userTotalDebt == 0) return 0;
-    return userTotalDebt.mulDiv(assetPrice, assetUnit);
   }
 
   function getMainWallet(
