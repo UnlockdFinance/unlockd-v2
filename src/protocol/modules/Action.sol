@@ -234,18 +234,17 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
     }
 
     UTokenVault uTokenVault = UTokenVault(_uTokenVault);
+    uTokenVault.updateState(loan.underlyingAsset);
 
     if (type(uint256).max == amount) {
       // If the amount is uint max we return the full amount
       amount = uTokenVault.getScaledDebtFromLoanId(loan.underlyingAsset, loan.loanId);
     }
 
-    uTokenVault.updateState(loan.underlyingAsset);
     DataTypes.ReserveData memory reserve = uTokenVault.getReserveData(loan.underlyingAsset);
 
     if (amount != 0) {
       ValidationLogic.validateRepay(signAction.loan.loanId, _uTokenVault, amount, reserve);
-
       uTokenVault.repay(loan.underlyingAsset, loan.loanId, amount, msgSender, msgSender);
     }
 

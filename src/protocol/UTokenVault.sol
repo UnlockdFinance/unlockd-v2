@@ -226,9 +226,6 @@ contract UTokenVault is
 
     // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
-    if (borrowScaledBalanceByLoanId[underlyingAsset][loanId] < amount) {
-      revert Errors.AmountExceedsDebt();
-    }
 
     uint256 scaledAmount = reserve.decreaseDebt(balance, amount);
     uint256 currentDebt = borrowScaledBalanceByLoanId[underlyingAsset][loanId];

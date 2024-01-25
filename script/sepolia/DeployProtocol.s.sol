@@ -64,11 +64,6 @@ contract DeployProtocolScript is DeployerHelper {
         );
         Installer(installer).installModules(modules);
       }
-      // ALLOW WETHGATEWEY
-      if (addresses.wethGateway != address(0)) {
-        // Authorize protocol
-        IWETHGateway(addresses.wethGateway).authorizeProtocol(addresses.unlockd);
-      }
 
       /*** CONFIGURE PROTOCOL */
       {

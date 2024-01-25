@@ -132,9 +132,9 @@ contract DeployPeripheryScript is DeployerHelper {
       WETHGateway wethGateway = new WETHGateway(DeployConfig.WETH, addresses.uTokenVault);
       addresses.wethGateway = address(wethGateway);
 
-      if (addresses.unlockd != address(0)) {
+      if (addresses.uTokenVault != address(0)) {
         // Authorize protocol
-        wethGateway.authorizeProtocol(addresses.unlockd);
+        wethGateway.authorizeProtocol(addresses.uTokenVault);
       }
     }
 
