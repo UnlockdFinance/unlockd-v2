@@ -20,7 +20,14 @@ interface IActionModule is ILoan {
     uint256 totalAssets,
     address token
   );
-  event Repay(address indexed user, bytes32 indexed loanId, uint256 amount, bytes32[] assets);
+
+  event Repay(
+    address indexed user,
+    bytes32 indexed loanId,
+    uint256 amount,
+    bytes32[] assets,
+    uint256 totalAssets
+  );
 
   // Functions
 

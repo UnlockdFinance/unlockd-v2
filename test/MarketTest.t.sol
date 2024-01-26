@@ -99,6 +99,10 @@ contract MarketTest is Setup {
     return (loanId, orderId);
   }
 
+  function test_create_order_two_times_with_the_same_asset() public {
+    // TODO: Make test
+  }
+
   function test_create_order_type_auction_minBid_set() public returns (bytes32, bytes32) {
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, 1 ether, 2 ether, 2, 2);
 
@@ -734,6 +738,10 @@ contract MarketTest is Setup {
       vm.expectRevert(Errors.InvalidLoanId.selector);
       Market(_market).bid(orderId, bidAmount + 0.5 ether, 0, signMarket, sig); // BID ON THE ASSET
     }
+  }
+
+  function test_bid_cancel_order_with_no_bids_and_expired() public {
+    // TODO: Pending test
   }
 
   function test_bid_ended_auction() public {
