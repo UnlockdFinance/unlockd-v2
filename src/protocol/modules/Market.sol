@@ -28,7 +28,8 @@ import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
 import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
-import {console} from 'forge-std/console.sol';
+
+// import {console} from 'forge-std/console.sol';
 
 contract Market is BaseCoreModule, IMarketModule, MarketSign {
   using SafeERC20 for IERC20;

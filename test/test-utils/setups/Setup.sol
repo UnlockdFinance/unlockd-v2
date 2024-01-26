@@ -687,7 +687,7 @@ contract Setup is Base, ActorsBase, NFTBase {
           loanId: params.loanId, // Because is new need to be 0
           aggLoanPrice: params.price,
           aggLtv: asset.assetLtv,
-          aggLiquidationThreshold: asset.assetLtv,
+          aggLiquidationThreshold: asset.assetLtv + 1000,
           totalAssets: uint88(params.totalAssets),
           nonce: nonce,
           deadline: deadline
@@ -755,7 +755,7 @@ contract Setup is Base, ActorsBase, NFTBase {
           loanId: params.loanId, // Because is new need to be 0
           aggLoanPrice: params.price,
           aggLtv: 6000,
-          aggLiquidationThreshold: 6000,
+          aggLiquidationThreshold: 7000,
           totalAssets: uint88(params.totalAssets),
           nonce: nonce,
           deadline: deadline
@@ -803,7 +803,7 @@ contract Setup is Base, ActorsBase, NFTBase {
           loanId: params.loanId, // Because is new need to be 0
           aggLoanPrice: params.price,
           aggLtv: 6000,
-          aggLiquidationThreshold: 6000,
+          aggLiquidationThreshold: 7000,
           totalAssets: uint88(params.totalAssets),
           nonce: nonce,
           deadline: deadline

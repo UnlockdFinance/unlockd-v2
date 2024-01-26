@@ -138,6 +138,7 @@ library GenericLogic {
     uint256 ltv
   ) internal pure returns (uint256 amount) {
     uint256 availableBorrows = totalCollateral.percentMul(ltv);
+
     unchecked {
       amount = availableBorrows < totalDebt ? totalDebt - availableBorrows : 0;
     }

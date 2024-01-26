@@ -26,7 +26,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-import {console} from 'forge-std/console.sol';
+// import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -229,8 +229,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // We repay the debt at the beginning
         // The ASSET only support a % of the current debt in case of the next bids
         // we are not repaying more debt until the auction is ended.
-        console.log('>>>> MIN BID', minBid);
-        console.log('Total Amount', totalAmount);
+
         OrderLogic.repayDebt(
           OrderLogic.RepayDebtParams({
             loanId: loan.loanId,
@@ -502,18 +501,14 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       uint256 healthFactor = GenericLogic.calculateHealthFactorFromBalances(
         signAuction.loan.aggLoanPrice,
         currentDebt,
-        signAuction.loan.aggLtv
+        signAuction.loan.aggLiquidationThreshold
       );
-      console.log('DEBT', currentDebt);
-      console.log('HF', healthFactor);
 
       if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-        console.log('Unhealthy');
         // If it's unhealty we can only update the totalAssets
         loan.totalAssets = signAuction.loan.totalAssets;
         // @dev if total assets is 0 we have this loan with a bad debt
       } else {
-        console.log('Healthy');
         // Healty path
         if (signAuction.loan.totalAssets == 0) {
           // If there is only one we can remove the loan
