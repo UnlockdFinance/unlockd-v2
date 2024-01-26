@@ -252,7 +252,8 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       loanState,
       orderOwner,
       orderType,
-      orderTimeframeEndtime
+      orderTimeframeEndtime,
+      bidData
     );
 
     //Refund bid
@@ -442,7 +443,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
     address msgSender = unpackTrailingParamMsgSender();
     _validateSignature(msgSender, signMarket, sig);
     DataTypes.Order memory order = _orders[orderId];
-
+    Errors.verifyNotZero(order.bid.buyer);
     if (msgSender != order.owner && msgSender != order.bid.buyer) {
       revert Errors.InvalidOrderOwner();
     }

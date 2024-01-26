@@ -260,7 +260,8 @@ library ValidationLogic {
     Constants.LoanState loanState,
     address orderOwner,
     Constants.OrderType orderType,
-    uint40 orderTimeframeEndTime
+    uint40 orderTimeframeEndTime,
+    DataTypes.Bid memory bidData
   ) internal view {
     // Only ORDER OWNER
     if (msgSender != orderOwner) {
@@ -275,8 +276,10 @@ library ValidationLogic {
       orderType == Constants.OrderType.TYPE_FIXED_PRICE_AND_AUCTION ||
       orderType == Constants.OrderType.TYPE_AUCTION
     ) {
-      // Check time only for typefixed price
-      Errors.verifyNotExpiredTimestamp(orderTimeframeEndTime, block.timestamp);
+      // If it's expired and has buyer
+      if (orderTimeframeEndTime < block.timestamp && bidData.buyer != address(0)) {
+        revert Errors.TimestampExpired();
+      }
     }
   }
 
