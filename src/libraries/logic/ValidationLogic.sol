@@ -65,16 +65,6 @@ library ValidationLogic {
       params.loanConfig
     );
 
-    // ........................ DEBUG MODE ....................................
-    // console.log('> validateFutureLoanState ----------------------------------------------- <');
-    // console.log('Total Collateral Balance : ', userCollateralBalance);
-    // console.log('userTotalDebt            : ', userTotalDebt);
-    // console.log('HF                       : ', healthFactor);
-    // console.log('LTV                      : ', params.loanConfig.aggLtv);
-    // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-    // console.log('AMOUNT REPAY             ; ', params.amount);
-    // console.log('-----------------------------------------------');
-
     if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.UnhealtyLoan();
     }
@@ -111,18 +101,6 @@ library ValidationLogic {
       params.reserve,
       params.loanConfig
     );
-
-    // ........................ DEBUG MODE ....................................
-    // console.log(
-    //   '> validateFutureUnhealtyLoanState ----------------------------------------------- <'
-    // );
-    // console.log('IN WETH Total Collateral Balance : ', params.loanConfig.aggLoanPrice);
-    // console.log('IN BASE baseUserTotalDebt        : ', baseUserTotalDebt);
-    // console.log('HF                       : ', healthFactor);
-    // console.log('LTV                      : ', params.loanConfig.aggLtv);
-    // console.log('LIQUIDATION              ; ', GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD);
-    // console.log('IN WTH AMOUNT REPAY             ; ', params.amount);
-    // console.log('-----------------------------------------------');
 
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
