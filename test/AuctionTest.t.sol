@@ -162,6 +162,7 @@ contract AuctionTest is Setup {
     bytes32[] memory assets = new bytes32[](2);
     assets[0] = AssetLogic.assetId(_nft, 0);
     assets[1] = AssetLogic.assetId(_nft, 1);
+
     writeTokenBalance(_actorTwo, _WETH, 2 ether);
     (
       DataTypes.SignAuction memory signAuction,
@@ -593,6 +594,7 @@ contract AuctionTest is Setup {
   /////////////////////////////////////////////////////////////////////////////////
 
   function test_auction_finalize_liquidation_auction_success() public {
+    vm.recordLogs();
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
@@ -662,7 +664,6 @@ contract AuctionTest is Setup {
     vm.recordLogs();
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
-
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
     bytes32[] memory assets = new bytes32[](1);
     assets[0] = AssetLogic.assetId(_nft, 0);
@@ -676,7 +677,7 @@ contract AuctionTest is Setup {
         DataTypes.EIP712Signature memory sig
       ) = auction_signature(
           _auction,
-          AuctionSignParams({user: _actor, loanId: loanId, price: 0.8 ether, totalAssets: 1}),
+          AuctionSignParams({user: _actor, loanId: loanId, price: 1 ether, totalAssets: 1}),
           AssetAuctionParams({assets: assets, assetPrice: 1 ether, assetLtv: 6000})
         );
 

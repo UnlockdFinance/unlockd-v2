@@ -210,7 +210,7 @@ library OrderLogic {
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
-  ) internal view returns (uint256 maxDebtOrDefault) {
+  ) internal view returns (uint256) {
     uint256 totalDebt = GenericLogic.calculateLoanDebt(
       loanId,
       uTokenVault,
@@ -223,7 +223,7 @@ library OrderLogic {
       ltv
     );
 
-    maxDebtOrDefault = MathUtils.maxOf(minAmountNeeded, defaultAmount);
+    return MathUtils.maxOf(minAmountNeeded, defaultAmount);
   }
 
   function getMinDebtOrDefault(
@@ -233,7 +233,7 @@ library OrderLogic {
     uint256 totalCollateral,
     uint256 ltv,
     DataTypes.ReserveData memory reserveData
-  ) internal view returns (uint256 minDebtOrDefault) {
+  ) internal view returns (uint256) {
     uint256 totalDebt = GenericLogic.calculateLoanDebt(
       loanId,
       uTokenVault,
@@ -246,7 +246,7 @@ library OrderLogic {
       totalDebt,
       ltv
     );
-    minDebtOrDefault = MathUtils.minOf(minAmountNeeded, defaultAmount);
+    return MathUtils.minOf(minAmountNeeded, defaultAmount);
   }
 
   /**

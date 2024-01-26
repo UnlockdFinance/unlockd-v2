@@ -26,7 +26,7 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -229,7 +229,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         // We repay the debt at the beginning
         // The ASSET only support a % of the current debt in case of the next bids
         // we are not repaying more debt until the auction is ended.
-
+        console.log('>>>> MIN BID', minBid);
+        console.log('Total Amount', totalAmount);
         OrderLogic.repayDebt(
           OrderLogic.RepayDebtParams({
             loanId: loan.loanId,
@@ -488,15 +489,42 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     if (_loans[loan.loanId].totalAssets != signAuction.loan.totalAssets + 1) {
       revert Errors.LoanNotUpdated();
     }
-    if (signAuction.loan.totalAssets == 0) {
-      // If there is only one we can remove the loan
-      delete _loans[offerLoanId];
-    } else {
-      // Activate loan
-      loan.activate();
-      loan.totalAssets = signAuction.loan.totalAssets;
-    }
-    // Get protocol owner from owner of the asset to transfer
+
+    {
+      // Check HF
+      uint256 currentDebt = GenericLogic.calculateLoanDebt(
+        signAuction.loan.loanId,
+        _uTokenVault,
+        loan.underlyingAsset
+      );
+
+      // We calculate the current debt and the HF
+      uint256 healthFactor = GenericLogic.calculateHealthFactorFromBalances(
+        signAuction.loan.aggLoanPrice,
+        currentDebt,
+        signAuction.loan.aggLtv
+      );
+      console.log('DEBT', currentDebt);
+      console.log('HF', healthFactor);
+
+      if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
+        console.log('Unhealthy');
+        // If it's unhealty we can only update the totalAssets
+        loan.totalAssets = signAuction.loan.totalAssets;
+        // @dev if total assets is 0 we have this loan with a bad debt
+      } else {
+        console.log('Healthy');
+        // Healty path
+        if (signAuction.loan.totalAssets == 0) {
+          // If there is only one we can remove the loan
+          delete _loans[offerLoanId];
+        } else {
+          // Activate loan
+          loan.activate();
+          loan.totalAssets = signAuction.loan.totalAssets;
+        }
+      }
+    } // Get protocol owner from owner of the asset to transfer
     address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, order.owner);
 
     // We transfer the ownership to the new Owner

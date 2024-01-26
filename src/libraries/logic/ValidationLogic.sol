@@ -216,9 +216,9 @@ library ValidationLogic {
 
     // Check if is auction over
     Errors.verifyExpiredTimestamp(order.timeframe.endTime, block.timestamp);
-    // if (loanState == Constants.LoanState.BLOCKED) {
-    //   revert Errors.LoanBlocked();
-    // }
+    if (loanState == Constants.LoanState.BLOCKED) {
+      revert Errors.LoanBlocked();
+    }
     if (loanTotalAssets != totalAssets + 1) revert Errors.LoanNotUpdated();
   }
 
