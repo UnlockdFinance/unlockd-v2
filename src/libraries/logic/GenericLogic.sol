@@ -40,6 +40,7 @@ library GenericLogic {
     uint256 amount;
   }
 
+  // @DEPRECATED
   function calculateFutureLoanData(
     uint256 amount,
     uint256 price,

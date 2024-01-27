@@ -46,7 +46,8 @@ library ValidationLogic {
     }
     if (
       params.loanConfig.aggLiquidationThreshold == 0 ||
-      params.loanConfig.aggLiquidationThreshold > 9999
+      params.loanConfig.aggLiquidationThreshold > 9999 ||
+      params.loanConfig.aggLtv > params.loanConfig.aggLiquidationThreshold
     ) {
       revert Errors.InvalidCurrentLiquidationThreshold();
     }
@@ -55,23 +56,21 @@ library ValidationLogic {
       params.uTokenVault,
       params.reserve.underlyingAsset
     );
+
+    uint256 updatedDebt = currentDebt < params.amount ? 0 : currentDebt - params.amount;
+
     // We calculate the current debt and the HF
-    (, , , uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
-      params.amount,
-      params.price,
-      currentDebt,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
+    uint256 healthFactor = GenericLogic.calculateHealthFactorFromBalances(
+      params.loanConfig.totalAssets == 0 ? params.price : params.loanConfig.aggLoanPrice,
+      updatedDebt,
+      params.loanConfig.aggLiquidationThreshold
     );
 
     if (healthFactor <= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.UnhealtyLoan();
     }
 
-    uint256 pendingDebt = currentDebt < params.amount ? 0 : currentDebt - params.amount;
-
-    if (params.loanConfig.totalAssets == 0 && pendingDebt > 0) {
+    if (params.loanConfig.totalAssets == 0 && updatedDebt > 0) {
       revert Errors.UnhealtyLoan();
     }
   }
@@ -83,32 +82,31 @@ library ValidationLogic {
     }
     if (
       params.loanConfig.aggLiquidationThreshold == 0 ||
-      params.loanConfig.aggLiquidationThreshold > 9999
+      params.loanConfig.aggLiquidationThreshold > 9999 ||
+      params.loanConfig.aggLtv > params.loanConfig.aggLiquidationThreshold
     ) {
       revert Errors.InvalidCurrentLiquidationThreshold();
     }
+
     uint256 currentDebt = GenericLogic.calculateLoanDebt(
       params.loanConfig.loanId,
       params.uTokenVault,
       params.reserve.underlyingAsset
     );
-    // We calculate the current debt and the HF
-    (, , , uint256 healthFactor) = GenericLogic.calculateFutureLoanData(
-      params.amount,
-      params.price,
-      currentDebt,
-      params.reserveOracle,
-      params.reserve,
-      params.loanConfig
+
+    uint256 updatedDebt = currentDebt < params.amount ? 0 : currentDebt - params.amount;
+
+    uint256 healthFactor = GenericLogic.calculateHealthFactorFromBalances(
+      params.loanConfig.totalAssets == 0 ? params.price : params.loanConfig.aggLoanPrice,
+      updatedDebt,
+      params.loanConfig.aggLiquidationThreshold
     );
 
     if (healthFactor > GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
       revert Errors.HealtyLoan();
     }
 
-    uint256 pendingDebt = currentDebt < params.amount ? 0 : currentDebt - params.amount;
-
-    if (params.loanConfig.totalAssets == 0 && pendingDebt == 0) {
+    if (params.loanConfig.totalAssets == 0 && updatedDebt == 0) {
       revert Errors.HealtyLoan();
     }
   }
