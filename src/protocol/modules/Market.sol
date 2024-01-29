@@ -725,8 +725,9 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         signMarket.loan.aggLtv,
         reserve
       );
-
-      if (totalAmount != assetPrice) revert Errors.InvalidTotalAmount();
+      // We validate that the assetPrice cover the minimun dev
+      // @dev we can't check exact amount because the debt can be increasing
+      if (totalAmount < assetPrice) revert Errors.InvalidTotalAmount();
     }
     // stake the assets on the protocol
     IERC20(underlyingAsset).safeTransferFrom(msgSender, address(this), amountToPay);

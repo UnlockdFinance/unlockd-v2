@@ -99,12 +99,10 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       // Sell the asset using the adapter
       SellNowLogic.sellAsset(
         SellNowLogic.SellParams({
-          loanId: loan.loanId,
           asset: asset,
           signSellNow: signSellNow,
           wallet: wallet,
-          protocolOwner: protocolOwner,
-          marketAdapter: signSellNow.marketAdapter
+          protocolOwner: protocolOwner
         })
       );
     }
@@ -118,6 +116,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         marketPrice: signSellNow.marketPrice,
         underlyingAsset: loan.underlyingAsset,
         uTokenVault: _uTokenVault,
+        from: address(this),
         owner: loan.owner
       })
     );
@@ -210,12 +209,10 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
     // Sell the asset using the adapter
     SellNowLogic.sellAsset(
       SellNowLogic.SellParams({
-        loanId: signSellNow.loan.loanId,
         asset: asset,
         signSellNow: signSellNow,
         wallet: wallet,
-        protocolOwner: protocolOwner,
-        marketAdapter: signSellNow.marketAdapter
+        protocolOwner: protocolOwner
       })
     );
 
@@ -230,6 +227,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
           marketPrice: signSellNow.marketPrice,
           underlyingAsset: signSellNow.underlyingAsset,
           uTokenVault: _uTokenVault,
+          from: address(this),
           owner: msgSender
         })
       );

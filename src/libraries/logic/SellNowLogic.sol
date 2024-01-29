@@ -9,7 +9,7 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {GenericLogic, Errors, DataTypes} from './GenericLogic.sol';
 
-// import {console} from 'forge-std/console.sol';
+import {console} from 'forge-std/console.sol';
 
 library SellNowLogic {
   using SafeERC20 for IERC20;
@@ -22,6 +22,7 @@ library SellNowLogic {
     uint256 marketPrice;
     address underlyingAsset;
     address uTokenVault;
+    address from;
     address owner;
   }
 
@@ -31,17 +32,16 @@ library SellNowLogic {
       params.totalDebt,
       params.aggLtv
     );
-
     uint256 minRepay = MathUtils.minOf(calculatedMinDebt, params.marketPrice);
     if (minRepay > 0) {
       // Repay Owner debt to arrive ltv
-      // TODO : Add repay
+
       IERC20(params.underlyingAsset).safeApprove(params.uTokenVault, minRepay);
       IUTokenVault(params.uTokenVault).repay(
         params.underlyingAsset,
         params.loanId,
         minRepay,
-        address(this),
+        params.from,
         params.owner
       );
     }
@@ -55,16 +55,17 @@ library SellNowLogic {
   struct SellParams {
     DataTypes.SignSellNow signSellNow;
     DataTypes.Asset asset;
-    bytes32 loanId;
     address wallet;
     address protocolOwner;
-    address marketAdapter;
   }
 
   function sellAsset(SellParams memory params) internal {
     // Approve the sale
-    IProtocolOwner(params.protocolOwner).delegateOneExecution(params.marketAdapter, true);
-    IMarketAdapter(params.marketAdapter).preSell(
+    IProtocolOwner(params.protocolOwner).delegateOneExecution(
+      params.signSellNow.marketAdapter,
+      true
+    );
+    IMarketAdapter(params.signSellNow.marketAdapter).preSell(
       IMarketAdapter.PreSellParams({
         loanId: params.signSellNow.loan.loanId,
         collection: params.asset.collection,
@@ -77,8 +78,11 @@ library SellNowLogic {
     );
 
     // Buy the asset
-    IProtocolOwner(params.protocolOwner).delegateOneExecution(params.marketAdapter, true);
-    IMarketAdapter(params.marketAdapter).sell(
+    IProtocolOwner(params.protocolOwner).delegateOneExecution(
+      params.signSellNow.marketAdapter,
+      true
+    );
+    IMarketAdapter(params.signSellNow.marketAdapter).sell(
       IMarketAdapter.SellParams({
         wallet: params.wallet,
         protocolOwner: params.protocolOwner,
