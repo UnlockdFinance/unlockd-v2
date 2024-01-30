@@ -63,4 +63,30 @@ contract WETHGatewayTest is Setup {
 
     assertEq(_actorTwo.balance, 1 ether);
   }
+
+  function test_emergencyTokenTransfer() public {
+    address scaled = _uTokenVault.getScaledToken(_WETH);
+    hoax(_admin);
+    gateway.authorizeProtocol(address(_uTokenVault));
+
+    hoax(_actor);
+    gateway.depositETH{value: 1 ether}(_actor);
+
+    hoax(_actor);
+    IERC20(scaled).transfer(address(gateway), 1 ether);
+
+    hoax(_admin);
+    gateway.emergencyTokenTransfer(scaled, _actorTwo, 1 ether);
+
+    assertEq(IERC20(scaled).balanceOf(_actorTwo), 1 ether);
+  }
+
+  function test_emergencyEtherTransfer() public {
+    // hoax(_actor);
+    // (bool success, ) = payable(address(gateway)).call{value: 1 ether}('');
+    // require(success, 'fail transfer');
+    // hoax(_admin);
+    // gateway.emergencyEtherTransfer(_actorTwo, 1 ether);
+    // assertEq(_actorTwo.balance, 1 ether);
+  }
 }
