@@ -53,41 +53,41 @@ contract SellNowLogicTest is Setup {
     vm.stopPrank();
   }
 
-  // function test_sellNow_repayDebtAndUser() public {
-  //   hoax(_actor);
+  function test_sellNow_repayDebtAndUser() public {
+    hoax(_actor);
 
-  //   writeTokenBalance(makeAddr('protocol'), _WETH, 10 ether);
-  //   vm.startPrank(makeAddr('protocol'));
-  //   _uTokenVault.borrow(_WETH, 'loan_0', 1 ether, _actor, _actor);
-  //   assertEq(_uTokenVault.getScaledDebtFromLoanId(_WETH, 'loan_0'), 1 ether);
+    writeTokenBalance(makeAddr('protocol'), _WETH, 10 ether);
+    vm.startPrank(makeAddr('protocol'));
+    _uTokenVault.borrow(_WETH, 'loan_0', 1 ether, _actor, _actor);
+    assertEq(_uTokenVault.getScaledDebtFromLoanId(_WETH, 'loan_0'), 1 ether);
 
-  //   assertEq(IERC20(_WETH).balanceOf(_actor), 1 ether);
-  //   IERC20(_WETH).approve(address(_uTokenVault), 10 ether);
+    assertEq(IERC20(_WETH).balanceOf(_actor), 1 ether);
+    IERC20(_WETH).approve(address(_uTokenVault), 10 ether);
 
-  //   SellNowLogic.repayDebtAndUser(
-  //     SellNowLogic.RepayDebtAndUserParams({
-  //       loanId: 'loan_0',
-  //       aggLoanPrice: 0.5 ether,
-  //       aggLtv: 6000,
-  //       totalDebt: 1 ether,
-  //       marketPrice: 2 ether,
-  //       underlyingAsset: _WETH,
-  //       uTokenVault: address(_uTokenVault),
-  //       from: makeAddr('protocol'),
-  //       owner: _actor
-  //     })
-  //   );
+    SellNowLogic.repayDebtAndUser(
+      SellNowLogic.RepayDebtAndUserParams({
+        loanId: 'loan_0',
+        aggLoanPrice: 0.5 ether,
+        aggLtv: 6000,
+        totalDebt: 1 ether,
+        marketPrice: 2 ether,
+        underlyingAsset: _WETH,
+        uTokenVault: address(_uTokenVault),
+        from: makeAddr('protocol'),
+        owner: _actor
+      })
+    );
 
-  //   assertEq(_uTokenVault.getScaledDebtFromLoanId(_WETH, 'loan_0'), 0.3 ether);
-  //   assertEq(IERC20(_WETH).balanceOf(_actor), 2.3 ether);
-  //   vm.stopPrank();
-  // }
+    assertEq(_uTokenVault.getScaledDebtFromLoanId(_WETH, 'loan_0'), 0.3 ether);
+    assertEq(IERC20(_WETH).balanceOf(_actor), 2.3 ether);
+    vm.stopPrank();
+  }
 
   // function test_sellNow_sellAsset() public {
   //   DataTypes.Asset memory asset = DataTypes.Asset({collection: address(_nft), tokenId: 0});
   //   address walletAddress = getWalletAddress(_actor);
   //   address protocolOwner = getProtocolOwnerAddress(_actor);
-
+  //   vm.assume(IERC721(asset.collection).ownerOf(asset.tokenId) == walletAddress);
   //   writeTokenBalance(address(_market), makeAsset('WETH'), 100 ether);
 
   //   DataTypes.SignSellNow memory data = DataTypes.SignSellNow({

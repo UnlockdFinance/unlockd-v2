@@ -14,7 +14,7 @@ contract NFTMarket {
     uint256 tokenId,
     address underliyingAsset,
     uint256 price
-  ) public {
+  ) public payable {
     require(IERC721(nftAddress).ownerOf(tokenId) == msg.sender, 'MOCK:SENDER NOT OWNER');
     IERC721(nftAddress).transferFrom(msg.sender, address(this), tokenId);
     IERC20(underliyingAsset).transferFrom(address(this), msg.sender, price);
@@ -30,9 +30,7 @@ contract NFTMarket {
     if (IERC20(underliyingAsset).allowance(msg.sender, address(this)) < price) {
       revert LowAllowance();
     }
-
     IERC20(underliyingAsset).safeTransferFrom(msg.sender, address(this), price);
-
     IERC721(nftAddress).transferFrom(address(this), taker, tokenId);
   }
 }

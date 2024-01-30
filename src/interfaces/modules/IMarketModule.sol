@@ -26,6 +26,8 @@ interface IMarketModule {
     bytes32 indexed orderId,
     bytes32 indexed assetId,
     uint256 amount,
+    address bidder,
+    address receiver,
     address user
   );
 

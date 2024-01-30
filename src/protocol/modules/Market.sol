@@ -563,7 +563,15 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
         buyer
       );
 
-      emit MarketClaim(loanId, order.orderId, signMarket.assetId, totalAmount, msgSender);
+      emit MarketClaim(
+        loanId,
+        order.orderId,
+        signMarket.assetId,
+        totalAmount,
+        order.bid.buyer,
+        buyer,
+        loan.owner
+      );
     }
   }
 
