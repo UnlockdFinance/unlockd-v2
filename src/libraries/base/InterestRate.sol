@@ -23,7 +23,7 @@ contract InterestRate is IInterestRate {
   address public immutable _aclManager;
 
   modifier onlyAdmin() {
-    if (IACLManager(_aclManager).isUTokenAdmin(msg.sender) == false) {
+    if (!IACLManager(_aclManager).isUTokenAdmin(msg.sender)) {
       revert Errors.UTokenAccessDenied();
     }
     _;

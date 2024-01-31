@@ -38,7 +38,7 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
    * @dev Modifier that checks if the sender has Auction Admin ROLE
    */
   modifier onlyAuctionAdmin() {
-    if (IACLManager(_aclManager).isAuctionAdmin(unpackTrailingParamMsgSender()) == false)
+    if (!IACLManager(_aclManager).isAuctionAdmin(unpackTrailingParamMsgSender()))
       revert Errors.AccessDenied();
     _;
   }

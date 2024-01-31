@@ -23,7 +23,7 @@ contract ReserveOracle is IReserveOracle {
   }
 
   modifier onlyPriceUpdater() {
-    if (IACLManager(ACL_MANAGER).isPriceUpdater(msg.sender) == false) revert Errors.AccessDenied();
+    if (!IACLManager(ACL_MANAGER).isPriceUpdater(msg.sender)) revert Errors.AccessDenied();
     _;
   }
 

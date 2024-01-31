@@ -30,31 +30,31 @@ abstract contract BaseToken is ERC20Upgradeable {
   /////////////////////////////////////////
 
   modifier isActive() {
-    if (_active == false) revert Errors.Paused();
+    if (!_active) revert Errors.Paused();
     _;
   }
 
   modifier isFrozen() {
-    if (_frozen == true) revert Errors.Frozen();
+    if (_frozen) revert Errors.Frozen();
     _;
   }
 
   modifier onlyProtocol() {
-    if (IACLManager(_aclManager).isProtocol(_msgSender()) == false) {
+    if (!IACLManager(_aclManager).isProtocol(_msgSender())) {
       revert Errors.ProtocolAccessDenied();
     }
     _;
   }
 
   modifier onlyEmergencyAdmin() {
-    if (IACLManager(_aclManager).isEmergencyAdmin(msg.sender) == false) {
+    if (!IACLManager(_aclManager).isEmergencyAdmin(msg.sender)) {
       revert Errors.ProtocolAccessDenied();
     }
     _;
   }
 
   modifier onlyAdmin() {
-    if (IACLManager(_aclManager).isUTokenAdmin(_msgSender()) == false) {
+    if (!IACLManager(_aclManager).isUTokenAdmin(_msgSender())) {
       revert Errors.UTokenAccessDenied();
     }
     _;
@@ -69,7 +69,7 @@ abstract contract BaseToken is ERC20Upgradeable {
    * @dev Modifier that checks if the sender has Emergency ROLE
    */
   modifier onlyEmergency() {
-    if (IACLManager(_aclManager).isEmergencyAdmin(_msgSender()) == false) {
+    if (!IACLManager(_aclManager).isEmergencyAdmin(_msgSender())) {
       revert Errors.EmergencyAccessDenied();
     }
     _;

@@ -12,7 +12,7 @@ contract BaseEmergency is IEmergency {
   address immutable _aclManager;
 
   modifier onlyEmergencyAdmin() {
-    if (IACLManager(_aclManager).isEmergencyAdmin(msg.sender) == false) {
+    if (!IACLManager(_aclManager).isEmergencyAdmin(msg.sender)) {
       revert Errors.ProtocolAccessDenied();
     }
     _;

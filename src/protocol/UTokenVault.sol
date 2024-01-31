@@ -42,14 +42,14 @@ contract UTokenVault is
   //////////////////////////////////////////////////////
 
   modifier onlyProtocol() {
-    if (IACLManager(_aclManager).isProtocol(msg.sender) == false) {
+    if (!IACLManager(_aclManager).isProtocol(msg.sender)) {
       revert Errors.ProtocolAccessDenied();
     }
     _;
   }
 
   modifier onlyAdmin() {
-    if (IACLManager(_aclManager).isUTokenAdmin(msg.sender) == false) {
+    if (!IACLManager(_aclManager).isUTokenAdmin(msg.sender)) {
       revert Errors.UTokenAccessDenied();
     }
     _;

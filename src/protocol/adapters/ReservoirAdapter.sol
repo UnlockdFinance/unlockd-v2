@@ -24,7 +24,7 @@ contract ReservoirAdapter is BaseEmergency, IMarketAdapter {
   ///////////////////////////////////////////////
 
   modifier onlyProtocol() {
-    if (IACLManager(_aclManager).isProtocol(msg.sender) == false) {
+    if (!IACLManager(_aclManager).isProtocol(msg.sender)) {
       revert Errors.AccessDenied();
     }
     _;
