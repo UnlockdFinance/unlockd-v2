@@ -35,6 +35,9 @@ contract AuctionSign is BaseSignature {
     if (msgSender == address(0)) {
       revert Errors.SenderZeroAddress();
     }
+    if (_signNonce[msgSender] != signAuction.nonce) {
+      revert Errors.WrongNonce();
+    }
     // Validate signature
     _validateRecoveredAddress(
       calculateDigest(_signNonce[msgSender]++, signAuction),

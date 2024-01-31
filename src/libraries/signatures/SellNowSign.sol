@@ -36,6 +36,9 @@ contract SellNowSign is BaseSignature {
     if (msgSender == address(0)) {
       revert Errors.SenderZeroAddress();
     }
+    if (_signNonce[msgSender] != signSellNow.nonce) {
+      revert Errors.WrongNonce();
+    }
     // Validate signature
     _validateRecoveredAddress(
       calculateDigest(_signNonce[msgSender]++, signSellNow),

@@ -404,9 +404,9 @@ library ReserveLogic {
       );
 
       // Because of the slippage we need to ensure the exact withdraw
-      uint256 amountWithdrawed = abi.decode(returnData, (uint256));
+      uint256 amountWithdrawn = abi.decode(returnData, (uint256));
 
-      balances.totalSupplyScaledNotInvested += amountWithdrawed
+      balances.totalSupplyScaledNotInvested += amountWithdrawn
         .rayDiv(reserve.liquidityIndex)
         .toUint128();
     }
@@ -428,9 +428,9 @@ library ReserveLogic {
     );
 
     // Because of the slippage we need to ensure the exact withdraw
-    uint256 amountWithdrawed = abi.decode(returnData, (uint256));
+    uint256 amountWithdrawn = abi.decode(returnData, (uint256));
 
-    balances.totalSupplyScaledNotInvested += amountWithdrawed
+    balances.totalSupplyScaledNotInvested += amountWithdrawn
       .rayDiv(reserve.liquidityIndex)
       .toUint128();
   }

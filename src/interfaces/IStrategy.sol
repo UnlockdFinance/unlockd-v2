@@ -9,12 +9,6 @@ interface IStrategy {
     uint256 percentageToInvest;
   }
 
-  // Returns a name for this strategy
-  function name() external view returns (string memory);
-
-  // Returns a description for this strategy
-  function description() external view returns (string memory);
-
   function asset() external view returns (address);
 
   function getConfig() external view returns (StrategyConfig memory);

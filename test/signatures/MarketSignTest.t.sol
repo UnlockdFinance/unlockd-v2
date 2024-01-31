@@ -175,7 +175,7 @@ contract MarketSignTest is Setup {
     // We validate the signature
     vm.startPrank(super.getActorAddress(ACTOR));
     SignSeam(_seam).validate(msgSender, data, sig);
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRecoveredAddress.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.WrongNonce.selector));
     SignSeam(_seam).validate(msgSender, data, sig);
     vm.stopPrank();
 

@@ -175,7 +175,7 @@ contract ActionSignTest is Setup {
     // We validate the signature
     vm.startPrank(super.getActorAddress(ACTOR));
     ActionSignSeam(_seam).validate(msgSender, data, sig);
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRecoveredAddress.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.WrongNonce.selector));
     ActionSignSeam(_seam).validate(msgSender, data, sig);
     vm.stopPrank();
 

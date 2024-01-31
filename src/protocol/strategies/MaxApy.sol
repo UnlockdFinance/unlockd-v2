@@ -25,15 +25,6 @@ contract MaxApyStrategy is IStrategy {
     _percentageToInvest = percentageToInvest_;
   }
 
-  function name() external pure returns (string memory) {
-    return 'MaxAPY';
-  }
-
-  // Returns a description for this strategy
-  function description() external pure returns (string memory) {
-    return 'MaxAPY strategy';
-  }
-
   function asset() external view returns (address) {
     return _asset;
   }
@@ -65,7 +56,7 @@ contract MaxApyStrategy is IStrategy {
   ) external view returns (uint256) {
     from_;
     amount_;
-    if (totalSupplyNotInvested < _minCap) return 0;
+    if (totalSupplyNotInvested <= _minCap) return 0;
     uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
     return investAmount > MIN_AMOUNT_TO_INVEST ? investAmount : 0;
   }

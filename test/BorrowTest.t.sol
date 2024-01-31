@@ -66,7 +66,6 @@ contract BorrowTest is Setup {
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
     // We check the new balance
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
     // Check if the asset is locked
@@ -107,7 +106,6 @@ contract BorrowTest is Setup {
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
     // We check the new balance
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
     // Check if the asset is locked
@@ -149,8 +147,6 @@ contract BorrowTest is Setup {
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
-
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
@@ -212,9 +208,8 @@ contract BorrowTest is Setup {
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
     vm.startPrank(_actor);
-    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidRecoveredAddress.selector));
+    vm.expectRevert(abi.encodeWithSelector(Errors.WrongNonce.selector));
     // Borrow amount
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     vm.stopPrank();
@@ -597,7 +592,6 @@ contract BorrowTest is Setup {
     // Borrow amount
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
     uint256 gasUsed = initialGas - gasleft();
-    console.log('GAS Used:', gasUsed);
 
     Vm.Log[] memory entries = vm.getRecordedLogs();
 

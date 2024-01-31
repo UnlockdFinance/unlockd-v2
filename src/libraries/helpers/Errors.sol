@@ -68,7 +68,9 @@ library Errors {
   error InvalidRecoveredAddress();
   error SenderZeroAddress();
 
+  error WrongNonce();
   error NotEqualDeadline();
+
   error NotEqualUnderlyingAsset();
   error NotEqualTotalAssets();
   error NotEqualOrderOwner();

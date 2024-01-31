@@ -59,6 +59,7 @@ contract UTokenVault is
 
   constructor(address aclManager) BaseEmergency(aclManager) {
     if (aclManager == address(0)) revert Errors.ZeroAddress();
+    _disableInitializers();
   }
 
   function initialize(address sharesTokenImp) public initializer {
@@ -136,12 +137,10 @@ contract UTokenVault is
     Errors.verifyNotZero(to);
     Errors.verifyNotZero(amount);
 
-    // Check if we have enought to withdraw
-    reserve.strategyWithdraw(balance, amount);
-
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
 
+    reserve.strategyWithdraw(balance, amount);
     // Burn scaled tokens
     reserve.burnScaled(balance, msg.sender, to, amount);
 
@@ -180,8 +179,6 @@ contract UTokenVault is
     // Check if we have enought to withdraw
     reserve.strategyWithdraw(balance, amount);
 
-    reserve.updateState(balance);
-
     uint256 scaledAmount = reserve.increaseDebt(balance, amount);
 
     // Update balances
@@ -190,8 +187,9 @@ contract UTokenVault is
 
     IERC20(underlyingAsset).safeTransfer(to, amount);
 
-    // Remove funds from the interest rate
-    reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
+    reserve.updateState(balance);
+    // @dev Because we update the debt with increaseDebt, we don't need to pass the current amount into the calculation.
+    reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, 0);
 
     emit Borrow(
       msg.sender,
@@ -237,9 +235,10 @@ contract UTokenVault is
     borrowScaledBalanceByUser[underlyingAsset][onBehalfOf] -= scaledAmount;
 
     IERC20(underlyingAsset).safeTransferFrom(from, address(this), amount);
-    reserve.updateState(balance);
 
-    reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
+    reserve.updateState(balance);
+    // @dev Because we update the debt with increaseDebt, we don't need to pass the current amount into the calculation.
+    reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, 0);
 
     reserve.strategyInvest(balance, amount);
 

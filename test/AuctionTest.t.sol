@@ -184,8 +184,6 @@ contract AuctionTest is Setup {
     uint128 bidAmount = 1 ether;
     uint128 bidDebtAmount = 0.5 ether;
 
-    console.log('MIN BID:', minBid);
-    console.log('BID    :', bidAmount + bidDebtAmount);
     hoax(_actorTwo);
     approveAsset(_WETH, address(getUnlockd()), bidAmount); // APPROVE AMOUNT
 

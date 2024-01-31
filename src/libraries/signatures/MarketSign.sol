@@ -35,6 +35,10 @@ contract MarketSign is BaseSignature {
     if (msgSender == address(0)) {
       revert Errors.SenderZeroAddress();
     }
+
+    if (_signNonce[msgSender] != signMarket.nonce) {
+      revert Errors.WrongNonce();
+    }
     // Validate signature
     _validateRecoveredAddress(
       calculateDigest(_signNonce[msgSender]++, signMarket),
