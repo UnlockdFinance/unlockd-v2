@@ -158,7 +158,11 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
       }
 
       // Lock the asset
-      IProtocolOwner(protocolOwner).setLoanId(signMarket.assetId, loan.loanId);
+      IProtocolOwner(protocolOwner).safeSetLoanId(
+        signMarket.collection,
+        signMarket.tokenId,
+        loan.loanId
+      );
     } else {
       if (loan.underlyingAsset != underlyingAsset) {
         revert Errors.InvalidUnderlyingAsset();

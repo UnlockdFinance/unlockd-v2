@@ -156,7 +156,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
           revert Errors.NotAssetOwner();
         }
 
-        IProtocolOwner(protocolOwner).setLoanId(assetId, loan.loanId);
+        IProtocolOwner(protocolOwner).safeSetLoanId(asset.collection, asset.tokenId, loan.loanId);
 
         emit AddCollateral(loan.loanId, asset.collection, asset.tokenId, assetId);
 
