@@ -4,25 +4,38 @@ import {IMaxApyVault} from '@maxapy/interfaces/IMaxApyVault.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
-
-// import {console} from 'forge-std/console.sol';
+import {IACLManager} from '../../interfaces/IACLManager.sol';
+import {Errors} from '../../libraries/helpers/Errors.sol';
 
 contract MaxApyStrategy is IStrategy {
   using PercentageMath for uint256;
 
   uint256 internal constant MAX_LOSS = 100; // 1%
-  uint256 internal constant MIN_AMOUNT_TO_INVEST = 0.5 ether;
-  uint256 internal constant RATIO = 3;
+
+  uint256 internal _minAmountToInvest;
+  uint256 internal _ratio;
+  address internal _aclManager;
   address internal _asset;
   address internal _vault;
   uint256 internal _minCap;
   uint256 internal _percentageToInvest;
 
-  constructor(address asset_, address vault_, uint256 minCap_, uint256 percentageToInvest_) {
+  modifier onlyAdmin() {
+    if (!IACLManager(_aclManager).isUTokenAdmin(msg.sender)) {
+      revert Errors.UTokenAccessDenied();
+    }
+    _;
+  }
+
+  constructor(address aclManager_, address asset_, address vault_, uint256 minCap_, uint256 percentageToInvest_) {
     _asset = asset_;
     _vault = vault_;
     _minCap = minCap_;
     _percentageToInvest = percentageToInvest_;
+    _aclManager = aclManager_;
+    // Default config
+    _minAmountToInvest = 0.5 ether;
+    _ratio = 3;
   }
 
   function asset() external view returns (address) {
@@ -58,7 +71,7 @@ contract MaxApyStrategy is IStrategy {
     amount_;
     if (totalSupplyNotInvested <= _minCap) return 0;
     uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
-    return investAmount > MIN_AMOUNT_TO_INVEST ? investAmount : 0;
+    return investAmount > _minAmountToInvest ? investAmount : 0;
   }
 
   // Function that invest on the this strategy
@@ -95,14 +108,30 @@ contract MaxApyStrategy is IStrategy {
     return IMaxApyVault(vault_).withdraw(amount_, to_, MAX_LOSS);
   }
 
+
+  function updateDeepConfig( uint256 minAmountToInvest_ , uint256 ratio_) external onlyAdmin {
+    _minAmountToInvest = minAmountToInvest_;
+    _ratio = ratio_;
+  }
+
+  function updateStrategyConfig(uint256 minCap_, uint256 percentageToInvest_) external onlyAdmin {
+    _minCap = minCap_;
+    _percentageToInvest = percentageToInvest_;
+  }
+
+  //////////////////////////////////////////////77
+  // PRIVATE
+
   function _getAmountToWithdraw(
     uint256 currentSupply,
     uint256 amount
-  ) internal pure returns (uint256) {
+  ) internal view returns (uint256) {
     if (currentSupply == 0) return amount;
-    if (currentSupply / RATIO < amount) {
+    if (currentSupply / _ratio < amount) {
       return amount;
     }
     return 0;
   }
+
+ 
 }

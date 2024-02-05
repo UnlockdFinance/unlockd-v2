@@ -44,7 +44,7 @@ contract DeployPeripheryScript is DeployerHelper {
     {
       uint256 percentageToInvest = 10000; // 100%
       address _maxApyStrategy = address(
-        new MaxApyStrategy(DeployConfig.WETH, DeployConfig.MAXAPY, 1 ether, percentageToInvest)
+        new MaxApyStrategy(addresses.aclManager,DeployConfig.WETH, DeployConfig.MAXAPY, 1 ether, percentageToInvest)
       );
       addresses.strategy = _maxApyStrategy;
     }

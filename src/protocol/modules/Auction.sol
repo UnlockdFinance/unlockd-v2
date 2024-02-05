@@ -474,9 +474,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       // Activate the loan from the bidder
       _loans[order.bid.loanId].activate();
     }
-
-    uint256 startAmount = order.offer.startAmount;
-
+     
     // The start amount it was payed as a debt
     uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) -
       (order.bidderDebtPayed + order.bidderBonus);
