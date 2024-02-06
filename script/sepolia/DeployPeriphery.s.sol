@@ -21,7 +21,6 @@ import {InterestRate} from '../../src/libraries/base/InterestRate.sol';
 import {ReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
 
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
-import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
 
 import {Action} from '../../src/protocol/modules/Action.sol';
 import {Auction} from '../../src/protocol/modules/Auction.sol';
@@ -44,7 +43,13 @@ contract DeployPeripheryScript is DeployerHelper {
     {
       uint256 percentageToInvest = 10000; // 100%
       address _maxApyStrategy = address(
-        new MaxApyStrategy(addresses.aclManager,DeployConfig.WETH, DeployConfig.MAXAPY, 1 ether, percentageToInvest)
+        new MaxApyStrategy(
+          addresses.aclManager,
+          DeployConfig.WETH,
+          DeployConfig.MAXAPY,
+          1 ether,
+          percentageToInvest
+        )
       );
       addresses.strategy = _maxApyStrategy;
     }

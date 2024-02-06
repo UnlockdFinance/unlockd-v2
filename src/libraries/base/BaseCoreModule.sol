@@ -67,18 +67,6 @@ contract BaseCoreModule is BaseCore {
     _;
   }
 
-  /**
-   * DEPRECATED
-   * @dev Modifier to check if this UToken is allowed by the protocol
-   * @param underlyingAsset Address of the uToken
-   */
-  modifier isReserveActive(address underlyingAsset) {
-    if (_allowedCollections[underlyingAsset] == Constants.ReserveType.DISABLED) {
-      revert Errors.UTokenNotAllowed();
-    }
-    _;
-  }
-
   // Accessing parameters
 
   /**

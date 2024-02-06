@@ -12,10 +12,13 @@ contract MaxApyStrategy is IStrategy {
 
   uint256 internal constant MAX_LOSS = 100; // 1%
 
+  address internal immutable _aclManager;
+  address internal immutable _asset;
+  address internal immutable _vault;
+
   uint256 internal _minAmountToInvest;
   uint256 internal _ratio;
-  address internal _aclManager;
-  address internal _asset;
+
   address internal _vault;
   uint256 internal _minCap;
   uint256 internal _percentageToInvest;
@@ -27,7 +30,13 @@ contract MaxApyStrategy is IStrategy {
     _;
   }
 
-  constructor(address aclManager_, address asset_, address vault_, uint256 minCap_, uint256 percentageToInvest_) {
+  constructor(
+    address aclManager_,
+    address asset_,
+    address vault_,
+    uint256 minCap_,
+    uint256 percentageToInvest_
+  ) {
     _asset = asset_;
     _vault = vault_;
     _minCap = minCap_;
@@ -108,8 +117,7 @@ contract MaxApyStrategy is IStrategy {
     return IMaxApyVault(vault_).withdraw(amount_, to_, MAX_LOSS);
   }
 
-
-  function updateDeepConfig( uint256 minAmountToInvest_ , uint256 ratio_) external onlyAdmin {
+  function updateDeepConfig(uint256 minAmountToInvest_, uint256 ratio_) external onlyAdmin {
     _minAmountToInvest = minAmountToInvest_;
     _ratio = ratio_;
   }
@@ -132,6 +140,4 @@ contract MaxApyStrategy is IStrategy {
     }
     return 0;
   }
-
- 
 }

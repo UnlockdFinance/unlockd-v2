@@ -32,8 +32,6 @@ import '../base/NFTBase.sol';
 
 import {Source} from '../mock/chainlink/Source.sol';
 
-import {DeployProtocol} from '../../../src/deployer/DeployProtocol.sol';
-
 import {IUTokenVault} from '../../../src/interfaces/IUTokenVault.sol';
 
 import {Constants} from '../../../src/libraries/helpers/Constants.sol';
@@ -240,7 +238,13 @@ contract Setup is Base, ActorsBase, NFTBase {
       new MaxApyVault(IERC20(underlyingAsset), 'maxETH', 'MAXETH', makeAddr('treasury'))
     );
     _maxApyStrategy = address(
-      new MaxApyStrategy(address(_aclManager),underlyingAsset, _maxApy, 1 ether, percentageToInvest)
+      new MaxApyStrategy(
+        address(_aclManager),
+        underlyingAsset,
+        _maxApy,
+        1 ether,
+        percentageToInvest
+      )
     );
   }
 
@@ -335,23 +339,15 @@ contract Setup is Base, ActorsBase, NFTBase {
 
     SafeERC721 safeERC721 = new SafeERC721(0x0000000000000000000000000000000000000000);
 
-    DeployProtocol deployerProtocol = new DeployProtocol(
-      _admin,
-      _adminUpdater,
-      address(_aclManager)
-    );
-
     vm.startPrank(_admin);
-    address unlockdAddress = deployerProtocol.deploy(gitCommit);
+    Installer impInstaller = new Installer(gitCommit);
+    Unlockd unlockd = new Unlockd(address(_aclManager), address(impInstaller));
+    address unlockdAddress = address(unlockd);
     _unlock = Unlockd(unlockdAddress);
 
     // Update roles to deploy
     // Add permisions to the protocol
     _aclManager.addPriceUpdater(unlockdAddress);
-
-    // Temporal roles to deploy
-    _aclManager.addProtocolAdmin(address(deployerProtocol));
-    _aclManager.addGovernanceAdmin(address(deployerProtocol));
 
     _aclManager.setProtocol(address(_unlock));
 
@@ -414,9 +410,6 @@ contract Setup is Base, ActorsBase, NFTBase {
       }
     }
 
-    // We remove the permision once we deployed everything
-    _aclManager.removeProtocolAdmin(address(deployerProtocol));
-    _aclManager.removeGovernanceAdmin(address(deployerProtocol));
     vm.stopPrank();
   }
 

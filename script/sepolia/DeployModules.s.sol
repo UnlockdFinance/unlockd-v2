@@ -11,7 +11,6 @@ import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Installer} from '../../src/protocol/modules/Installer.sol';
 
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
-import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
 
 import {Test} from '../../test/test-utils/mock/modules/Test.sol';
 import {Action} from '../../src/protocol/modules/Action.sol';

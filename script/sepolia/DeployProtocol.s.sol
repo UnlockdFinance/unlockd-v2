@@ -21,7 +21,6 @@ import {InterestRate} from '../../src/libraries/base/InterestRate.sol';
 import {ReserveOracle} from '../../src/libraries/oracles/ReserveOracle.sol';
 
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
-import {DeployProtocol} from '../../src/deployer/DeployProtocol.sol';
 
 import {Action} from '../../src/protocol/modules/Action.sol';
 import {Auction} from '../../src/protocol/modules/Auction.sol';
@@ -42,13 +41,9 @@ contract DeployProtocolScript is DeployerHelper {
 
     /******************** Deploy Protocol ********************/
     {
-      DeployProtocol deployerProtocol = new DeployProtocol(
-        DeployConfig.ADMIN,
-        DeployConfig.ADMIN,
-        addresses.aclManager
-      );
-      addresses.unlockd = deployerProtocol.deploy(VERSION);
-
+      Installer impInstaller = new Installer(VERSION);
+      Unlockd unlockd = new Unlockd(addresses.aclManager, address(impInstaller));
+      addresses.unlockd = address(unlockd);
       ACLManager(addresses.aclManager).setProtocol(addresses.unlockd);
 
       {

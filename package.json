@@ -2,6 +2,7 @@
   "name": "unlockd",
   "version": "2.0.0",
   "scripts": {
+    "natspec": "natspec-smells",
     "command:buy:weth": "ts-node ./exec/index.ts generate --action buy --address 0x000000000000000000000000000000000000DEAD --nft 0xc1a5fc1d2b17f3a4c592da5d3c533c27f353d8a1:8821 --currency 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     "command:buy:dai": "ts-node ./exec/index.ts generate --action buy --address 0x000000000000000000000000000000000000DEAD --nft 0xc1a5fc1d2b17f3a4c592da5d3c533c27f353d8a1:8821 --currency 0x6B175474E89094C44Da98b954EedeAC495271d0F",
     "command:sell:weth": "ts-node ./exec/index.ts generate --action sell --address 0x815Deac7795c1566E17995f4e457518B1b593edc --nft 0x26727ed4f5ba61d3772d1575bca011ae3aef5d36:1528 --currency 0x6B175474E89094C44Da98b954EedeAC495271d0F",
@@ -32,6 +33,7 @@
     "prettier-plugin-solidity": "^1.1.1"
   },
   "dependencies": {
+    "@defi-wonderland/natspec-smells": "^1.0.3",
     "@types/node": "^20.1.2",
     "axios": "^1.4.0",
     "bignumber.js": "^9.1.1",
