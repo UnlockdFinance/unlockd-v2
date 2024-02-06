@@ -979,470 +979,406 @@ contract MarketTest is Setup {
   //   // BuyNow function
   //   //////////////////////////////////////////////
 
-  //   function test_buyNow_type_fixed_price_unlockd_wallet() public {
-  //     vm.recordLogs();
-  //     test_create_order_type_fixed_price();
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
+  function test_buyNow_type_fixed_price_unlockd_wallet() public {
+    (bytes32 loanId, bytes32 orderId) = test_create_order_type_fixed_price();
 
-  //     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
-  //     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = market_signature(
+        _market,
+        MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
 
-  //     (
-  //       DataTypes.SignMarket memory signMarket,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = _generate_signature(
-  //         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
-  //     // Add funds to the actor two
+    uint256 amount = 0.9 ether;
+    hoax(_actorTwo);
+    approveAsset(_WETH, address(getUnlockd()), amount); // APPROVE AMOUNT
 
-  //     uint256 amount = 0.9 ether;
-  //     hoax(actorTwo);
-  //     approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
+    hoax(_actorTwo);
+    Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
 
-  //     hoax(actorTwo);
+    assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(_actorTwo));
+  }
 
-  //     Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
+  function test_buyNow_type_fixed_price_eoa() public {
+    (bytes32 loanId, bytes32 orderId) = test_create_order_type_fixed_price();
 
-  //     assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTWO));
-  //   }
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = market_signature(
+        _market,
+        MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
 
-  //   function test_buyNow_type_fixed_price_eoa() public {
-  //     vm.recordLogs();
-  //     test_create_order_type_fixed_price();
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
+    uint256 amount = 1 ether;
+    hoax(_actorTwo);
+    approveAsset(_WETH, address(getUnlockd()), amount); // APPROVE AMOUNT
 
-  //     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
-  //     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    hoax(_actorTwo);
+    Market(_market).buyNow(false, orderId, amount, 0 ether, signMarket, sig); // BID ON THE ASSET
 
-  //     (
-  //       DataTypes.SignMarket memory signMarket,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = _generate_signature(
-  //         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
-  //     // Add funds to the actor two
+    assertEq(MintableERC721(_nft).ownerOf(1), _actorTwo);
+  }
 
-  //     uint256 amount = 1 ether;
-  //     hoax(actorTwo);
-  //     approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
+  function test_buyNow_type_fixed_price_canceled() public {
+    (bytes32 loanId, bytes32 orderId) = test_create_order_type_fixed_price();
+    // We cancel the current auction
+    hoax(_actor);
+    Market(_market).cancel(orderId);
+    // We try to buyNow
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = market_signature(
+        _market,
+        MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
 
-  //     hoax(actorTwo);
+    uint256 amount = 0.9 ether;
+    hoax(_actorTwo);
+    approveAsset(_WETH, address(getUnlockd()), amount); // APPROVE AMOUNT
 
-  //     Market(_market).buyNow(false, orderId, amount, 0 ether, signMarket, sig); // BID ON THE ASSET
+    hoax(_actorTwo);
+    vm.expectRevert(Errors.InvalidLoanId.selector);
+    Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
+  }
 
-  //     assertEq(MintableERC721(_nft).ownerOf(1), getActorAddress(ACTORTWO));
-  //   }
+  function test_buyNow_type_auction() public {
+    (bytes32 loanId, bytes32 orderId) = test_create_order_type_auction();
 
-  //   function test_buyNow_type_fixed_price_canceled() public {
-  //     vm.recordLogs();
-  //     test_create_order_type_fixed_price();
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = market_signature(
+        _market,
+        MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
 
-  //     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
-  //     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
-  //     // We cancel the current auction
-  //     hoax(getActorAddress(ACTOR));
-  //     Market(_market).cancel(orderId);
-  //     // We try to buyNow
-  //     (
-  //       DataTypes.SignMarket memory signMarket,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = _generate_signature(
-  //         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
-  //     // Add funds to the actor two
+    uint256 amount = 0.9 ether;
+    hoax(_actorTwo);
+    approveAsset(_WETH, address(getUnlockd()), amount); // APPROVE AMOUNT
 
-  //     uint256 amount = 0.9 ether;
-  //     hoax(actorTwo);
-  //     approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
+    hoax(_actorTwo);
+    vm.expectRevert(Errors.OrderNotAllowed.selector);
+    Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
+  }
 
-  //     hoax(actorTwo);
-  //     vm.expectRevert(Errors.OrderNotAllowed.selector);
-  //     Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
-  //   }
+  function test_buyNow_type_fixed_price_and_auction() public {
+    (bytes32 loanId, bytes32 orderId) = test_create_order_without_order_type_fixed_price_auction();
 
-  //   function test_buyNow_type_auction() public {
-  //     vm.recordLogs();
-  //     test_create_order_type_auction();
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = market_signature(
+        _market,
+        MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
 
-  //     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
-  //     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    uint256 amount = 0.9 ether;
+    hoax(_actorTwo);
+    approveAsset(_WETH, address(getUnlockd()), amount); // APPROVE AMOUNT
 
-  //     (
-  //       DataTypes.SignMarket memory signMarket,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = _generate_signature(
-  //         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
-  //     // Add funds to the actor two
+    hoax(_actorTwo);
+    Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
 
-  //     uint256 amount = 0.9 ether;
-  //     hoax(actorTwo);
-  //     approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
+    assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(_actorTwo));
+  }
 
-  //     hoax(actorTwo);
-  //     vm.expectRevert(Errors.OrderNotAllowed.selector);
-  //     Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
-  //   }
+  function test_buyNow_type_fixed_price_and_auction_expired() public {
+    (bytes32 loanId, bytes32 orderId) = test_create_order_without_order_type_fixed_price_auction();
 
-  //   function test_buyNow_type_fixed_price_and_auction() public {
-  //     vm.recordLogs();
-  //     test_create_order_without_order_type_fixed_price_auction();
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
+    (
+      DataTypes.SignMarket memory signMarket,
+      DataTypes.EIP712Signature memory sig
+    ) = market_signature(
+        _market,
+        MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+        AssetParams({
+          assetId: AssetLogic.assetId(_nft, 1),
+          collection: _nft,
+          tokenId: 1,
+          assetPrice: 1 ether,
+          assetLtv: 6000
+        })
+      );
+    // Add funds to the actor two
+    // Force finalize the auction
+    vm.warp(block.timestamp + 2000);
 
-  //     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
-  //     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
+    uint256 amount = 0.9 ether;
+    hoax(_actorTwo);
+    approveAsset(_WETH, address(getUnlockd()), amount); // APPROVE AMOUNT
 
-  //     (
-  //       DataTypes.SignMarket memory signMarket,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = _generate_signature(
-  //         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
-  //     // Add funds to the actor two
-
-  //     uint256 amount = 0.9 ether;
-  //     hoax(actorTwo);
-  //     approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
-
-  //     hoax(actorTwo);
-  //     Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
-
-  //     assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTWO));
-  //   }
-
-  //   function test_buyNow_type_fixed_price_and_auction_expired() public {
-  //     vm.recordLogs();
-  //     test_create_order_without_order_type_fixed_price_auction();
-  //     vm.warp(block.timestamp + 2000);
-  //     Vm.Log[] memory entries = vm.getRecordedLogs();
-
-  //     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
-  //     bytes32 loanId = bytes32(entries[entries.length - 1].topics[3]);
-  //     address actorTwo = getActorWithFunds(ACTORTWO, 'WETH', 2 ether);
-
-  //     (
-  //       DataTypes.SignMarket memory signMarket,
-  //       DataTypes.EIP712Signature memory sig
-  //     ) = _generate_signature(
-  //         GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //         AssetParams({
-  //           assetId: AssetLogic.assetId(_nft, 1),
-  //           collection: _nft,
-  //           tokenId: 1,
-  //           assetPrice: 1 ether,
-  //           assetLtv: 6000
-  //         })
-  //       );
-  //     // Add funds to the actor two
-
-  //     uint256 amount = 0.9 ether;
-  //     hoax(actorTwo);
-  //     approveAsset('WETH', address(getUnlockd()), amount); // APPROVE AMOUNT
-
-  //     hoax(actorTwo);
-  //     vm.expectRevert(Errors.TimestampExpired.selector);
-  //     Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
-  //   }
+    hoax(_actorTwo);
+    vm.expectRevert(Errors.TimestampExpired.selector);
+    Market(_market).buyNow(true, orderId, amount, 0.1 ether, signMarket, sig); // BID ON THE ASSET
+  }
 
   //   //////////////////////////////////////////////
   //   // Claim function
   //   //////////////////////////////////////////////
 
-  //   function test_claim_ended_auction() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_zero();
-  //     // Force finalize the auction
-  //     vm.warp(block.timestamp + 2000);
+  function test_claim_ended_auction() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_zero();
+    // Force finalize the auction
+    vm.warp(block.timestamp + 2000);
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      Market(_market).claim(false, orderId, signMarket, sig);
 
-  //       assertEq(MintableERC721(_nft).ownerOf(1), actorTwo);
-  //     }
-  //   }
+      assertEq(MintableERC721(_nft).ownerOf(1), _actorTwo);
+    }
+  }
 
-  //   function test_claim_ended_auction_but_can_not_claim() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_debt();
-  //     // Force finalize the auction
-  //     vm.warp(block.timestamp + 5000);
+  function test_claim_ended_auction_but_can_not_claim() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_debt();
+    // Force finalize the auction
+    vm.warp(block.timestamp + 5000);
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           // The price is 1 eth and we get the loan unhealty beacause the interest of the time.
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 0.2 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      vm.expectRevert(Errors.UnhealtyLoan.selector);
+      Market(_market).claim(false, orderId, signMarket, sig);
 
-  //       hoax(actorTwo);
-  //       vm.expectRevert(Errors.UnhealtyLoan.selector);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
+      hoax(_actorTwo);
+      Market(_market).cancelClaim(orderId, signMarket, sig);
+    }
+  }
 
-  //       hoax(actorTwo);
-  //       Market(_market).cancelClaim(orderId, signMarket, sig);
-  //     }
-  //   }
+  function test_claim_ended_auction_with_debt() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_debt();
+    // Force finalize the auction
+    vm.warp(block.timestamp + 2000);
 
-  //   function test_claim_ended_auction_with_debt() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_debt();
-  //     // Force finalize the auction
-  //     vm.warp(block.timestamp + 2000);
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 1.5 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      vm.expectRevert(Errors.AmountExceedsDebt.selector);
+      Market(_market).cancelClaim(orderId, signMarket, sig);
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           // We increase the price of the current balance in order tho get a healty loan.
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1.5 ether, totalAssets: 1}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       vm.expectRevert(Errors.AmountExceedsDebt.selector);
-  //       Market(_market).cancelClaim(orderId, signMarket, sig);
+      hoax(_actorTwo);
+      Market(_market).claim(false, orderId, signMarket, sig);
+    }
+  }
 
-  //       hoax(actorTwo);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
-  //     }
-  //   }
+  function test_claim_ended_auction_not_finished() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_set_with_debt();
 
-  //   function test_claim_ended_auction_not_finished() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_set_with_debt();
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      vm.expectRevert(Errors.TimestampNotExpired.selector);
+      Market(_market).claim(false, orderId, signMarket, sig);
+    }
+  }
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       vm.expectRevert(Errors.TimestampNotExpired.selector);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
-  //     }
-  //   }
+  function test_claim_ended_auction_with_debt_on_the_bidder() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_set_with_debt();
+    // Force finalize the auction
+    vm.warp(block.timestamp + 2000);
 
-  //   function test_claim_ended_auction_with_debt_on_the_bidder() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_set_with_debt();
-  //     // Force finalize the auction
-  //     vm.warp(block.timestamp + 2000);
+    DataTypes.Order memory order = Market(_market).getOrder(orderId);
 
-  //     DataTypes.Order memory order = Market(_market).getOrder(orderId);
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      vm.expectRevert(Errors.ProtocolOwnerZeroAddress.selector);
+      Market(_market).claim(false, orderId, signMarket, sig);
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       vm.expectRevert(Errors.DelegationOwnerZeroAddress.selector);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
+      hoax(_actorTwo);
+      Market(_market).claim(true, orderId, signMarket, sig);
 
-  //       hoax(actorTwo);
-  //       Market(_market).claim(true, orderId, signMarket, sig);
+      assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(_actorTwo));
+    }
+  }
 
-  //       assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTWO));
-  //     }
-  //   }
+  function test_claim_ended_fixed_price_auction() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_fixed_price_and_auction();
+    // Force finalize the auction
+    vm.warp(block.timestamp + 2000);
 
-  //   function test_claim_ended_auction_claim_in_uWallet() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_zero();
-  //     // Force finalize the auction
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      Market(_market).claim(false, orderId, signMarket, sig);
 
-  //     vm.warp(block.timestamp + 2000);
+      assertEq(MintableERC721(_nft).ownerOf(1), _actorTwo);
+    }
+  }
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 0, totalAssets: 0}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       Market(_market).claim(true, orderId, signMarket, sig);
+  function test_claim_canceled() public {
+    (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_zero();
+    // Force finalize the auction
+    hoax(_actor);
+    Market(_market).cancel(orderId);
 
-  //       assertEq(MintableERC721(_nft).ownerOf(1), getWalletAddress(ACTORTWO));
-  //     }
-  //   }
+    {
+      (
+        DataTypes.SignMarket memory signMarket,
+        DataTypes.EIP712Signature memory sig
+      ) = market_signature(
+          _market,
+          MarketSignParams({user: _actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
+          AssetParams({
+            assetId: AssetLogic.assetId(_nft, 1),
+            collection: _nft,
+            tokenId: 1,
+            assetPrice: 1 ether,
+            assetLtv: 6000
+          })
+        );
+      hoax(_actorTwo);
+      vm.expectRevert(Errors.ZeroAddress.selector);
+      Market(_market).claim(false, orderId, signMarket, sig);
+    }
+  }
 
-  //   function test_claim_ended_fixed_price_auction() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_fixed_price_and_auction();
-  //     // Force finalize the auction
-  //     vm.warp(block.timestamp + 2000);
+  // //////////////////////////////////////////////
+  // // Cancel function
+  // //////////////////////////////////////////////
 
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
+  function test_cancel_fixed_price() public {
+    (, bytes32 orderId) = test_bid_type_fixed_price();
+    hoax(_actor);
+    Market(_market).cancel(orderId);
+  }
 
-  //       assertEq(MintableERC721(_nft).ownerOf(1), actorTwo);
-  //     }
-  //   }
+  function test_cancel_expired_auction() public {
+    (, bytes32 orderId) = test_bid_type_auction_minBid_zero();
+    vm.warp(block.timestamp + 2000);
+    // Force finalize the auction
+    hoax(_actor);
+    vm.expectRevert(Errors.TimestampExpired.selector);
+    Market(_market).cancel(orderId);
+  }
 
-  //   function test_claim_fixed_price() public {}
-
-  //   function test_claim_canceled() public {
-  //     (bytes32 loanId, bytes32 orderId) = test_bid_type_auction_minBid_zero();
-  //     // Force finalize the auction
-  //     hoax(getActorAddress(ACTOR));
-  //     Market(_market).cancel(orderId);
-
-  //     {
-  //       address actorTwo = getActorAddress(ACTORTWO);
-  //       (
-  //         DataTypes.SignMarket memory signMarket,
-  //         DataTypes.EIP712Signature memory sig
-  //       ) = _generate_signature(
-  //           GenerateSignParams({user: actorTwo, loanId: loanId, price: 1 ether, totalAssets: 1}),
-  //           AssetParams({
-  //             assetId: AssetLogic.assetId(_nft, 1),
-  //             collection: _nft,
-  //             tokenId: 1,
-  //             assetPrice: 1 ether,
-  //             assetLtv: 6000
-  //           })
-  //         );
-  //       hoax(actorTwo);
-  //       vm.expectRevert(Errors.OrderNotAllowed.selector);
-  //       Market(_market).claim(false, orderId, signMarket, sig);
-  //     }
-  //   }
-
-  //   // //////////////////////////////////////////////
-  //   // // Cancel function
-  //   // //////////////////////////////////////////////
-
-  //   function test_cancel_fixed_price() public {
-  //     (, bytes32 orderId) = test_bid_type_fixed_price();
-  //     hoax(getActorAddress(ACTOR));
-  //     Market(_market).cancel(orderId);
-  //   }
-
-  //   function test_cancel_expired_auction() public {
-  //     (, bytes32 orderId) = test_bid_type_auction_minBid_zero();
-  //     vm.warp(block.timestamp + 2000);
-  //     // Force finalize the auction
-  //     hoax(getActorAddress(ACTOR));
-  //     vm.expectRevert(Errors.TimestampExpired.selector);
-  //     Market(_market).cancel(orderId);
-  //   }
-
-  //   function test_cancel_not_owned() public {
-  //     (, bytes32 orderId) = test_bid_type_auction_minBid_zero();
-  //     // Force finalize the auction
-  //     hoax(getActorAddress(ACTORTWO));
-  //     vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualOrderOwner.selector));
-  //     Market(_market).cancel(orderId);
-  //   }
+  function test_cancel_not_owned() public {
+    (, bytes32 orderId) = test_bid_type_auction_minBid_zero();
+    // Force finalize the auction
+    hoax(_actorTwo);
+    vm.expectRevert(abi.encodeWithSelector(Errors.NotEqualOrderOwner.selector));
+    Market(_market).cancel(orderId);
+  }
 }
