@@ -358,7 +358,7 @@ contract MarketTest is Setup {
   //   //////////////////////////////////////////////
 
   function test_update_timestamp_auction() public {
-    (bytes32 loanId, bytes32 orderId) = test_create_order_type_auction();
+    (, bytes32 orderId) = test_create_order_type_auction();
 
     DataTypes.Order memory order = Market(_market).getOrder(orderId);
 
@@ -973,6 +973,7 @@ contract MarketTest is Setup {
       assertEq(order.bid.buyer, _actorThree);
       assertEq(order.bid.amountToPay, minBid);
     }
+    return (loanId, orderId);
   }
 
   //   //////////////////////////////////////////////
@@ -1273,7 +1274,7 @@ contract MarketTest is Setup {
     // Force finalize the auction
     vm.warp(block.timestamp + 2000);
 
-    DataTypes.Order memory order = Market(_market).getOrder(orderId);
+    // DataTypes.Order memory order = Market(_market).getOrder(orderId);
 
     {
       (

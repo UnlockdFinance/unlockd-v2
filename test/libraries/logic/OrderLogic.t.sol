@@ -302,7 +302,7 @@ contract OrderLogicTest is Setup {
     );
     assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
-    uint256 amountLeft = OrderLogic.repayDebtToSell(
+    OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
@@ -356,7 +356,7 @@ contract OrderLogicTest is Setup {
     );
     assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
-    uint256 amountLeft = OrderLogic.repayDebtToSell(
+    OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
@@ -409,7 +409,7 @@ contract OrderLogicTest is Setup {
     );
     assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 1 ether);
     // Repay Debt
-    uint256 amountLeft = OrderLogic.repayDebtToSell(
+    OrderLogic.repayDebtToSell(
       order,
       OrderLogic.RepayDebtToSellParams({
         reserveOracle: _reserveOracle,
@@ -464,16 +464,16 @@ contract OrderLogicTest is Setup {
     );
     assertEq(_uTokenVault.getDebtFromLoanId(makeAsset('WETH'), loanId), 3 ether);
     // Repay Debt
-    DataTypes.ReserveData memory data = _uTokenVault.getReserveData(makeAsset('WETH'));
-    OrderLogic.RepayDebtToSellParams memory orderData = OrderLogic.RepayDebtToSellParams({
-      reserveOracle: _reserveOracle,
-      underlyingAsset: makeAsset('WETH'),
-      uTokenVault: address(_uTokenVault),
-      from: makeAddr('protocol'),
-      totalAmount: 1 ether,
-      aggLoanPrice: 0,
-      aggLtv: 6000
-    });
+    // DataTypes.ReserveData memory data = _uTokenVault.getReserveData(makeAsset('WETH'));
+    // OrderLogic.RepayDebtToSellParams memory orderData = OrderLogic.RepayDebtToSellParams({
+    //   reserveOracle: _reserveOracle,
+    //   underlyingAsset: makeAsset('WETH'),
+    //   uTokenVault: address(_uTokenVault),
+    //   from: makeAddr('protocol'),
+    //   totalAmount: 1 ether,
+    //   aggLoanPrice: 0,
+    //   aggLtv: 6000
+    // });
 
     // TODO: This is not working properly
     //  vm.expectRevert(abi.encodeWithSelector(Errors.DebtExceedsAmount.selector));

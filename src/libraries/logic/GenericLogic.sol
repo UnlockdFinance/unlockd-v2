@@ -40,45 +40,6 @@ library GenericLogic {
     uint256 amount;
   }
 
-  // @DEPRECATED
-  function calculateFutureLoanData(
-    uint256 amount,
-    uint256 price,
-    uint256 currentDebt,
-    address reserveOracle,
-    DataTypes.ReserveData memory reserveData,
-    DataTypes.SignLoanConfig memory loanConfig
-  ) internal view returns (uint256, uint256, uint256, uint256) {
-    CalculateLoanDataVars memory vars;
-
-    // Calculate the reserve price
-    vars.reserveUnit = 10 ** reserveData.decimals;
-    vars.reserveUnitPrice = IReserveOracle(reserveOracle).getAssetPrice(
-      reserveData.underlyingAsset
-    );
-    vars.amount = amount.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
-
-    vars.totalDebtInReserve = currentDebt.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
-    // If the total assets are 0, then we need to calculate the collateral with the current value of the market
-    // All the assets are expresed in the amount of the BASE (USD)
-    uint256 collateral = loanConfig.totalAssets == 0 ? price : loanConfig.aggLoanPrice;
-    // We transform the collateral in BASE currency
-    vars.totalCollateralInReserve = collateral.mulDiv(vars.reserveUnitPrice, vars.reserveUnit);
-
-    uint256 updatedDebt = vars.totalDebtInReserve > vars.amount
-      ? vars.totalDebtInReserve - vars.amount
-      : 0;
-
-    // Calculate the HF
-    vars.healthFactor = calculateHealthFactorFromBalances(
-      vars.totalCollateralInReserve,
-      updatedDebt,
-      loanConfig.aggLiquidationThreshold
-    );
-
-    return (vars.totalCollateralInReserve, vars.totalDebtInReserve, vars.amount, vars.healthFactor);
-  }
-
   function calculateLoanDebt(
     bytes32 loanId,
     address uTokenVault,

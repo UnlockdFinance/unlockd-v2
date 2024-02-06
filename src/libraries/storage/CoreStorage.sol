@@ -51,8 +51,6 @@ contract CoreStorage {
   //  Allowed addresses
   /////////////////////////////////////////
 
-  //TODO: Pending Remove
-  mapping(address => uint256) internal _allowedUTokens; // address uToken true/false
   // Mapping of markets adapter allowed
   mapping(address => uint256) internal _allowedMarketAdapter; // address adapter true/false
 

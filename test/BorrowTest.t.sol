@@ -60,12 +60,11 @@ contract BorrowTest is Setup {
         makeAsset('WETH'),
         ActionSignParams({user: _actor, loanId: 0, price: 2 ether, totalAssets: 1, totalArray: 1})
       );
-    uint256 initialGas = gasleft();
 
     // Borrow amount
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
+
     // We check the new balance
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
     // Check if the asset is locked
@@ -101,11 +100,11 @@ contract BorrowTest is Setup {
           totalArray: 10
         })
       );
-    uint256 initialGas = gasleft();
+
     // Borrow amount
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
+
     // We check the new balance
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToBorrow);
     // Check if the asset is locked
@@ -141,12 +140,12 @@ contract BorrowTest is Setup {
           totalArray: 10
         })
       );
-    uint256 initialGas = gasleft();
+
     vm.recordLogs();
     // Borrow amount
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
+
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
 
@@ -202,12 +201,11 @@ contract BorrowTest is Setup {
           totalArray: 10
         })
       );
-    uint256 initialGas = gasleft();
 
     // Borrow amount
     hoax(_actor);
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
+
     vm.startPrank(_actor);
     vm.expectRevert(abi.encodeWithSelector(Errors.WrongNonce.selector));
     // Borrow amount
@@ -587,11 +585,10 @@ contract BorrowTest is Setup {
           totalArray: 10
         })
       );
-    uint256 initialGas = gasleft();
+
     vm.recordLogs();
     // Borrow amount
     Action(_action).borrow(amountToBorrow, assets, signAction, sig);
-    uint256 gasUsed = initialGas - gasleft();
 
     Vm.Log[] memory entries = vm.getRecordedLogs();
 

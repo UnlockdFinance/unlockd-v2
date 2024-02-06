@@ -184,6 +184,8 @@ contract AuctionTest is Setup {
     uint128 bidAmount = 1 ether;
     uint128 bidDebtAmount = 0.5 ether;
 
+    assertTrue(minBid <= bidAmount + bidDebtAmount);
+
     hoax(_actorTwo);
     approveAsset(_WETH, address(getUnlockd()), bidAmount); // APPROVE AMOUNT
 
@@ -474,11 +476,9 @@ contract AuctionTest is Setup {
   }
 
   function test_auction_redeem_expired_liquidation_auction() public {
-    vm.recordLogs();
     bytes32 loanId = test_auction_bid_liquidation_auction();
-    Vm.Log[] memory entries = vm.getRecordedLogs();
 
-    bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    // bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
 
     vm.warp(block.timestamp + 3000);
 
