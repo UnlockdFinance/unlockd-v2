@@ -6,6 +6,11 @@ import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IEmergency} from '../../interfaces/IEmergency.sol';
 import {Errors} from '../helpers/Errors.sol';
 
+/**
+ * @title BaseEmergency
+ * @notice Base logic to recover funds
+ * @author Unlockd
+ */
 contract BaseEmergency is IEmergency {
   using SafeERC20 for IERC20;
 

@@ -4,6 +4,12 @@ pragma solidity ^0.8.19;
 import {FixedPointMathLib} from '@solady/utils/FixedPointMathLib.sol';
 import {WadRayMath} from './WadRayMath.sol';
 
+/**
+ * @title MathUtils library
+ * @author Unlockd
+ * @notice Provides functions to perform linear and compounded interest calculations
+ * @dev fork from https://github.com/aave/aave-v3-core/blob/master/contracts/protocol/libraries/math/MathUtils.sol
+ */
 library MathUtils {
   using WadRayMath for uint256;
 

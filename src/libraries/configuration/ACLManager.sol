@@ -7,8 +7,8 @@ import {Errors} from '../helpers/Errors.sol';
 
 /**
  * @title ACLManager
- * @author Unlockd
  * @notice Access Control List Manager. Main registry of system roles and permissions.
+ * @author Unlockd
  */
 contract ACLManager is AccessControl, IACLManager {
   // @dev address of the PROTOCOL

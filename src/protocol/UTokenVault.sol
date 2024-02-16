@@ -10,7 +10,7 @@ import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.s
 import {IStrategy} from '../interfaces/IStrategy.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {IUTokenVault} from '../interfaces/IUTokenVault.sol';
-import {UFactoryStorage} from '../libraries/storage/UFactoryStorage.sol';
+import {UVaultStorage} from '../libraries/storage/UVaultStorage.sol';
 import {BaseEmergency} from '../libraries/base/BaseEmergency.sol';
 import {MathUtils} from '../libraries/math/MathUtils.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
@@ -26,13 +26,7 @@ import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProx
 
 // import {console} from 'forge-std/console.sol';
 
-contract UTokenVault is
-  Initializable,
-  UUPSUpgradeable,
-  UFactoryStorage,
-  BaseEmergency,
-  IUTokenVault
-{
+contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmergency, IUTokenVault {
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
   using WadRayMath for uint256;
@@ -67,6 +61,8 @@ contract UTokenVault is
     _sharesTokenImp = sharesTokenImp;
   }
 
+  
+
   function createMarket(IUTokenVault.CreateMarketParams calldata params) external onlyAdmin {
     if (reserves[params.underlyingAsset].lastUpdateTimestamp != 0) {
       revert Errors.UnderlyingMarketAlreadyExist();
@@ -94,7 +90,7 @@ contract UTokenVault is
     Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(onBehalfOf);
     Errors.verifyNotZero(amount);
-    // Move amount to the pool
+ 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
     if (reserve.reserveState != Constants.ReserveState.ACTIVE) {
@@ -133,9 +129,6 @@ contract UTokenVault is
     if (reserve.lastUpdateTimestamp == 0) {
       revert Errors.UnderlyingMarketNotExist();
     }
-
-    Errors.verifyNotZero(to);
-    Errors.verifyNotZero(amount);
 
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);

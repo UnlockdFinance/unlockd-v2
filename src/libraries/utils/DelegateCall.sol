@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: GNU AGPLv3
 pragma solidity ^0.8.19;
 
-/// @title Delegate Call Library.
+/**
+ * @title DelegateCall
+ * @author Unlockd
+ * @notice Delegate call library
+ * @dev fork from https://github.com/morpho-org/morpho-utils/blob/main/src/DelegateCall.sol
+ */
 library DelegateCall {
   /// ERRORS ///
 

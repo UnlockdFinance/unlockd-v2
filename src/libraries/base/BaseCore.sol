@@ -7,6 +7,11 @@ import {UnlockdMinimalProxy} from '../proxy/UnlockdMinimalProxy.sol';
 import {Constants} from '../helpers/Constants.sol';
 import {Errors} from '../helpers/Errors.sol';
 
+/**
+ * @title BaseCore
+ * @notice Base logic for the proxy
+ * @author Unlockd
+ */
 contract BaseCore is CoreStorage, ICore {
   function _createProxy(uint256 proxyModuleId) internal returns (address) {
     if (proxyModuleId == 0) {

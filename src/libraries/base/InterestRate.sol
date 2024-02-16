@@ -9,10 +9,12 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 
 /**
+
  * @title InterestRate contract
  * @notice Implements the calculation of the interest rates depending on the reserve state
  * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
  * point of utilization and another from that one to 100%
+ * @dev based on Aave InterestRate https://github.com/aave/aave-v3-core/blob/master/contracts/misc/ZeroReserveInterestRateStrategy.sol
  * @author Unlockd
  *
  */

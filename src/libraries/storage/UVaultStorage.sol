@@ -3,7 +3,12 @@ pragma solidity ^0.8.19;
 
 import {DataTypes} from '../../types/DataTypes.sol';
 
-contract UFactoryStorage {
+/**
+ * @title UVaultStorage
+ * @author Unlockd
+ * @notice Storage for the Vault
+ */
+contract UVaultStorage {
   /////////////////////////////////////////
   //  Configurations
   /////////////////////////////////////////

@@ -40,7 +40,7 @@ library DataTypes {
     // address asset
     address underlyingAsset;
     // Decimals of the underlyingAsset
-    uint8 decimals;
+    uint8 decimals; 
     // address scaled token
     address scaledTokenAddress;
     //address of the interest rate strategy

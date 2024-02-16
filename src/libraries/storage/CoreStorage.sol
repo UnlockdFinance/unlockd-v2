@@ -5,6 +5,11 @@ import {Constants} from '../helpers/Constants.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {ACLManager} from '../configuration/ACLManager.sol';
 
+/**
+ * @title CoreStorage
+ * @author Unlockd
+ * @notice Storage of the route context for the modules
+ */
 contract CoreStorage {
   /////////////////////////////////////////
   //  Dispacher and Upgrades

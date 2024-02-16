@@ -6,6 +6,11 @@ import {GenericLogic} from './GenericLogic.sol';
 import {Constants} from '../helpers/Constants.sol';
 import {Errors} from '../helpers/Errors.sol';
 
+/**
+ * @title LoanLogic library
+ * @author Unlockd
+ * @notice Implements protocol-level logic to calculate and validate the state of a user
+ */
 library LoanLogic {
   event LoanCreated(address indexed user, bytes32 indexed loanId, uint256 totalAssets);
 
@@ -34,7 +39,9 @@ library LoanLogic {
   }
 
   /**
-   * @dev creates a new loan type
+   * @dev creates a new Loan object on the storage
+   * @param loan storage of the loan
+   * @param params Parameters to create the new loan
    */
   function createLoan(DataTypes.Loan storage loan, ParamsCreateLoan memory params) internal {
     unchecked {
@@ -71,6 +78,7 @@ library LoanLogic {
 
   /**
    * @dev return the loan struct hashed
+   * @param nonce Nonce of the signature
    */
   function getLoanStructHash(
     uint256 nonce,

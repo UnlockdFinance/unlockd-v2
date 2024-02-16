@@ -27,15 +27,6 @@ contract DeployACLManagerScript is DeployerHelper {
     aclManager.addEmergencyAdmin(msg.sender);
     aclManager.addPriceUpdater(msg.sender);
 
-    /*
-      aclManager.addUTokenAdmin(DeployConfig.ADMIN);
-      aclManager.addProtocolAdmin(DeployConfig.ADMIN);
-      aclManager.addGovernanceAdmin(DeployConfig.ADMIN);
-      aclManager.addAuctionAdmin(DeployConfig.ADMIN);
-      aclManager.addEmergencyAdmin(DeployConfig.ADMIN);
-      aclManager.addPriceUpdater(DeployConfig.ADMIN);
-    */
-
     addresses.aclManager = address(aclManager);
     addresses.deployer = msg.sender;
 

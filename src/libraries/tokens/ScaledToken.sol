@@ -7,9 +7,8 @@ import {WadRayMath} from '../math/WadRayMath.sol';
 
 /**
  * @title ScaledToken
- * @notice Implements a scaled token to track the amount deposited of the user
  * @author Unlockd
- *
+ * @notice Implements a scaled token to track the amount deposited of the user
  */
 contract ScaledToken is BaseToken, UUPSUpgradeable {
   using WadRayMath for uint256;

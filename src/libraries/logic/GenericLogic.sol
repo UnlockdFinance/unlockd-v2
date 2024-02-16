@@ -27,7 +27,6 @@ library GenericLogic {
   using FixedPointMathLib for uint256;
   // HEALTH FACTOR 1
   uint256 internal constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
-
   uint256 internal constant FIRST_BID_INCREMENT = 250; // 2.5 %
   uint256 internal constant NEXT_BID_INCREMENT = 100; // 1 %
 
@@ -40,6 +39,14 @@ library GenericLogic {
     uint256 amount;
   }
 
+    /**
+   * @dev Calculates the current debt of a specific loand and asset 
+   * @param loanId identifier of the loan
+   * @param uTokenVault Current vault
+   * @param underlyingAsset Underlying asset of the debt
+   * @return currentDebt the amount of debt
+   *
+   */
   function calculateLoanDebt(
     bytes32 loanId,
     address uTokenVault,
@@ -81,7 +88,6 @@ library GenericLogic {
    * @return availableBorrows the amount available to borrow for the user
    *
    */
-
   function calculateAvailableBorrows(
     uint256 totalCollateral,
     uint256 totalDebt,
@@ -94,15 +100,22 @@ library GenericLogic {
     }
   }
 
+  /**
+   * @dev Calculates the amount needed to arrive the LTV, in case of a healty position returns 0
+   * @param totalCollateral The total collateral
+   * @param totalDebt The total borrow balance
+   * @param ltv The average loan to value
+   * @return amountToLtv the amount needed to arrive to LTV
+   */
   function calculateAmountToArriveToLTV(
     uint256 totalCollateral,
     uint256 totalDebt,
     uint256 ltv
-  ) internal pure returns (uint256 amount) {
+  ) internal pure returns (uint256 amountToLtv) {
     uint256 availableBorrows = totalCollateral.percentMul(ltv);
 
     unchecked {
-      amount = availableBorrows < totalDebt ? totalDebt - availableBorrows : 0;
+      amountToLtv = availableBorrows < totalDebt ? totalDebt - availableBorrows : 0;
     }
   }
 

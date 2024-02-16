@@ -4,6 +4,11 @@ pragma solidity 0.8.19;
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {ICryptoPunks} from '../../interfaces/tokens/ICryptoPunks.sol';
 
+/**
+ * @title SafeERC721
+ * @author Unlockd
+ * @notice Generic function to aggregate different cases to interact with the ERC721
+ */
 contract SafeERC721 {
   address internal CRYPTO_PUNK;
 

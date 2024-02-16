@@ -4,6 +4,11 @@ pragma solidity 0.8.19;
 import {DataTypes} from '../../types/DataTypes.sol';
 import {GenericLogic} from './GenericLogic.sol';
 
+/**
+ * @title AssetLogic library
+ * @author Unlockd
+ * @notice Implements the logic to sign the asset
+ */
 library AssetLogic {
   bytes32 internal constant TYPEHASH =
     0x952d72a21d7cc0fcc1bc09ed86fbffc8c63ecf57742377a17e9461f7a2d704fd;

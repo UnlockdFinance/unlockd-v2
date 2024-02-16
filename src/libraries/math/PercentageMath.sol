@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+/**
+ * @title PercentageMath library
+ * @author Unlockd
+ * @notice Provides functions to perform percentage calculations
+ * @dev Percentages are defined by default with 2 decimals of precision (100.00). The precision is indicated by PERCENTAGE_FACTOR
+ * @dev Operations are rounded. If a value is >=.5, will be rounded up, otherwise rounded down.
+ * @dev fork from https://github.com/aave/aave-v3-core/blob/master/contracts/protocol/libraries/math/PercentageMath.sol
+ */
 library PercentageMath {
   uint256 constant PERCENTAGE_FACTOR = 1e4; //percentage plus two decimals
   uint256 constant ONE_HUNDRED_PERCENT = 1e4; //10000, 100%

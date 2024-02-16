@@ -18,8 +18,7 @@ contract MaxApyStrategy is IStrategy {
 
   uint256 internal _minAmountToInvest;
   uint256 internal _ratio;
-
-  address internal _vault;
+ 
   uint256 internal _minCap;
   uint256 internal _percentageToInvest;
 

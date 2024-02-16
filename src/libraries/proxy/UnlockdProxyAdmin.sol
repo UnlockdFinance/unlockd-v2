@@ -3,4 +3,11 @@ pragma solidity ^0.8.19;
 
 import {ProxyAdmin} from '@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol';
 
-contract UnlockdProxyAdmin is ProxyAdmin {}
+/**
+ * @title Unlockd UnlockdProxyAdmin
+ * @author Unlockd
+ * @notice Proxy
+ */
+contract UnlockdProxyAdmin is ProxyAdmin {
+
+}

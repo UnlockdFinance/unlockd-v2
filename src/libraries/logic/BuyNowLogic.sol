@@ -5,6 +5,11 @@ pragma solidity 0.8.19;
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {GenericLogic, DataTypes} from './GenericLogic.sol';
 
+/**
+ * @title BuyNowLogic library
+ * @author Unlockd
+ * @notice Implements the logic to execute the buynow module
+ */
 library BuyNowLogic {
   /**
    *  @dev In charge of the calculation to buy the asset to get the max Amount needed contributed by

@@ -395,7 +395,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     }
 
     if (totalDebt > 0) {
-      underlyingAsset.safeApprove(_uTokenVault, totalDebt);
+      underlyingAsset.forceSafeApprove(_uTokenVault, totalDebt);
       // We repay all the debt
       IUTokenVault(_uTokenVault).repay(
         underlyingAsset,
@@ -474,7 +474,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       // Activate the loan from the bidder
       _loans[order.bid.loanId].activate();
     }
-     
+
     // The start amount it was payed as a debt
     uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) -
       (order.bidderDebtPayed + order.bidderBonus);
