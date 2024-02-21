@@ -24,17 +24,17 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 
 import {DataTypes} from '../../types/DataTypes.sol';
 
+import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IMarketModule} from '../../interfaces/modules/IMarketModule.sol';
 import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 contract Market is BaseCoreModule, IMarketModule, MarketSign {
   using SafeERC20 for IERC20;
   using OrderLogic for DataTypes.Order;
   using LoanLogic for DataTypes.Loan;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   constructor(uint256 moduleId_, bytes32 moduleVersion_) BaseCoreModule(moduleId_, moduleVersion_) {
     // NOTHING TO DO
@@ -142,7 +142,7 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
 
       if (
         IUTokenVault(_uTokenVault).validateReserveType(
-          reserve.reserveType,
+          reserve.config.getReserveType(),
           _allowedCollections[signMarket.collection]
         ) == false
       ) {

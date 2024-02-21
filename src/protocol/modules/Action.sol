@@ -15,6 +15,7 @@ import {GenericLogic} from '../../libraries/logic/GenericLogic.sol';
 import {IActionModule} from '../../interfaces/modules/IActionModule.sol';
 import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
+import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 import {UTokenVault} from '../UTokenVault.sol';
 import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
 
@@ -22,10 +23,9 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 contract Action is BaseCoreModule, ActionSign, IActionModule {
   using LoanLogic for DataTypes.Loan;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   constructor(uint256 moduleId_, bytes32 moduleVersion_) BaseCoreModule(moduleId_, moduleVersion_) {
     // NOTHING TO DO
@@ -141,7 +141,7 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
         if (
           UTokenVault(_uTokenVault).validateReserveType(
-            reserve.reserveType,
+            reserve.config.getReserveType(),
             _allowedCollections[asset.collection]
           ) == false
         ) {

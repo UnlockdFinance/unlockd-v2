@@ -16,15 +16,14 @@ import {MathUtils} from '../libraries/math/MathUtils.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
+import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {ScaledToken} from '../libraries/tokens/ScaledToken.sol';
-
+import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {Constants} from '../libraries/helpers/Constants.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
-
-// import {console} from 'forge-std/console.sol';
 
 contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmergency, IUTokenVault {
   using ReserveLogic for DataTypes.ReserveData;
@@ -33,6 +32,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
   using WadRayMath for uint128;
   using SafeCast for uint256;
 
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   //////////////////////////////////////////////////////
 
   modifier onlyProtocol() {
@@ -61,8 +61,6 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     _sharesTokenImp = sharesTokenImp;
   }
 
-  
-
   function createMarket(IUTokenVault.CreateMarketParams calldata params) external onlyAdmin {
     if (reserves[params.underlyingAsset].lastUpdateTimestamp != 0) {
       revert Errors.UnderlyingMarketAlreadyExist();
@@ -70,11 +68,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     address sharesToken = _sharesToken(params.decimals, params.tokenName, params.tokenSymbol);
     // Create Reserve Asset
     reserves[params.underlyingAsset].init(
-      params.underlyingAsset,
       params.reserveType,
+      params.underlyingAsset,
       sharesToken,
       params.interestRateAddress,
       params.strategyAddress,
+      params.decimals,
       params.reserveFactor
     );
 
@@ -90,18 +89,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(onBehalfOf);
     Errors.verifyNotZero(amount);
- 
+
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
-
-    if (reserve.reserveState != Constants.ReserveState.ACTIVE) {
-      revert Errors.ReserveNotActive();
-    }
-
-    if (reserve.lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
-
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
+
+    ValidationLogic.validateDeposit(reserve, amount);
 
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
@@ -120,15 +112,9 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
-    if (reserve.reserveState == Constants.ReserveState.FREEZED) {
-      revert Errors.ReserveNotActive();
-    }
-
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
-    if (reserve.lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
+    ValidationLogic.validateWithdraw(reserve, amount);
 
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
@@ -153,13 +139,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
-    if (reserve.lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
-
-    if (reserve.reserveState != Constants.ReserveState.ACTIVE) {
-      revert Errors.ReserveNotActive();
-    }
+    ValidationLogic.validateBorrow(reserve, amount);
 
     // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
@@ -207,14 +187,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
-    if (reserve.lastUpdateTimestamp == 0) {
-      revert Errors.UnderlyingMarketNotExist();
-    }
-
-    if (reserve.reserveState == Constants.ReserveState.FREEZED) {
-      revert Errors.ReserveNotActive();
-    }
-
+    ValidationLogic.validateRepay(reserve, amount);
     // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
@@ -253,12 +226,64 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     reserves[underlyingAsset].updateState(balances[underlyingAsset]);
   }
 
-  function updateReserveState(
+  function setActive(address underlyingAsset, bool isActive) external onlyEmergencyAdmin {
+    DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
+    currentConfig.setActive(isActive);
+    reserves[underlyingAsset].config = currentConfig;
+    emit ActiveVault(underlyingAsset, isActive);
+  }
+
+  function setFrozen(address underlyingAsset, bool isFrozen) external onlyEmergencyAdmin {
+    DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
+    currentConfig.setFrozen(isFrozen);
+    reserves[underlyingAsset].config = currentConfig;
+    emit FrozenVault(underlyingAsset, isFrozen);
+  }
+
+  function setPaused(address underlyingAsset, bool isPaused) external onlyEmergencyAdmin {
+    DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
+    currentConfig.setPaused(isPaused);
+    reserves[underlyingAsset].config = currentConfig;
+    emit PausedVault(underlyingAsset, isPaused);
+  }
+
+  function setCaps(
     address underlyingAsset,
-    Constants.ReserveState reserveState
+    uint256 minCap,
+    uint256 depositCap,
+    uint256 borrowCap
   ) external onlyEmergencyAdmin {
-    reserves[underlyingAsset].reserveState = reserveState;
-    emit UpdateReserveState(underlyingAsset, uint256(reserveState));
+    DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
+    currentConfig.setMinCap(minCap);
+    currentConfig.setDepositCap(depositCap);
+    currentConfig.setBorrowCap(borrowCap);
+    reserves[underlyingAsset].config = currentConfig;
+
+    emit UpdateCaps(underlyingAsset, minCap, depositCap, borrowCap);
+  }
+
+  function getCaps(address underlyingAsset) external returns (uint256, uint256, uint256) {
+    return reserves[underlyingAsset].config.getCaps();
+  }
+
+  function getFlags(address underlyingAsset) external returns (bool, bool, bool) {
+    return reserves[underlyingAsset].config.getFlags();
+  }
+
+  function updateInterestRate(
+    address underlyingAsset,
+    address newInterestRateAddress
+  ) external onlyEmergencyAdmin {
+    DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
+    // Update the interest rate
+    reserve.interestRateAddress = newInterestRateAddress;
+
+    // Recalculate all the balances
+    DataTypes.MarketBalance storage balance = balances[underlyingAsset];
+    reserve.updateState(balance);
+    reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, 0);
+
+    emit MarketInterestRateUpdated(underlyingAsset, newInterestRateAddress);
   }
 
   function disableStrategy(address underlyingAsset) external onlyEmergencyAdmin {

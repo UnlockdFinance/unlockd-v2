@@ -78,6 +78,66 @@ contract BorrowTest is Setup {
     }
   }
 
+  function test_borrow_with_configs() public {
+    uint256 amountToBorrow = 0.5 ether;
+    // User doesn't have WETH
+    assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
+    // Get data signed
+    (
+      DataTypes.SignAction memory signAction,
+      DataTypes.EIP712Signature memory sig,
+      bytes32[] memory assetsIds,
+      DataTypes.Asset[] memory assets
+    ) = action_signature(
+        _action,
+        _nft,
+        makeAsset('WETH'),
+        ActionSignParams({user: _actor, loanId: 0, price: 5 ether, totalAssets: 1, totalArray: 1})
+      );
+
+    // ////////////////////
+    // // Vault not actived
+    // vm.startPrank(_admin);
+    // _uTokenVault.setActive(makeAsset('WETH'), false);
+    // vm.stopPrank();
+
+    // // Borrow amount
+    // hoax(_actor);
+    // vm.expectRevert(abi.encodeWithSelector(Errors.PoolNotActive.selector));
+    // Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+
+    // ////////////////////
+    // // Vault frozen
+    // vm.startPrank(_admin);
+    // _uTokenVault.setActive(makeAsset('WETH'), true);
+    // _uTokenVault.setFrozen(makeAsset('WETH'), true);
+    // vm.stopPrank();
+
+    // hoax(_actor);
+    // vm.expectRevert(abi.encodeWithSelector(Errors.PoolFrozen.selector));
+    // Action(_action).borrow(amountToBorrow, assets, signAction, sig);
+
+    ////////////////////
+    // Vault frozen
+    vm.startPrank(_admin);
+    _uTokenVault.setActive(makeAsset('WETH'), true);
+    _uTokenVault.setFrozen(makeAsset('WETH'), false);
+    _uTokenVault.setCaps(makeAsset('WETH'), 0.0000000001 ether, 1, 1);
+
+    vm.stopPrank();
+
+    hoax(_actor);
+    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidBorrowCap.selector));
+    Action(_action).borrow(0.00000000001 ether, assets, signAction, sig);
+
+    hoax(_actor);
+    vm.expectRevert(abi.encodeWithSelector(Errors.InvalidBorrowCap.selector));
+    Action(_action).borrow(1.2 ether, assets, signAction, sig);
+
+    hoax(_actor);
+    Action(_action).borrow(0.9 ether, assets, signAction, sig);
+  }
+
   function test_borrow_with_multiples_nfts() public {
     uint256 amountToBorrow = 1 ether;
     // User doesn't have WETH

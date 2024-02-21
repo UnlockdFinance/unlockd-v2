@@ -9,8 +9,6 @@ import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {GenericLogic, Errors, DataTypes} from './GenericLogic.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 library SellNowLogic {
   using SafeERC20 for IERC20;
 
@@ -36,7 +34,7 @@ library SellNowLogic {
     if (minRepay > 0) {
       // Repay Owner debt to arrive ltv
 
-      IERC20(params.underlyingAsset).safeApprove(params.uTokenVault, minRepay);
+      IERC20(params.underlyingAsset).forceApprove(params.uTokenVault, minRepay);
       IUTokenVault(params.uTokenVault).repay(
         params.underlyingAsset,
         params.loanId,

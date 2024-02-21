@@ -15,6 +15,8 @@ interface IUTokenVault {
     address sharesToken
   );
 
+  event MarketInterestRateUpdated(address indexed underlyingAsset, address indexed interestRate);
+
   event ReserveDataUpdated(
     address indexed reserve,
     uint256 liquidityRate,
@@ -69,6 +71,16 @@ interface IUTokenVault {
    */
   event Unpaused();
 
+  event ActiveVault(address indexed underlyingAsset, bool isActive);
+  event FrozenVault(address indexed underlyingAsset, bool isFrozen);
+  event PausedVault(address indexed underlyingAsset, bool isPaused);
+
+  event UpdateCaps(
+    address indexed underlyingAsset,
+    uint256 minCap,
+    uint256 depositCap,
+    uint256 borrowCap
+  );
   //////////////////////////////////
   // STRUCTS
 
@@ -116,11 +128,15 @@ interface IUTokenVault {
 
   function updateState(address underlyingAsset) external;
 
+  //////////////////////////////////
   // EMERGENCY
-  function updateReserveState(
-    address underlyingAsset,
-    Constants.ReserveState reserveState
-  ) external;
+
+  function updateInterestRate(address underlyingAsset, address newInterestRateAddress) external;
+
+  // function updateReserveState(
+  //   address underlyingAsset,
+  //   Constants.ReserveState reserveState
+  // ) external;
 
   //////////////////////////////////
   // GETTERS

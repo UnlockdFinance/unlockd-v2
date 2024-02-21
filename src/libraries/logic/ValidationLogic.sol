@@ -10,7 +10,7 @@ import {IAllowedControllers} from '@unlockd-wallet/src/interfaces/IAllowedContro
 import {Constants} from '../helpers/Constants.sol';
 import {WadRayMath} from '../math/WadRayMath.sol';
 import {PercentageMath} from '../math/PercentageMath.sol';
-
+import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {GenericLogic} from './GenericLogic.sol';
 import {OrderLogic} from './OrderLogic.sol';
 
@@ -18,8 +18,6 @@ import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
 import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
-
-// import {console} from 'forge-std/console.sol';
 
 /**
  * @title ValidationLogic library
@@ -29,6 +27,7 @@ import {IInterestRate} from '../../interfaces/tokens/IInterestRate.sol';
 library ValidationLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   struct ValidateLoanStateParams {
     uint256 amount;
@@ -299,5 +298,75 @@ library ValidationLogic {
     Errors.verifyNotExpiredTimestamp(order.timeframe.endTime, block.timestamp);
     if (totalAmount == 0) revert Errors.InvalidTotalAmount();
     if (totalAmount < minBid) revert Errors.InvalidBidAmount();
+  }
+
+  ///////////////////////////////////////////////////////
+  // Validation Vault
+  ///////////////////////////////////////////////////////
+
+  function validateDeposit(DataTypes.ReserveData storage reserve, uint256 amount) internal {
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    (, uint256 depositCap, uint256 minCap) = reserve.config.getCaps();
+
+    if (depositCap != 0) {
+      uint256 decimals = reserve.config.getDecimals();
+      uint256 depositCap_ = depositCap + 10 ** decimals;
+
+      if (amount <= minCap || amount > depositCap_) {
+        revert Errors.InvalidDepositCap();
+      }
+    }
+
+    (bool isActive, bool isFrozen, ) = reserve.config.getFlags();
+
+    if (!isActive) revert Errors.PoolNotActive();
+    if (isFrozen) revert Errors.PoolFrozen();
+  }
+
+  function validateWithdraw(DataTypes.ReserveData memory reserve, uint256 amount) internal {
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    (bool isActive, , bool isPaused) = reserve.config.getFlags();
+
+    if (!isActive) revert Errors.PoolNotActive();
+    if (isPaused) revert Errors.PoolPaused();
+  }
+
+  function validateRepay(DataTypes.ReserveData memory reserve, uint256 amount) internal {
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    (bool isActive, , bool isPaused) = reserve.config.getFlags();
+
+    if (!isActive) revert Errors.PoolNotActive();
+    if (isPaused) revert Errors.PoolPaused();
+  }
+
+  function validateBorrow(DataTypes.ReserveData memory reserve, uint256 amount) internal {
+    if (reserve.lastUpdateTimestamp == 0) {
+      revert Errors.UnderlyingMarketNotExist();
+    }
+
+    (uint256 borrowCap, , uint256 minCap) = reserve.config.getCaps();
+
+    if (borrowCap != 0) {
+      uint256 decimals = reserve.config.getDecimals();
+      uint256 borrowCap_ = borrowCap * 10 ** decimals;
+
+      if (amount <= minCap || amount > borrowCap_) {
+        revert Errors.InvalidBorrowCap();
+      }
+    }
+
+    (bool isActive, , bool isPaused) = reserve.config.getFlags();
+
+    if (!isActive) revert Errors.PoolNotActive();
+    if (isPaused) revert Errors.PoolPaused();
   }
 }

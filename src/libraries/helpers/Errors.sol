@@ -69,20 +69,35 @@ library Errors {
   error SenderZeroAddress();
 
   error WrongNonce();
-  error NotEqualDeadline();
 
+  error NotEqualDeadline();
   error NotEqualUnderlyingAsset();
   error NotEqualTotalAssets();
   error NotEqualOrderOwner();
   error NotEqualSender();
 
   error ProtocolAccessDenied();
-
   error GovernanceAccessDenied();
   error EmergencyAccessDenied();
   error RoleAccessDenied();
   error MarketPriceNotCoverDebt();
   error StrategyNotEmpty();
+
+  error InvalidDepositCap();
+  error InvalidBorrowCap();
+  error PoolNotActive();
+  error PoolPaused();
+  error PoolFrozen();
+
+  ///////////////////////////////////////////
+  ///   RESERVE CONFIG
+  ///////////////////////////////////////////
+
+  error InvalidReserveFactor();
+  error InvalidMaxBorrowCap();
+  error InvalidMaxDepositCap();
+  error InvalidMaxMinCap();
+  error InvalidMaxDecimals();
   ///////////////////////////////////////////
   ///   UTOKEN
   ///////////////////////////////////////////

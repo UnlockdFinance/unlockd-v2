@@ -14,8 +14,6 @@ import {PercentageMath} from '../math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 /**
  * @title GenericLogic library
  * @author Unlockd
@@ -39,8 +37,8 @@ library GenericLogic {
     uint256 amount;
   }
 
-    /**
-   * @dev Calculates the current debt of a specific loand and asset 
+  /**
+   * @dev Calculates the current debt of a specific loand and asset
    * @param loanId identifier of the loan
    * @param uTokenVault Current vault
    * @param underlyingAsset Underlying asset of the debt

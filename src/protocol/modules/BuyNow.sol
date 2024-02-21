@@ -18,15 +18,15 @@ import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {IBuyNowModule} from '../../interfaces/modules/IBuyNowModule.sol';
 import {BuyNowSign} from '../../libraries/signatures/BuyNowSign.sol';
 
+import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
   using SafeTransferLib for address;
   using LoanLogic for DataTypes.Loan;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   constructor(uint256 moduleId, bytes32 moduleVersion) BaseCoreModule(moduleId, moduleVersion) {
     // NOTHING TO DO
@@ -78,7 +78,7 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
     if (amount < signBuyMarket.marketPrice) {
       if (
         IUTokenVault(_uTokenVault).validateReserveType(
-          reserve.reserveType,
+          reserve.config.getReserveType(),
           _allowedCollections[signBuyMarket.asset.collection]
         ) == false
       ) {

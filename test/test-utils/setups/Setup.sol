@@ -324,10 +324,10 @@ contract Setup is Base, ActorsBase, NFTBase {
     );
 
     // Activate Pools
-    _uTokenVault.updateReserveState(makeAsset('WETH'), Constants.ReserveState.ACTIVE);
-    _uTokenVault.updateReserveState(makeAsset('DAI'), Constants.ReserveState.ACTIVE);
-    _uTokenVault.updateReserveState(makeAsset('USDC'), Constants.ReserveState.ACTIVE);
-    _uTokenVault.updateReserveState(makeAsset('SPECIAL'), Constants.ReserveState.ACTIVE);
+    _uTokenVault.setActive(makeAsset('WETH'), true);
+    _uTokenVault.setActive(makeAsset('DAI'), true);
+    _uTokenVault.setActive(makeAsset('USDC'), true);
+    _uTokenVault.setActive(makeAsset('SPECIAL'), true);
 
     vm.stopPrank();
 

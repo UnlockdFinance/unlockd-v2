@@ -15,8 +15,7 @@ import {Errors} from '../helpers/Errors.sol';
 import {DataTypes, Constants} from '../../types/DataTypes.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {ScaledToken} from '../tokens/ScaledToken.sol';
-
-// import {console} from 'forge-std/console.sol';
+import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 
 /**
  * @title ReserveLogic library
@@ -31,6 +30,7 @@ library ReserveLogic {
   using SafeERC20 for IERC20;
   using DelegateCall for address;
   using ReserveLogic for DataTypes.ReserveData;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   // See `IPool` for descriptions
   event ReserveDataUpdated(
@@ -154,24 +154,28 @@ library ReserveLogic {
    */
   function init(
     DataTypes.ReserveData storage reserve,
-    address underlyingAsset,
     Constants.ReserveType reserveType,
+    address underlyingAsset,
     address scaledTokenAddress,
     address interestRateAddress,
     address strategyAddress,
+    uint8 decimals,
     uint16 reserveFactor
   ) internal {
     reserve.liquidityIndex = uint128(WadRayMath.RAY);
     reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
-    reserve.reserveFactor = reserveFactor;
     reserve.scaledTokenAddress = scaledTokenAddress;
     reserve.interestRateAddress = interestRateAddress;
     reserve.strategyAddress = strategyAddress;
     reserve.underlyingAsset = underlyingAsset;
-    reserve.decimals = ScaledToken(scaledTokenAddress).decimals();
-    reserve.reserveType = reserveType;
-    reserve.reserveState = Constants.ReserveState.STOPPED;
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
+    // CONFIG
+    DataTypes.ReserveConfigurationMap memory config = reserve.config;
+    config.setReserveFactor(reserveFactor);
+    config.setDecimals(decimals);
+    config.setReserveType(reserveType);
+
+    reserve.config = config;
   }
 
   struct UpdateInterestRatesLocalVars {
@@ -206,7 +210,7 @@ library ReserveLogic {
           liquidityAdded: liquidityAdded,
           liquidityTaken: liquidityTaken,
           totalVariableDebt: vars.totalVariableDebt, // Need to be the real not the scaled
-          reserveFactor: reserve.reserveFactor,
+          reserveFactor: reserve.config.getReserveFactor(),
           totalSupplyAssets: totalSupplyAssets // Need to be the real not the scaled
         })
       );

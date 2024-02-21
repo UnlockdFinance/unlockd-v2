@@ -103,25 +103,25 @@ contract DeployPeripheryScript is DeployerHelper {
       );
 
       // Activate Pools
-      _uTokenVault.updateReserveState(DeployConfig.WETH, Constants.ReserveState.ACTIVE);
-      _uTokenVault.updateReserveState(DeployConfig.USDC, Constants.ReserveState.ACTIVE);
+      _uTokenVault.setActive(DeployConfig.WETH, true);
+      _uTokenVault.setActive(DeployConfig.USDC, true);
     }
 
     {
       // We define the base token to USDC
       addresses.reserveOracle = address(
-        new ReserveOracle(addresses.aclManager, DeployConfig.USDC, 1 ether)
+        new ReserveOracle(addresses.aclManager, DeployConfig.WETH, 1 ether)
       );
       //////////////////////////////
       // WARNING ONLY FOR TESTING
       // Add DAI to the Oracle
       // https://data.chain.link/ethereum/mainnet/stablecoins/usdc-usd
-      Source usdcSource = new Source(8, 100000000);
-      // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
-      Source wethSource = new Source(8, 224136576100);
+      // Source usdcSource = new Source(8, 100000000);
+      // // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
+      // Source wethSource = new Source(8, 224136576100);
 
-      ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.WETH, address(wethSource));
-      ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.USDC, address(usdcSource));
+      // ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.WETH, address(wethSource));
+      // ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.USDC, address(usdcSource));
 
       // DEPLOY ADAPTER RESERVOIR
       addresses.adapter = address(

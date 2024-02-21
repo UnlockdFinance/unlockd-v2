@@ -7,6 +7,7 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegat
 import {IDelegationOwner} from '@unlockd-wallet/src/interfaces/IDelegationOwner.sol';
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {SafeCastLib} from '@solady/utils/SafeCastLib.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 
 import {BaseCoreModule, IACLManager} from '../../libraries/base/BaseCoreModule.sol';
@@ -26,12 +27,11 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using EnumerableSet for EnumerableSet.Bytes32Set;
   using PercentageMath for uint256;
   using SafeTransferLib for address;
+  using SafeERC20 for IERC20;
   using SafeCastLib for uint256;
   using OrderLogic for DataTypes.Order;
   using LoanLogic for DataTypes.Loan;
@@ -395,7 +395,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     }
 
     if (totalDebt > 0) {
-      underlyingAsset.forceSafeApprove(_uTokenVault, totalDebt);
+      IERC20(underlyingAsset).forceApprove(_uTokenVault, totalDebt);
       // We repay all the debt
       IUTokenVault(_uTokenVault).repay(
         underlyingAsset,

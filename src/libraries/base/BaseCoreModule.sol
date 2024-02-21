@@ -7,8 +7,6 @@ import {Errors} from '../helpers/Errors.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Constants} from '../helpers/Constants.sol';
 
-// import {console} from 'forge-std/console.sol';
-
 /**
  * @title BaseCoreModule
  * @notice Base logic on each module
