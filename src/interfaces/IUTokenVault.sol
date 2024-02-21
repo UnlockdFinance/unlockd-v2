@@ -129,16 +129,6 @@ interface IUTokenVault {
   function updateState(address underlyingAsset) external;
 
   //////////////////////////////////
-  // EMERGENCY
-
-  function updateInterestRate(address underlyingAsset, address newInterestRateAddress) external;
-
-  // function updateReserveState(
-  //   address underlyingAsset,
-  //   Constants.ReserveState reserveState
-  // ) external;
-
-  //////////////////////////////////
   // GETTERS
 
   function getScaledToken(address underlyingAsset) external view returns (address);

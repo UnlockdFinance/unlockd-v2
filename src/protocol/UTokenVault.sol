@@ -270,22 +270,6 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     return reserves[underlyingAsset].config.getFlags();
   }
 
-  function updateInterestRate(
-    address underlyingAsset,
-    address newInterestRateAddress
-  ) external onlyEmergencyAdmin {
-    DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
-    // Update the interest rate
-    reserve.interestRateAddress = newInterestRateAddress;
-
-    // Recalculate all the balances
-    DataTypes.MarketBalance storage balance = balances[underlyingAsset];
-    reserve.updateState(balance);
-    reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, 0);
-
-    emit MarketInterestRateUpdated(underlyingAsset, newInterestRateAddress);
-  }
-
   function disableStrategy(address underlyingAsset) external onlyEmergencyAdmin {
     if (reserves[underlyingAsset].strategyAddress != address(0)) {
       reserves[underlyingAsset].strategyWithdrawAll(balances[underlyingAsset]);

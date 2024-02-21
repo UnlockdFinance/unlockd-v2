@@ -21,7 +21,7 @@ import {SellNow} from '../../src/protocol/modules/SellNow.sol';
 import {Market} from '../../src/protocol/modules/Market.sol';
 
 contract DeployModulesScript is DeployerHelper {
-  bytes32 public constant VERSION = '18';
+  bytes32 public constant VERSION = '1';
   uint256 public constant MODULE_ID = 100;
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {

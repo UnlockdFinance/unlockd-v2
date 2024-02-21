@@ -74,7 +74,13 @@ contract DeployPeripheryScript is DeployerHelper {
       _uTokenVault.createMarket(
         IUTokenVault.CreateMarketParams({
           interestRateAddress: address(
-            new InterestRate(addresses.aclManager, 1 ether, 1 ether, 1 ether, 1 ether)
+            new InterestRate(
+              addresses.aclManager,
+              900000000000000000000000000,
+              0,
+              28000000000000000000000000,
+              800000000000000000000000000
+            )
           ),
           strategyAddress: addresses.strategy,
           reserveFactor: 0,
@@ -90,7 +96,13 @@ contract DeployPeripheryScript is DeployerHelper {
       _uTokenVault.createMarket(
         IUTokenVault.CreateMarketParams({
           interestRateAddress: address(
-            new InterestRate(addresses.aclManager, 1 ether, 1 ether, 1 ether, 1 ether)
+            new InterestRate(
+              addresses.aclManager,
+              900000000000000000000000000,
+              0,
+              60000000000000000000000000,
+              600000000000000000000000000
+            )
           ),
           strategyAddress: address(0),
           reserveFactor: 0,
