@@ -21,7 +21,7 @@ import {SellNow} from '../../src/protocol/modules/SellNow.sol';
 import {Market} from '../../src/protocol/modules/Market.sol';
 
 contract DeployModulesScript is DeployerHelper {
-  bytes32 public constant VERSION = '1';
+  bytes32 public constant VERSION = '12';
   uint256 public constant MODULE_ID = 100;
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
@@ -31,22 +31,19 @@ contract DeployModulesScript is DeployerHelper {
       // INSTALL
 
       {
-        // Test testImp = new Test(MODULE_ID, VERSION);
-        Action moduleImp1 = new Action(Constants.MODULEID__ACTION, VERSION);
+        // Action moduleImp1 = new Action(Constants.MODULEID__ACTION, VERSION);
         Auction moduleImp2 = new Auction(Constants.MODULEID__AUCTION, VERSION);
-        BuyNow moduleImp3 = new BuyNow(Constants.MODULEID__BUYNOW, VERSION);
-        SellNow moduleImp4 = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
-        Market moduleImp5 = new Market(Constants.MODULEID__MARKET, VERSION);
+        // BuyNow moduleImp3 = new BuyNow(Constants.MODULEID__BUYNOW, VERSION);
+        // SellNow moduleImp4 = new SellNow(Constants.MODULEID__SELLNOW, VERSION);
+        // Market moduleImp5 = new Market(Constants.MODULEID__MARKET, VERSION);
 
         // Install Modules
-        address[] memory modules = new address[](5);
-        modules[0] = address(moduleImp1);
-        modules[1] = address(moduleImp2);
-        modules[2] = address(moduleImp3);
-        modules[3] = address(moduleImp4);
-        modules[4] = address(moduleImp5);
-
-        // modules[1] = address(buyNowImp);
+        address[] memory modules = new address[](1);
+        // modules[0] = address(moduleImp1);
+        modules[0] = address(moduleImp2);
+        // modules[2] = address(moduleImp3);
+        // modules[3] = address(moduleImp4);
+        // modules[4] = address(moduleImp5);
 
         address installer = Unlockd(addresses.unlockd).moduleIdToProxy(
           Constants.MODULEID__INSTALLER

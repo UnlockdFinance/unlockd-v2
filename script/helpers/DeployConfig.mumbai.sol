@@ -6,14 +6,14 @@ library DeployConfig {
   uint256 public constant CHAINID = 80001;
   // ************************ TOKENS ************************
   // https://testnets.opensea.io/  to wrap
-  address public constant WETH = 0xa6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa;
+  address public constant WETH = 0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa;
   // https://staging.aave.com/faucet/?marketName=proto_mumbai_v3 to mint
-  address public constant USDC = 0x52d800ca262522580cebad275395ca6e7598c014;
+  address public constant USDC = 0x52D800ca262522580CeBAD275395ca6e7598C014;
 
   address public constant MAXAPY = 0x0000000000000000000000000000000000000000;
   // ************************ RESERVOIR ************************
   // @dev location addresses https://github.com/reservoirprotocol/indexer/blob/main/packages/sdk/src/router/v6/addresses.ts
-  address public constant RESERVOIR_ROUTER = 0xc2c862322e9c97d6244a3506655da95f05246fd8;
+  address public constant RESERVOIR_ROUTER = 0xC2c862322E9c97D6244a3506655DA95F05246Fd8;
   address public constant RESERVOIR_ETH = 0x0000000000000000000000000000000000000000;
 
   // ************************ APP ************************

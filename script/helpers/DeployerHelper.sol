@@ -6,6 +6,8 @@ import 'forge-std/Script.sol';
 
 import '@openzeppelin/contracts/utils/Strings.sol';
 
+import {console} from 'forge-std/console.sol';
+
 contract DeployerHelper is Script {
   using stdJson for string;
 
@@ -32,6 +34,8 @@ contract DeployerHelper is Script {
   }
 
   modifier onlyInChain(uint256 chainId) {
+    console.log('Deploy in chain', chainId);
+    console.log('RPC chain', getChainID());
     require(chainId == getChainID(), 'chainId not valid');
     _;
   }

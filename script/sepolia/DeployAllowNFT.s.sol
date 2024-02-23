@@ -8,13 +8,14 @@ import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
 import {SafeERC721} from '../../src/libraries/tokens/SafeERC721.sol';
+import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 import '../helpers/DeployerHelper.sol';
 
 contract DeployAllowNFTScript is DeployerHelper {
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
     // CryptoPunk address
-    SafeERC721 safeERC721 = new SafeERC721(0x987EfDB241fE66275b3594481696f039a82a799e);
+    SafeERC721 safeERC721 = new SafeERC721(DeployConfig.CRYPTOPUNK);
 
     ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
     address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
@@ -132,6 +133,5 @@ contract DeployAllowNFTScript is DeployerHelper {
         Constants.ReserveType.STABLE
       );
     }
-    
   }
 }

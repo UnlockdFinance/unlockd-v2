@@ -87,7 +87,7 @@ contract DeployPeripheryScript is DeployerHelper {
           underlyingAsset: DeployConfig.WETH,
           reserveType: Constants.ReserveType.COMMON,
           decimals: 18,
-          tokenName: 'UWETH',
+          tokenName: 'uWETH',
           tokenSymbol: 'UWETH'
         })
       );
@@ -109,7 +109,7 @@ contract DeployPeripheryScript is DeployerHelper {
           underlyingAsset: DeployConfig.USDC,
           reserveType: Constants.ReserveType.STABLE,
           decimals: 6,
-          tokenName: 'UUSDC',
+          tokenName: 'uUSDC',
           tokenSymbol: 'UUSDC'
         })
       );

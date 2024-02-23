@@ -39,20 +39,20 @@ contract DeployPeripheryScript is DeployerHelper {
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
 
-    /******************** STRATEGY ********************/
-    {
-      uint256 percentageToInvest = 10000; // 100%
-      address _maxApyStrategy = address(
-        new MaxApyStrategy(
-          addresses.aclManager,
-          DeployConfig.WETH,
-          DeployConfig.MAXAPY,
-          1 ether,
-          percentageToInvest
-        )
-      );
-      addresses.strategy = _maxApyStrategy;
-    }
+    // /******************** STRATEGY ********************/
+    // {
+    //   uint256 percentageToInvest = 10000; // 100%
+    //   address _maxApyStrategy = address(
+    //     new MaxApyStrategy(
+    //       addresses.aclManager,
+    //       DeployConfig.WETH,
+    //       DeployConfig.MAXAPY,
+    //       1 ether,
+    //       percentageToInvest
+    //     )
+    //   );
+    //   addresses.strategy = _maxApyStrategy;
+    // }
 
     /******************** UTokenVault ********************/
     {
@@ -70,27 +70,27 @@ contract DeployPeripheryScript is DeployerHelper {
       UTokenVault _uTokenVault = UTokenVault(uTokenVaultProxy);
       addresses.uTokenVault = uTokenVaultProxy;
 
-      // Deploy weth pool
-      _uTokenVault.createMarket(
-        IUTokenVault.CreateMarketParams({
-          interestRateAddress: address(
-            new InterestRate(
-              addresses.aclManager,
-              900000000000000000000000000,
-              0,
-              28000000000000000000000000,
-              800000000000000000000000000
-            )
-          ),
-          strategyAddress: addresses.strategy,
-          reserveFactor: 0,
-          underlyingAsset: DeployConfig.WETH,
-          reserveType: Constants.ReserveType.COMMON,
-          decimals: 18,
-          tokenName: 'UWETH',
-          tokenSymbol: 'UWETH'
-        })
-      );
+      // // Deploy weth pool
+      // _uTokenVault.createMarket(
+      //   IUTokenVault.CreateMarketParams({
+      //     interestRateAddress: address(
+      //       new InterestRate(
+      //         addresses.aclManager,
+      //         900000000000000000000000000,
+      //         0,
+      //         28000000000000000000000000,
+      //         800000000000000000000000000
+      //       )
+      //     ),
+      //     strategyAddress: addresses.strategy,
+      //     reserveFactor: 0,
+      //     underlyingAsset: DeployConfig.WETH,
+      //     reserveType: Constants.ReserveType.COMMON,
+      //     decimals: 18,
+      //     tokenName: 'UWETH',
+      //     tokenSymbol: 'UWETH'
+      //   })
+      // );
 
       // Deploy weth usdc
       _uTokenVault.createMarket(
@@ -109,13 +109,13 @@ contract DeployPeripheryScript is DeployerHelper {
           underlyingAsset: DeployConfig.USDC,
           reserveType: Constants.ReserveType.STABLE,
           decimals: 6,
-          tokenName: 'UUSDC',
+          tokenName: 'uUSDC',
           tokenSymbol: 'UUSDC'
         })
       );
 
       // Activate Pools
-      _uTokenVault.setActive(DeployConfig.WETH, true);
+      // _uTokenVault.setActive(DeployConfig.WETH, true);
       _uTokenVault.setActive(DeployConfig.USDC, true);
     }
 
@@ -145,15 +145,15 @@ contract DeployPeripheryScript is DeployerHelper {
       );
     }
     /******************** WETHGATEWAY ********************/
-    {
-      WETHGateway wethGateway = new WETHGateway(DeployConfig.WETH, addresses.uTokenVault);
-      addresses.wethGateway = address(wethGateway);
+    // {
+    //   WETHGateway wethGateway = new WETHGateway(DeployConfig.WETH, addresses.uTokenVault);
+    //   addresses.wethGateway = address(wethGateway);
 
-      if (addresses.uTokenVault != address(0)) {
-        // Authorize protocol
-        wethGateway.authorizeProtocol(addresses.uTokenVault);
-      }
-    }
+    //   if (addresses.uTokenVault != address(0)) {
+    //     // Authorize protocol
+    //     wethGateway.authorizeProtocol(addresses.uTokenVault);
+    //   }
+    // }
 
     _encodeJson(addresses);
   }

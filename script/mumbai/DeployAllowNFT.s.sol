@@ -2,6 +2,8 @@
 pragma solidity ^0.8.19;
 
 import 'forge-std/Script.sol';
+
+import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
@@ -14,7 +16,7 @@ contract DeployAllowNFTScript is DeployerHelper {
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
     // CryptoPunk address
-    SafeERC721 safeERC721 = new SafeERC721(address(0));
+    SafeERC721 safeERC721 = new SafeERC721(DeployConfig.CRYPTOPUNK);
 
     ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
     address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(

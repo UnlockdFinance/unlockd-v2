@@ -17,6 +17,8 @@ import {DataTypes, Constants} from '../src/types/DataTypes.sol';
 import {Unlockd} from '../src/protocol/Unlockd.sol';
 import './test-utils/mock/asset/MintableERC20.sol';
 
+import {console} from 'forge-std/console.sol';
+
 contract AuctionTest is Setup {
   address internal _actor;
   address internal _actorTwo;
@@ -440,6 +442,17 @@ contract AuctionTest is Setup {
       );
 
       assertEq(bidAmount, 0.5125 ether);
+
+      (uint256 totalAmount, uint256 totalDebt, uint256 bidderBonus) = Auction(_auction)
+        .getAmountToReedem(loanId, assets);
+
+      console.log('totaAmount', totalAmount);
+      console.log('totalDebt', totalDebt);
+      console.log('bidderBonus', bidderBonus);
+
+      assertEq(totalDebt, 0.5 ether);
+      assertEq(totalAmount, 1.0125 ether);
+      assertEq(bidderBonus, 0.0125 ether);
 
       approveAsset(_WETH, address(getUnlockd()), bidAmount); // APPROVE AMOUNT
       Auction(_auction).bid(uint128(bidAmount), 0, signAuction, sig); // BID ON THE ASSET

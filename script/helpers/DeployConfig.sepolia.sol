@@ -30,5 +30,5 @@ library DeployConfig {
     0x017062a1dE2FE6b99BE3d9d37841FeD19F573804;
 
   // Sepolia doesnt' have CRYPTO PUNK
-  address public constant CRYPTOPUNK = 0x0000000000000000000000000000000000000000;
+  address public constant CRYPTOPUNK = 0x987EfDB241fE66275b3594481696f039a82a799e;
 }

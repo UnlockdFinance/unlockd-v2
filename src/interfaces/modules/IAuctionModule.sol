@@ -43,4 +43,34 @@ interface IAuctionModule {
     uint256 totalAmountBid;
     uint256 startAmount;
   }
+
+  function getAmountToReedem(
+    bytes32 loanId,
+    bytes32[] calldata assets
+  ) external view returns (uint256, uint256, uint256);
+
+  function getMinBidPriceAuction(
+    bytes32 loanId,
+    bytes32 assetId,
+    uint256 assetPrice,
+    uint256 aggLoanPrice,
+    uint256 aggLtv
+  ) external view returns (uint256);
+
+  function getOrderAuction(bytes32 orderId) external view returns (DataTypes.Order memory);
+
+  function redeem(
+    uint256 amount,
+    bytes32[] calldata assets,
+    DataTypes.SignAuction calldata signAuction,
+    DataTypes.EIP712Signature calldata sig
+  ) external;
+
+  function finalize(
+    bool claimOnUWallet,
+    bytes32 orderId,
+    DataTypes.Asset calldata asset,
+    DataTypes.SignAuction calldata signAuction,
+    DataTypes.EIP712Signature calldata sig
+  ) external;
 }

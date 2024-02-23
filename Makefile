@@ -26,6 +26,7 @@ deploy-sep-modules :; forge script script/sepolia/DeployModules.s.sol:DeployModu
 deploy-sep-allow :; forge script script/sepolia/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 
 deploy-sep-nft :; forge script script/sepolia/DeployFakeNFT.s.sol:DeployFakeNftsScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv
+execute-sep :; forge script script/sepolia/Execute.s.sol:ExecuteScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 
 ## POLYGON MUMBAI
 deploy-mum-aclmanager :; forge script script/mumbai/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY} -vvvv

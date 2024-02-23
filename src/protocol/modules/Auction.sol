@@ -27,6 +27,8 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
+import {console} from 'forge-std/console.sol';
+
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using EnumerableSet for EnumerableSet.Bytes32Set;
   using PercentageMath for uint256;
@@ -45,8 +47,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     bytes32 loanId,
     bytes32[] calldata assets
   ) public view returns (uint256, uint256, uint256) {
-    DataTypes.Loan storage loan = _loans[loanId];
-
+    DataTypes.Loan memory loan = _loans[loanId];
+    if (loan.owner == address(0)) return (0, 0, 0);
     uint256 totalDebt = GenericLogic.calculateLoanDebt(
       loan.loanId,
       _uTokenVault,
@@ -70,29 +72,32 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     uint256 assetPrice,
     uint256 aggLoanPrice,
     uint256 aggLtv
-  ) external view returns (uint256 minBid) {
+  ) external view returns (uint256) {
     DataTypes.Loan memory loan = _loans[loanId];
+    console.log('hola');
+    if (loan.owner == address(0) || loan.underlyingAsset == address(0)) return 0;
 
     DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       loan.underlyingAsset
     );
-
+    return 0;
     // Calculate the order ID
-    bytes32 orderId = OrderLogic.generateId(assetId, loanId);
-    DataTypes.Order memory order = _orders[orderId];
+    // bytes32 orderId = OrderLogic.generateId(assetId, loanId);
+    // DataTypes.Order memory order = _orders[orderId];
 
-    if (order.owner == address(0)) {
-      minBid = OrderLogic.getMinDebtOrDefault(
-        loan.loanId,
-        _uTokenVault,
-        assetPrice,
-        aggLoanPrice,
-        aggLtv,
-        reserve
-      );
-    } else {
-      minBid = OrderLogic.getMinBid(order, _uTokenVault, aggLoanPrice, aggLtv, reserve);
-    }
+    // if (order.owner == address(0)) {
+    //   return
+    //     OrderLogic.getMinDebtOrDefault(
+    //       loan.loanId,
+    //       _uTokenVault,
+    //       assetPrice,
+    //       aggLoanPrice,
+    //       aggLtv,
+    //       reserve
+    //     );
+    // }
+
+    // return OrderLogic.getMinBid(order, _uTokenVault, aggLoanPrice, aggLtv, reserve);
   }
 
   /**
@@ -240,6 +245,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
             amount: minBid
           })
         );
+        // The first time we calculate the bonus for this user
+        // BONUS AMOUNT
+        order.bidderBonus = totalAmount.percentMul(GenericLogic.FIRST_BID_INCREMENT);
+
         // The protocol freeze the loan repayed until end of the auction
         // to protect against borrow again
         order.bidderDebtPayed = minBid;
@@ -250,13 +259,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         if (order.countBids == 1) {
           // The first bidder gets 2.5% of benefit over the second bidder
           // We increate the amount to repay
-          uint256 bonusAmount = (amountToPayBuyer + order.bid.amountOfDebt).percentMul(
-            GenericLogic.FIRST_BID_INCREMENT
-          );
-          // BONUS AMOUNT
-          order.bidderBonus = bonusAmount;
-
-          amountToPayBuyer = amountToPayBuyer + bonusAmount;
+          amountToPayBuyer = amountToPayBuyer + order.bidderBonus;
         }
         // We assuming that the ltv is enought to cover the growing interest of this bid
         OrderLogic.refundBidder(
@@ -404,9 +407,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         address(this),
         msgSender
       );
-
-      _loans[loan.loanId].activate();
     }
+
+    _loans[loan.loanId].activate();
+
     emit AuctionRedeem(loan.loanId, totalAmount, msgSender);
   }
 
