@@ -13,6 +13,9 @@ import {Errors} from '../helpers/Errors.sol';
  */
 library LoanLogic {
   event LoanCreated(address indexed user, bytes32 indexed loanId, uint256 totalAssets);
+  event FreezeLoan(bytes32 loanId);
+  event ActivateLoan(bytes32 loanId);
+  event BlockLoan(bytes32 loanId);
 
   bytes32 internal constant TYPEHASH =
     0x4b24ba5d0861514e3889c8dcf89590916d297469584a6cf27d0e9d3750a33970;
@@ -60,6 +63,7 @@ library LoanLogic {
    */
   function freeze(DataTypes.Loan storage loan) internal {
     loan.state = Constants.LoanState.FREEZE;
+    emit FreezeLoan(loan.loanId);
   }
 
   /**
@@ -67,6 +71,7 @@ library LoanLogic {
    */
   function activate(DataTypes.Loan storage loan) internal {
     loan.state = Constants.LoanState.ACTIVE;
+    emit ActivateLoan(loan.loanId);
   }
 
   /**
@@ -74,6 +79,7 @@ library LoanLogic {
    */
   function blocked(DataTypes.Loan storage loan) internal {
     loan.state = Constants.LoanState.BLOCKED;
+    emit BlockLoan(loan.loanId);
   }
 
   /**

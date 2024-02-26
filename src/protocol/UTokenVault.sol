@@ -262,11 +262,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit UpdateCaps(underlyingAsset, minCap, depositCap, borrowCap);
   }
 
-  function getCaps(address underlyingAsset) external returns (uint256, uint256, uint256) {
+  function getCaps(address underlyingAsset) external view returns (uint256, uint256, uint256) {
     return reserves[underlyingAsset].config.getCaps();
   }
 
-  function getFlags(address underlyingAsset) external returns (bool, bool, bool) {
+  function getFlags(address underlyingAsset) external view returns (bool, bool, bool) {
     return reserves[underlyingAsset].config.getFlags();
   }
 

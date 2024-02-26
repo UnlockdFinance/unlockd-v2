@@ -56,7 +56,7 @@ library ReserveConfiguration {
 
   function getReserveFactor(
     DataTypes.ReserveConfigurationMap memory self
-  ) internal returns (uint256) {
+  ) internal pure returns (uint256) {
     return self.data & ~RESERVE_FACTOR_MASK;
   }
 

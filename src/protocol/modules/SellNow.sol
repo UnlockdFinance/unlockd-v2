@@ -185,6 +185,11 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
         revert Errors.LoanNotActive();
       }
 
+      bytes32 orderId = OrderLogic.generateId(assetId, loan.loanId);
+      if (_orders[orderId].owner != address(0)) {
+        revert Errors.OrderActive();
+      }
+
       IUTokenVault(_uTokenVault).updateState(loan.underlyingAsset);
       DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
         loan.underlyingAsset
@@ -246,7 +251,8 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
       // If there is no debt we send the amount to the user
       IERC20(signSellNow.underlyingAsset).safeTransfer(msgSender, signSellNow.marketPrice);
     }
-
+    // We reset the state of this asset on the wallet
+    IProtocolOwner(protocolOwner).setLoanId(assetId, 0);
     emit Sold(
       signSellNow.loan.loanId,
       assetId,

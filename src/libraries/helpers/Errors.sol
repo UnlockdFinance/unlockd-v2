@@ -67,6 +67,7 @@ library Errors {
   error AssetsMismatch();
   error InvalidRecoveredAddress();
   error SenderZeroAddress();
+  error OrderActive();
 
   error WrongNonce();
 

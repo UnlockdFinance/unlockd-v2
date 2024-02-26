@@ -74,30 +74,29 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     uint256 aggLtv
   ) external view returns (uint256) {
     DataTypes.Loan memory loan = _loans[loanId];
-    console.log('hola');
+
     if (loan.owner == address(0) || loan.underlyingAsset == address(0)) return 0;
 
     DataTypes.ReserveData memory reserve = IUTokenVault(_uTokenVault).getReserveData(
       loan.underlyingAsset
     );
-    return 0;
     // Calculate the order ID
-    // bytes32 orderId = OrderLogic.generateId(assetId, loanId);
-    // DataTypes.Order memory order = _orders[orderId];
+    bytes32 orderId = OrderLogic.generateId(assetId, loanId);
+    DataTypes.Order memory order = _orders[orderId];
 
-    // if (order.owner == address(0)) {
-    //   return
-    //     OrderLogic.getMinDebtOrDefault(
-    //       loan.loanId,
-    //       _uTokenVault,
-    //       assetPrice,
-    //       aggLoanPrice,
-    //       aggLtv,
-    //       reserve
-    //     );
-    // }
+    if (order.owner == address(0)) {
+      return
+        OrderLogic.getMinDebtOrDefault(
+          loan.loanId,
+          _uTokenVault,
+          assetPrice,
+          aggLoanPrice,
+          aggLtv,
+          reserve
+        );
+    }
 
-    // return OrderLogic.getMinBid(order, _uTokenVault, aggLoanPrice, aggLtv, reserve);
+    return OrderLogic.getMinBid(order, _uTokenVault, aggLoanPrice, aggLtv, reserve);
   }
 
   /**

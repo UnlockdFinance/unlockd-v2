@@ -18,7 +18,7 @@ import {ISafeERC721} from '../../interfaces/ISafeERC721.sol';
 import {ReserveConfiguration} from '../../libraries/configuration/ReserveConfiguration.sol';
 import {UTokenVault} from '../UTokenVault.sol';
 import {ActionSign} from '../../libraries/signatures/ActionSign.sol';
-
+import {OrderLogic} from '../../libraries/logic/OrderLogic.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
@@ -270,7 +270,12 @@ contract Action is BaseCoreModule, ActionSign, IActionModule {
 
       // Get protocol owner
       address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, msgSender);
-
+      for (uint256 i; i < signAction.assets.length; i++) {
+        bytes32 orderId = OrderLogic.generateId(signAction.assets[i], loan.loanId);
+        if (_orders[orderId].owner != address(0)) {
+          revert Errors.OrderActive();
+        }
+      }
       // Unlock specific assets
       IProtocolOwner(protocolOwner).batchSetToZeroLoanId(signAction.assets);
     }
