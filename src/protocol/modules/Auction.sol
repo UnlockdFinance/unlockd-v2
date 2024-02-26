@@ -27,8 +27,6 @@ import {DataTypes} from '../../types/DataTypes.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
-import {console} from 'forge-std/console.sol';
-
 contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
   using EnumerableSet for EnumerableSet.Bytes32Set;
   using PercentageMath for uint256;
