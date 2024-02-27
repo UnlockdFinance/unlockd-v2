@@ -16,7 +16,8 @@
     "fork:destroy": "ts-node _helpers/fork_destroy.ts",
     "coverage": "node .coverage/run_coverage.js",
     "inspect": "bash ./exec/inspect.sh",
-    "verify": "bash ./exec/verify_contracts.sh"
+    "verify:sepolia": "bash ./exec/verify_contracts_sepolia.sh",
+    "verify:mumbai": "bash ./exec/verify_contracts_mumbai.sh"
   },
   "repository": {
     "type": "git",
