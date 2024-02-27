@@ -79,14 +79,13 @@ contract BorrowTest is Setup {
   }
 
   function test_borrow_with_configs() public {
-    uint256 amountToBorrow = 0.5 ether;
     // User doesn't have WETH
     assertEq(balanceAssets(makeAsset('WETH'), _actor), 0);
     // Get data signed
     (
       DataTypes.SignAction memory signAction,
       DataTypes.EIP712Signature memory sig,
-      bytes32[] memory assetsIds,
+      ,
       DataTypes.Asset[] memory assets
     ) = action_signature(
         _action,

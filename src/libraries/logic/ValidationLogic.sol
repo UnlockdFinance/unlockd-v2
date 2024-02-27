@@ -304,7 +304,10 @@ library ValidationLogic {
   // Validation Vault
   ///////////////////////////////////////////////////////
 
-  function validateDeposit(DataTypes.ReserveData storage reserve, uint256 amount) internal view {
+  function validateVaultDeposit(
+    DataTypes.ReserveData storage reserve,
+    uint256 amount
+  ) internal view {
     if (reserve.lastUpdateTimestamp == 0) {
       revert Errors.UnderlyingMarketNotExist();
     }
@@ -326,7 +329,7 @@ library ValidationLogic {
     if (isFrozen) revert Errors.PoolFrozen();
   }
 
-  function validateWithdraw(DataTypes.ReserveData memory reserve, uint256 amount) internal view {
+  function validateVaultWithdraw(DataTypes.ReserveData memory reserve) internal pure {
     if (reserve.lastUpdateTimestamp == 0) {
       revert Errors.UnderlyingMarketNotExist();
     }
@@ -337,7 +340,7 @@ library ValidationLogic {
     if (isPaused) revert Errors.PoolPaused();
   }
 
-  function validateRepay(DataTypes.ReserveData memory reserve, uint256 amount) internal view {
+  function validateVaultRepay(DataTypes.ReserveData memory reserve) internal pure {
     if (reserve.lastUpdateTimestamp == 0) {
       revert Errors.UnderlyingMarketNotExist();
     }
@@ -348,7 +351,7 @@ library ValidationLogic {
     if (isPaused) revert Errors.PoolPaused();
   }
 
-  function validateBorrow(DataTypes.ReserveData memory reserve, uint256 amount) internal pure {
+  function validateVaultBorrow(DataTypes.ReserveData memory reserve, uint256 amount) internal pure {
     if (reserve.lastUpdateTimestamp == 0) {
       revert Errors.UnderlyingMarketNotExist();
     }

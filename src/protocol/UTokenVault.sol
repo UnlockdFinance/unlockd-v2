@@ -93,7 +93,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
-    ValidationLogic.validateDeposit(reserve, amount);
+    ValidationLogic.validateVaultDeposit(reserve, amount);
 
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, amount, 0);
@@ -114,7 +114,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 
-    ValidationLogic.validateWithdraw(reserve, amount);
+    ValidationLogic.validateVaultWithdraw(reserve);
 
     reserve.updateState(balance);
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, amount);
@@ -139,7 +139,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
-    ValidationLogic.validateBorrow(reserve, amount);
+    ValidationLogic.validateVaultBorrow(reserve, amount);
 
     // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
@@ -187,7 +187,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
 
-    ValidationLogic.validateRepay(reserve, amount);
+    ValidationLogic.validateVaultRepay(reserve);
     // Move amount to the pool
     DataTypes.MarketBalance storage balance = balances[underlyingAsset];
 

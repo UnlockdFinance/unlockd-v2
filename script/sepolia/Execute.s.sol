@@ -16,7 +16,7 @@ import {Market} from '../../src/protocol/modules/Market.sol';
 
 contract ExecuteScript is DeployerHelper {
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
-    Addresses memory addresses = _decodeJson();
+    // Addresses memory addresses = _decodeJson();
 
     // Manager manager = Manager(0x9151329be2D23fdf33865cA69cf57a727fAC7706);
 
