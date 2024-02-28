@@ -24,7 +24,7 @@ import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
 
 contract DeployWalletScript is DeployerHelper {
-  bytes32 public constant VERSION = 0;
+  bytes32 public constant VERSION = '0';
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();

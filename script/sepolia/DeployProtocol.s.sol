@@ -34,7 +34,7 @@ import {Source} from '../../test/test-utils/mock/chainlink/Source.sol';
 import {UnlockdUpgradeableProxy} from '../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 
 contract DeployProtocolScript is DeployerHelper {
-  bytes32 public constant VERSION = '1';
+  bytes32 public constant VERSION = '0';
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
