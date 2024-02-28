@@ -25,3 +25,5 @@ bin/
 report/
 reports/
 lcov.info
+
+compressedArtifacts.zip
