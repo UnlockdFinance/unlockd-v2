@@ -43,6 +43,20 @@ library OrderLogic {
 
   /**
    * @dev creates a new order
+   * @param order
+   * @param params struct with params
+   *  struct ParamsCreateOrder {
+   *    Constants.OrderType orderType;
+   *    address owner;
+   *    bytes32 orderId;
+   *    bytes32 loanId;
+   *    bytes32 assetId;
+   *    uint128 startAmount;
+   *    uint128 endAmount;
+   *    uint128 debtToSell;
+   *    uint40 startTime;
+   *    uint40 endTime;
+   *  }
    */
   function createOrder(DataTypes.Order storage order, ParamsCreateOrder memory params) internal {
     unchecked {
@@ -70,6 +84,17 @@ library OrderLogic {
     uint40 endTime;
   }
 
+  /**
+   * @dev Change the order type to LIQUIDATION_AUCTION
+   * @param order order previously created
+   * @param params data needed to migrate from one order type to other
+   *  struct ParamsUpdateOrder {
+   *     bytes32 loanId;
+   *     bytes32 assetId;
+   *     uint128 minBid;
+   *     uint40 endTime;
+   *  }
+   */
   function updateToLiquidationOrder(
     DataTypes.Order storage order,
     ParamsUpdateOrder memory params
@@ -100,6 +125,21 @@ library OrderLogic {
     uint256 assetLtv;
   }
 
+  /**
+   * @dev Borrow function from bidder
+   * @param params data needed to migrate from one order type to other
+   *  struct BorrowByBidderParams {
+   *    bytes32 loanId;
+   *    address owner;
+   *    address to;
+   *    address underlyingAsset;
+   *    address uTokenVault;
+   *    uint256 amountOfDebt;
+   *    uint256 assetPrice;
+   *    uint256 assetLtv;
+   *  }
+   *
+   */
   function borrowByBidder(BorrowByBidderParams memory params) internal {
     if (params.loanId == 0) revert Errors.InvalidLoanId();
     uint256 maxAmountToBorrow = GenericLogic.calculateAvailableBorrows(
@@ -129,6 +169,19 @@ library OrderLogic {
     uint256 amount;
   }
 
+  /**
+   * @dev Repay specified debt
+   * @param params data needed to migrate from one order type to other
+   *  struct RepayDebtParams {
+   *    address owner;
+   *    address from;
+   *    address underlyingAsset;
+   *    address uTokenVault;
+   *    bytes32 loanId;
+   *    uint256 amount;
+   *  }
+   *
+   */
   function repayDebt(RepayDebtParams memory params) internal {
     // Check if there is a loan asociated
     // We repay the total debt
@@ -155,6 +208,21 @@ library OrderLogic {
     DataTypes.ReserveData reserve;
   }
 
+  /**
+   * @dev Refund bidder amount
+   * @param params data needed to migrate from one order type to other
+   *  struct RefundBidderParams {
+   *    bytes32 loanId;
+   *    address owner;
+   *    address from;
+   *    address underlyingAsset;
+   *    address uTokenVault;
+   *    address reserveOracle;
+   *    uint256 amountToPay;
+   *    uint256 amountOfDebt;
+   *    DataTypes.ReserveData reserve;
+   *  }
+   */
   function refundBidder(RefundBidderParams memory params) internal {
     uint256 totalAmount = params.amountToPay + params.amountOfDebt;
     // Check if there is a loan asociated
@@ -201,6 +269,16 @@ library OrderLogic {
     }
   }
 
+  /**
+   * @dev Get the bigger amount between the amount needed to be healty or the amount provided
+   * @param loanId Id from the loan
+   * @param uTokenVault vault address
+   * @param defaultAmount default amount to compare with the debt
+   * @param totalCollateral total amount of collateral of the Loan provided
+   * @param ltv ltv of the asset
+   * @param reserveData reserve data
+   * @return amount Max amount calculated
+   */
   function getMaxDebtOrDefault(
     bytes32 loanId,
     address uTokenVault,
@@ -224,6 +302,16 @@ library OrderLogic {
     return MathUtils.maxOf(minAmountNeeded, defaultAmount);
   }
 
+  /**
+   * @dev Get the lower amount between the amount needed to be healty or the amount provided
+   * @param loanId Id from the loan
+   * @param uTokenVault vault address
+   * @param defaultAmount default amount to compare with the debt
+   * @param totalCollateral total amount of collateral of the Loan provided
+   * @param ltv ltv of the asset
+   * @param reserveData reserve data
+   * @return amount lower amount calculated
+   */
   function getMinDebtOrDefault(
     bytes32 loanId,
     address uTokenVault,
@@ -248,9 +336,14 @@ library OrderLogic {
   }
 
   /**
-   * @dev Calculate the mind bid based on the configuration of the order and the bids
+   * @dev Calculate the minimum bid based on the amount of debt to be healty or the startAmount
    * 0 bids then debt or startAmoun
    * 1 > bids then debt or lastBid + 1%
+   * @param order current order
+   * @param uTokenVault address of the vault
+   * @param totalCollateral total collateral of the loan
+   * @param ltv ltv of the loan
+   * @return amount Calculation of the min bid
    * */
   function getMinBid(
     DataTypes.Order memory order,

@@ -51,7 +51,31 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
    * @dev Force liquidation of a NFT managed by the bot from Unlockd
    * @param asset asset to sell
    * @param signSellNow struct the information to sell the asset
-   * @param sig validation of
+   *  struct SignSellNow {
+   *     SignLoanConfig loan;
+   *     bytes32 assetId;
+   *     // approval
+   *     address marketAdapter;
+   *     address marketApproval;
+   *     uint256 marketPrice;
+   *     address underlyingAsset;
+   *     // sell data
+   *     address from;
+   *     address to;
+   *     bytes data;
+   *     uint256 value;
+   *     // signature
+   *     uint256 nonce;
+   *     uint256 deadline;
+   *  }
+   * @param sig validation of signature
+   *  struct EIP712Signature {
+   *    uint8 v;
+   *    bytes32 r;
+   *    bytes32 s;
+   *    uint256 deadline;
+   *  }
+   *
    */
   function forceSell(
     DataTypes.Asset calldata asset,
@@ -145,7 +169,30 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
    * @dev Sell a nft on the market, can be locked on a loan and repay the debt until arrives to HF > 1
    * @param asset asset to sell
    * @param signSellNow struct the information to sell the asset
-   * @param sig validation of
+   *  struct SignSellNow {
+   *     SignLoanConfig loan;
+   *     bytes32 assetId;
+   *     // approval
+   *     address marketAdapter;
+   *     address marketApproval;
+   *     uint256 marketPrice;
+   *     address underlyingAsset;
+   *     // sell data
+   *     address from;
+   *     address to;
+   *     bytes data;
+   *     uint256 value;
+   *     // signature
+   *     uint256 nonce;
+   *     uint256 deadline;
+   *  }
+   * @param sig validation of signature
+   *  struct EIP712Signature {
+   *    uint8 v;
+   *    bytes32 r;
+   *    bytes32 s;
+   *    uint256 deadline;
+   *  }
    */
   function sell(
     DataTypes.Asset calldata asset,

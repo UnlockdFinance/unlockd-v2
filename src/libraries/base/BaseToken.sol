@@ -29,16 +29,25 @@ abstract contract BaseToken is ERC20Upgradeable {
   //  MODIFIERS
   /////////////////////////////////////////
 
+  /**
+   * @dev Modifier that checks if the token is Active
+   */
   modifier isActive() {
     if (!_active) revert Errors.Paused();
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the token is Frozen
+   */
   modifier isFrozen() {
     if (_frozen) revert Errors.Frozen();
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the sender is the protocol
+   */
   modifier onlyProtocol() {
     if (!IACLManager(_aclManager).isProtocol(_msgSender())) {
       revert Errors.ProtocolAccessDenied();
@@ -46,6 +55,9 @@ abstract contract BaseToken is ERC20Upgradeable {
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the sender has Protocol Emergency Admin ROLE
+   */
   modifier onlyEmergencyAdmin() {
     if (!IACLManager(_aclManager).isEmergencyAdmin(msg.sender)) {
       revert Errors.ProtocolAccessDenied();
@@ -53,6 +65,9 @@ abstract contract BaseToken is ERC20Upgradeable {
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the sender has Protocol UToken Admin ROLE
+   */
   modifier onlyAdmin() {
     if (!IACLManager(_aclManager).isUTokenAdmin(_msgSender())) {
       revert Errors.UTokenAccessDenied();
@@ -60,18 +75,11 @@ abstract contract BaseToken is ERC20Upgradeable {
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the sender is the uTokenVault
+   */
   modifier onlyUTokenVault() {
     if (_uTokenVault != _msgSender()) revert Errors.UTokenAccessDenied();
-    _;
-  }
-
-  /**
-   * @dev Modifier that checks if the sender has Emergency ROLE
-   */
-  modifier onlyEmergency() {
-    if (!IACLManager(_aclManager).isEmergencyAdmin(_msgSender())) {
-      revert Errors.EmergencyAccessDenied();
-    }
     _;
   }
 
@@ -98,14 +106,25 @@ abstract contract BaseToken is ERC20Upgradeable {
   // PUBLIC
   ////////////////////////////////////////////////////7
 
+  /**
+   * @dev Update to active the token state
+   * @param active boolean
+   */
   function setActive(bool active) external onlyEmergencyAdmin {
     _active = active;
   }
 
+  /**
+   * @dev Update to frozen the token state
+   * @param frozen boolean
+   */
   function setFrozen(bool frozen) external onlyEmergencyAdmin {
     _frozen = frozen;
   }
 
+  /**
+   * @dev Return the number of decimals of the token
+   */
   function decimals() public view virtual override returns (uint8) {
     return _decimals;
   }

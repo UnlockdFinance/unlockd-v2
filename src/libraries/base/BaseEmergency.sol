@@ -15,7 +15,9 @@ contract BaseEmergency is IEmergency {
   using SafeERC20 for IERC20;
 
   address immutable _aclManager;
-
+  /**
+   * @dev Modifier that checks if the sender has Protocol Emergency Admin ROLE
+   */
   modifier onlyEmergencyAdmin() {
     if (!IACLManager(_aclManager).isEmergencyAdmin(msg.sender)) {
       revert Errors.ProtocolAccessDenied();
@@ -28,11 +30,19 @@ contract BaseEmergency is IEmergency {
     _aclManager = aclManager;
   }
 
+  /**
+   * @dev Execute emegency native withdraw, only executable by the emergency admin
+   * @param _to address to send the amount
+   */
   function emergencyWithdraw(address payable _to) external onlyEmergencyAdmin {
     (bool sent, ) = _to.call{value: address(this).balance}('');
     if (sent == false) revert Errors.UnsuccessfulExecution();
   }
 
+  /**
+   * @dev Execute emegency ERC20 withdraw, only executable by the emergency admin
+   * @param _to address to send the amount
+   */
   function emergencyWithdrawERC20(address _asset, address _to) external onlyEmergencyAdmin {
     IERC20(_asset).safeTransfer(_to, IERC20(_asset).balanceOf(address(this)));
   }

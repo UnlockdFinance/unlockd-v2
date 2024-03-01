@@ -441,7 +441,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
   /**
    * @notice Checks authorization for UUPS upgrades
-   * @dev Only ACL manager is allowed to upgrade
+   * @dev Only UTokenVault is allowed to upgrade
    */
   function _authorizeUpgrade(address) internal override onlyAdmin {}
 }

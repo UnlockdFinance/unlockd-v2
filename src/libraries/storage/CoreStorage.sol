@@ -39,7 +39,7 @@ contract CoreStorage {
   address internal _signer;
   // UTOKEN Vault
   address internal _uTokenVault;
-
+  /// @dev contract that
   address internal _safeERC721;
   /////////////////////////////////////////
   //  Signature Logic

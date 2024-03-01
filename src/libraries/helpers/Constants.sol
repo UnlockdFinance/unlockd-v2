@@ -5,28 +5,28 @@ library Constants {
   ////////////////////////////////////////////
   // Reentrancy Guard for modules
   ////////////////////////////////////////////
-  uint256 internal constant REENTRANCYLOCK__UNLOCKED = 0;
-  uint256 internal constant REENTRANCYLOCK__LOCKED = 2;
+  uint256 internal constant REENTRANCYLOCK__UNLOCKED = 0; // prettier-ignore
+  uint256 internal constant REENTRANCYLOCK__LOCKED   = 2; // prettier-ignore
 
   ////////////////////////////////////////////
   // Modules Configuration
   ////////////////////////////////////////////
 
-  uint256 internal constant MAX_EXTERNAL_SINGLE_PROXY_MODULEID = 499_999;
-  uint256 internal constant MAX_EXTERNAL_MODULEID = 999_999;
+  uint256 internal constant MAX_EXTERNAL_SINGLE_PROXY_MODULEID = 499_999; // prettier-ignore
+  uint256 internal constant MAX_EXTERNAL_MODULEID              = 999_999; // prettier-ignore
 
   ////////////////////////////////////////////
   // List Modules
   ////////////////////////////////////////////
 
   // Public single-proxy modules
-  uint256 internal constant MODULEID__INSTALLER = 1;
-  uint256 internal constant MODULEID__MANAGER = 2;
-  uint256 internal constant MODULEID__ACTION = 3;
-  uint256 internal constant MODULEID__AUCTION = 4;
-  uint256 internal constant MODULEID__MARKET = 5;
-  uint256 internal constant MODULEID__BUYNOW = 6;
-  uint256 internal constant MODULEID__SELLNOW = 7;
+  uint256 internal constant MODULEID__INSTALLER  = 1; // prettier-ignore
+  uint256 internal constant MODULEID__MANAGER    = 2; // prettier-ignore
+  uint256 internal constant MODULEID__ACTION     = 3; // prettier-ignore
+  uint256 internal constant MODULEID__AUCTION    = 4; // prettier-ignore
+  uint256 internal constant MODULEID__MARKET     = 5; // prettier-ignore
+  uint256 internal constant MODULEID__BUYNOW     = 6; // prettier-ignore
+  uint256 internal constant MODULEID__SELLNOW    = 7; // prettier-ignore
 
   ////////////////////////////////////////////
   // RESERVE STATE

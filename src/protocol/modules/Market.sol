@@ -102,6 +102,12 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    *        - the loan struct need to be once the nft is not anymore inside of the original loan.
    *        - assetPrice and assetLtv need to be the values only of this asset where we want to interact
    * @param sig validation of the signature
+   *  struct EIP712Signature {
+   *    uint8 v;
+   *    bytes32 r;
+   *    bytes32 s;
+   *    uint256 deadline;
+   *  }
    */
   function create(
     address underlyingAsset,
@@ -297,6 +303,12 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    * @param amountOfDebt specified amount to create as a debt considering the asset buyed as a collateral
    * @param signMarket struct with information of the loan and prices
    * @param sig validation of this struct
+   *  struct EIP712Signature {
+   *    uint8 v;
+   *    bytes32 r;
+   *    bytes32 s;
+   *    uint256 deadline;
+   *  }
    * */
   function bid(
     bytes32 orderId,
@@ -437,6 +449,12 @@ contract Market is BaseCoreModule, IMarketModule, MarketSign {
    * @param orderId identifier of the order
    * @param signMarket struct with information of the loan and prices
    * @param sig validation of this struct
+   *  struct EIP712Signature {
+   *    uint8 v;
+   *    bytes32 r;
+   *    bytes32 s;
+   *    uint256 deadline;
+   *  }
    * */
   function claim(
     bool claimOnUWallet,

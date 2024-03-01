@@ -8,24 +8,6 @@ import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 
-/*
-
-+--------------------- +
-|    Asset:      WETH  |
-|    Uoptimal:   90%   |
-|    R0:         0%    |
-|    Rslope1:    28%   |
-|    Rslope2:    80%   |
-+ -------------------- +
-|    Asset:      USDC  |
-|    Uoptimal:   90%   |
-|    R0:         0%    |
-|    Rslope1:    6%    |
-|    Rslope2:    60%   |
-+ -------------------- +
-
-*/
-
 /**
 
  * @title InterestRate contract

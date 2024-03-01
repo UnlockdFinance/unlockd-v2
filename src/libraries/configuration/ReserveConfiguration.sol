@@ -26,7 +26,7 @@ library ReserveConfiguration {
   /// @dev For the RESERVE_FACTOR, the start bit is 0 (up to 15), hence no bitshifting is needed
 
   uint256 internal constant BORROW_CAP_START_BIT_POSITION     = 16; // prettier-ignore
-  uint256 internal constant DEPOSIT_CAP_START_BIT_POSITION     = 52; // prettier-ignore
+  uint256 internal constant DEPOSIT_CAP_START_BIT_POSITION    = 52; // prettier-ignore
   uint256 internal constant MIN_CAP_START_BIT_POSITION        = 88; // prettier-ignore
 
   uint256 internal constant DECIMALS_START_BIT_POSITION       = 124; // prettier-ignore
@@ -35,17 +35,22 @@ library ReserveConfiguration {
   uint256 internal constant IS_FROZEN_START_BIT_POSITION      = 133; // prettier-ignore
   uint256 internal constant IS_PAUSED_START_BIT_POSITION      = 136; // prettier-ignore
 
-  uint256 internal constant RESERVE_TYPE_START_BIT_POSITION = 140; // prettier-ignore
+  uint256 internal constant RESERVE_TYPE_START_BIT_POSITION   = 140; // prettier-ignore
 
   ///////////////////////////////////////
   // VALIDATIONS
 
-  uint256 internal constant MAX_VALID_DECIMALS = 255;
-  uint256 internal constant MAX_VALID_RESERVE_FACTOR = 65535;
-  uint256 internal constant MAX_VALID_BORROW_CAP = 68719476735;
-  uint256 internal constant MAX_VALID_DEPOSIT_CAP = 68719476735;
-  uint256 internal constant MAX_VALID_MIN_CAP = 68719476735;
+  uint256 internal constant MAX_VALID_DECIMALS                = 255; // prettier-ignore
+  uint256 internal constant MAX_VALID_RESERVE_FACTOR          = 65535; // prettier-ignore
+  uint256 internal constant MAX_VALID_BORROW_CAP              = 68719476735; // prettier-ignore
+  uint256 internal constant MAX_VALID_DEPOSIT_CAP             = 68719476735; // prettier-ignore
+  uint256 internal constant MAX_VALID_MIN_CAP                 = 68719476735; // prettier-ignore
 
+  /**
+   * @notice Sets reserve factor
+   * @param self The reserve configuration
+   * @param reserveFactor value reserve factor
+   */
   function setReserveFactor(
     DataTypes.ReserveConfigurationMap memory self,
     uint256 reserveFactor
@@ -54,6 +59,11 @@ library ReserveConfiguration {
     self.data = (self.data & RESERVE_FACTOR_MASK) | reserveFactor;
   }
 
+  /**
+   * @notice Gets reserve factor
+   * @param self The reserve configuration
+   * @return The borrow cap
+   */
   function getReserveFactor(
     DataTypes.ReserveConfigurationMap memory self
   ) internal pure returns (uint256) {

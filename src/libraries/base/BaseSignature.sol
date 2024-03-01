@@ -24,10 +24,19 @@ abstract contract BaseSignature is EIP712, CoreStorage {
     // NOTHING TO DO
   }
 
+  /**
+   * @dev Generates the domain separator
+   */
   function DOMAIN_SEPARATOR() external view returns (bytes32) {
     return _domainSeparatorV4();
   }
 
+  /**
+   * @dev Validates that the signed message is signed by the expected Address
+   * @param digest message signature
+   * @param expectedAddress expected address to check
+   * @param deadline expired time of the message
+   */
   function _validateRecoveredAddress(
     bytes32 digest,
     address expectedAddress,
@@ -46,6 +55,11 @@ abstract contract BaseSignature is EIP712, CoreStorage {
     return true;
   }
 
+  /**
+   * @dev Return the address of the signature
+   * @param digest message signature
+   * @param sig struct with the signed message
+   */
   function _getAddressRecover(
     bytes32 digest,
     DataTypes.EIP712Signature memory sig
@@ -53,10 +67,18 @@ abstract contract BaseSignature is EIP712, CoreStorage {
     return digest.recover(sig.v, sig.r, sig.s);
   }
 
+  /**
+   * @dev Hash with typed data
+   * @param structHash struct hash
+   */
   function _hashTypedData(bytes32 structHash) internal view returns (bytes32) {
     return _hashTypedDataV4(structHash);
   }
 
+  /**
+   * @dev Return the nonce
+   * @param sender user to return the nonce
+   */
   function getNonce(address sender) external view returns (uint256) {
     return _signNonce[sender];
   }

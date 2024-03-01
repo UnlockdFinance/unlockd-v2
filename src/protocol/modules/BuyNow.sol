@@ -33,7 +33,7 @@ contract BuyNow is BaseCoreModule, BuyNowSign, IBuyNowModule {
   }
 
   /**
-   *  @dev WARNING : Get the calculation without validation
+   *  @dev Get the calculation
    *  @param signBuyMarket struct with the information needed about the asset to realize the buy
    *
    */
