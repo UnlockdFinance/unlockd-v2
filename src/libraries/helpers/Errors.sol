@@ -156,6 +156,20 @@ library Errors {
   error BorrorRateOverflow();
   error BorrowIndexOverflow();
 
+  ///////////////////////////////////////////
+  ///   WRAPPERS
+  ///////////////////////////////////////////
+  
+  error TransferNotSupported();
+  error ApproveNotSupported();
+  error SetApprovalForAllNotSupported();
+  error StreamERC20NotSupported();
+  error CallerNotNFTOwner();
+  error StreamCancelable();
+  error StreamNotTransferable();
+  error BurnerNotApproved();
+  error ERC721ReceiverNotSupported();
+
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
       revert ZeroAddress();
