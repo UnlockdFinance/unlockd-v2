@@ -443,7 +443,6 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       revert Errors.InvalidLoanId();
     }
     bytes32 offerLoanId = order.offer.loanId;
-
     DataTypes.Loan storage loan = _loans[offerLoanId];
 
     // The aution need to be ended
@@ -469,7 +468,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
         revert Errors.ProtocolOwnerZeroAddress();
       }
       // Block the asset
-      IProtocolOwner(protocolOwnerBuyer).setLoanId(assetId, loan.loanId);
+      IProtocolOwner(protocolOwnerBuyer).setLoanId(assetId, order.bid.loanId);
       // Update the loan
       _loans[order.bid.loanId].totalAssets = 1;
       // Activate the loan from the bidder

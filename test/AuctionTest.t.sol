@@ -446,10 +446,6 @@ contract AuctionTest is Setup {
       (uint256 totalAmount, uint256 totalDebt, uint256 bidderBonus) = Auction(_auction)
         .getAmountToReedem(loanId, assets);
 
-      console.log('totaAmount', totalAmount);
-      console.log('totalDebt', totalDebt);
-      console.log('bidderBonus', bidderBonus);
-
       assertEq(totalDebt, 0.5 ether);
       assertEq(totalAmount, 1.0125 ether);
       assertEq(bidderBonus, 0.0125 ether);
@@ -528,7 +524,27 @@ contract AuctionTest is Setup {
     bytes32 loanId = test_auction_bid_liquidation_auction();
     Vm.Log[] memory entries = vm.getRecordedLogs();
     bytes32 orderId = bytes32(entries[entries.length - 1].topics[2]);
+    DataTypes.Order memory order = Auction(_auction).getOrderAuction(orderId);
 
+    // We check that the owner of the ASSET is the LOAN owner
+    {
+      // Check that these nfts are locked
+      IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+        .getOwnerWalletAt(_actor, 0);
+      // Get the loan from the winner bidder
+      DataTypes.Loan memory loan = Action(_action).getLoan(loanId);
+
+      assertEq(_actor, loan.owner);
+      assertEq(
+        ProtocolOwner(wallet.protocolOwner).isAssetLocked(AssetLogic.assetId(_nft, 0)),
+        true
+      );
+      assertEq(
+        ProtocolOwner(wallet.protocolOwner).getLoanId(AssetLogic.assetId(_nft, 0)),
+        loan.loanId
+      );
+      assertEq(IERC721(_nft).ownerOf(0), wallet.wallet);
+    }
     // END AUCTION
     vm.warp(block.timestamp + 3000);
     writeTokenBalance(_actor, _WETH, 2 ether);
@@ -554,6 +570,26 @@ contract AuctionTest is Setup {
         sig
       );
     }
+
+    // We check the new owner
+    {
+      // Check that these nfts are locked
+      IDelegationWalletRegistry.Wallet memory wallet = DelegationWalletRegistry(_walletRegistry)
+        .getOwnerWalletAt(_actorTwo, 0);
+      // Get the loan from the winner bidder
+      DataTypes.Loan memory loan = Action(_action).getLoan(order.bid.loanId);
+
+      assertEq(_actorTwo, loan.owner);
+      assertEq(
+        ProtocolOwner(wallet.protocolOwner).isAssetLocked(AssetLogic.assetId(_nft, 0)),
+        true
+      );
+      assertEq(
+        ProtocolOwner(wallet.protocolOwner).getLoanId(AssetLogic.assetId(_nft, 0)),
+        loan.loanId
+      );
+      assertEq(IERC721(_nft).ownerOf(0), wallet.wallet);
+    }
   }
 
   function test_auction_finalize_liquidation_auction_error_LoanNotUpdated() public {
@@ -567,6 +603,7 @@ contract AuctionTest is Setup {
     bytes32[] memory assets = new bytes32[](2);
     assets[0] = AssetLogic.assetId(_nft, 0);
     assets[1] = AssetLogic.assetId(_nft, 1);
+
     {
       writeTokenBalance(_actor, _WETH, 2 ether);
       (

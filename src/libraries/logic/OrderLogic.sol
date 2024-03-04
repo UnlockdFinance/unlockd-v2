@@ -43,7 +43,7 @@ library OrderLogic {
 
   /**
    * @dev creates a new order
-   * @param order
+   * @param order storage of the order
    * @param params struct with params
    *  struct ParamsCreateOrder {
    *    Constants.OrderType orderType;

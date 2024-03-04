@@ -137,7 +137,7 @@ library GenericLogic {
    * @dev Get the wallet adderess of the abstract wallet
    * @param walletRegistry address of the wallet registry
    * @param owner Owner of the wallet
-   * @return address wallet
+   * @return walletAddress wallet
    */
   function getMainWalletAddress(
     address walletRegistry,
@@ -152,7 +152,7 @@ library GenericLogic {
    * @dev Get the owner adderess of the abstract wallet
    * @param walletRegistry address of the wallet registry
    * @param owner Owner of the wallet
-   * @return address owner
+   * @return walletOwner owner
    */
   function getMainWalletOwner(
     address walletRegistry,
@@ -167,7 +167,7 @@ library GenericLogic {
    * @dev Get the protocol owner adderess of the abstract wallet
    * @param walletRegistry address of the wallet registry
    * @param owner Owner of the wallet
-   * @return address protocol owner
+   * @return walletProtocolOwner protocol owner
    */
   function getMainWalletProtocolOwner(
     address walletRegistry,
