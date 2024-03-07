@@ -38,7 +38,7 @@ contract ReservoirAdapter is BaseEmergency, IMarketAdapter {
       params.collection,
       params.tokenId,
       params.underlyingAsset,
-      params.marketPrice,
+      0,
       address(this),
       params.loanId
     );

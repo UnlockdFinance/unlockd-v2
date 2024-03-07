@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.19;
 
-import {ISablierV2LockupLinear} from '../../interfaces/wrappers/ISablierV2LockupLinear.sol';
-import {IUSablierLockupLinear} from '../../interfaces/wrappers/IUSablierLockupLinear.sol';
 import {BaseERC1155Wrapper, Errors} from '../../libraries/base/BaseERC1155Wrapper.sol';
+import {IERC11554KController} from '../../interfaces/wrappers/IERC11554KController.sol';
+import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
+
+import {IERC11554K} from '../../interfaces/wrappers/IERC11554K.sol';
 
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 
@@ -11,20 +13,26 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
  * @title U4K - ERC721 wrapper representing a ERC1155 4K
  * @dev Implements a wrapper for the ERC1155 assets from 4K to ERC721
  **/
-contract U4K is BaseERC1155Wrapper, UUPSUpgradeable {
+contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
+  IERC11554KController internal _controller;
+
+  error CollectionDisabled();
+
   /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
   /**
-   * @dev Initializes the contract with Sablier, WETH, and USDC addresses.=
+   * @dev Initializes the contract with 4K Controller
    */
+
   function initialize(
     string memory name,
     string memory symbol,
-    address aclManager
+    address aclManager,
+    address controller
   ) external initializer {
     __BaseERC1155Wrapper_init(name, symbol, aclManager);
-
+    _controller = IERC11554KController(controller);
     emit Initialized(name, symbol);
   }
 
@@ -38,6 +46,22 @@ contract U4K is BaseERC1155Wrapper, UUPSUpgradeable {
   }
 
   /*//////////////////////////////////////////////////////////////
+                            CUSTOM
+    //////////////////////////////////////////////////////////////*/
+
+  function wrappedMaxAmount() external pure returns (uint256) {
+    return AMOUNT;
+  }
+
+  function collection() external view returns (address) {
+    return address(_erc1155);
+  }
+
+  function wrappedTokenId(uint256 tokenId) external view returns (uint256) {
+    return _tokenIds[tokenId];
+  }
+
+  /*//////////////////////////////////////////////////////////////
                                 ERC721
     //////////////////////////////////////////////////////////////*/
   /**
@@ -47,9 +71,13 @@ contract U4K is BaseERC1155Wrapper, UUPSUpgradeable {
    * @param to The address to mint the token to.
    * @param tokenId The token ID to mint.
    */
-  function mint(address to, uint256 tokenId) public {
+  function mint(address to, uint256 tokenId) external override(BaseERC1155Wrapper, IUTokenWrapper) {
     preMintChecks(to, tokenId);
-    _baseMint(to, tokenId);
+    _baseMint(to, tokenId, true);
+  }
+
+  function burn(address to, uint256 tokenId) external override(BaseERC1155Wrapper, IUTokenWrapper) {
+    _baseBurn(tokenId, to);
   }
 
   /**
@@ -58,13 +86,12 @@ contract U4K is BaseERC1155Wrapper, UUPSUpgradeable {
    *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
    * @param tokenId the token id representing the stream
    */
-  function preMintChecks(address, uint256 tokenId) public view override(BaseERC1155Wrapper) {
-    // ISablierV2LockupLinear sablier = ISablierV2LockupLinear(address(_erc721));
-    // if (!_ERC20Allowed[address(sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
-    // if (sablier.ownerOf(tokenId) != msg.sender && sablier.ownerOf(tokenId) != address(this))
-    //   revert Errors.CallerNotNFTOwner();
-    // if (sablier.isCancelable(tokenId)) revert Errors.StreamCancelable();
-    // if (!sablier.isTransferable(tokenId)) revert Errors.StreamNotTransferable();
+  function preMintChecks(
+    address,
+    uint256 tokenId
+  ) public view override(BaseERC1155Wrapper, IUTokenWrapper) {
+    if (!_controller.isActiveCollection(address(_erc1155))) revert CollectionDisabled();
+    if (_erc1155.balanceOf(msg.sender, tokenId) == 0) revert Errors.CallerNotNFTOwner();
   }
 
   //   /**

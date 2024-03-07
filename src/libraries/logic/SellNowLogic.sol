@@ -75,7 +75,7 @@ library SellNowLogic {
       })
     );
 
-    // Buy the asset
+    // Sell the asset
     IProtocolOwner(params.protocolOwner).delegateOneExecution(
       params.signSellNow.marketAdapter,
       true

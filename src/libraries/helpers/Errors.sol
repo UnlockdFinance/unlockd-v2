@@ -159,7 +159,7 @@ library Errors {
   ///////////////////////////////////////////
   ///   WRAPPERS
   ///////////////////////////////////////////
-  
+
   error TransferNotSupported();
   error ApproveNotSupported();
   error SetApprovalForAllNotSupported();
@@ -169,6 +169,9 @@ library Errors {
   error StreamNotTransferable();
   error BurnerNotApproved();
   error ERC721ReceiverNotSupported();
+
+  error ERC1155AmountNotValid();
+  error ERC1155BatchNotAllowed();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {

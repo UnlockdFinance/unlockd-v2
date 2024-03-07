@@ -11,7 +11,7 @@ interface IERC11554KController {
 
   function originators(address collection, uint256 tokenId) external returns (address);
 
-  function isActiveCollection(address collection) external returns (bool);
+  function isActiveCollection(address collection) external view returns (bool);
 
   function isLinkedCollection(address collection) external returns (bool);
 

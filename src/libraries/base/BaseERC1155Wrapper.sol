@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.19;
 import {IERC1155} from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import {IERC1155MetadataURI} from '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol';
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
 import {IERC1155ReceiverUpgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC1155/IERC1155ReceiverUpgradeable.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
@@ -14,7 +15,12 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
+  uint256 internal constant AMOUNT = 1;
+
   IERC1155 internal immutable _erc1155;
+  uint256 internal _counter = 1;
+  // Old token ID => new Token ID
+  mapping(uint256 => uint256) internal _tokenIds;
   address internal _aclManager;
 
   /*//////////////////////////////////////////////////////////////
@@ -99,11 +105,16 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   /*//////////////////////////////////////////////////////////////
                             ERC721
     //////////////////////////////////////////////////////////////*/
+
+  function mint(address, uint256) external virtual;
+
+  function burn(address, uint256) external virtual;
+
   /**
    * @notice in case the underlying asset needs some specific checks before minting.
    * the params are supposed to be collection:tokenId.
    */
-  function preMintChecks(address, uint256) public virtual {}
+  function preMintChecks(address, uint256) public virtual;
 
   /**
    * @notice Mints a new token.
@@ -111,9 +122,14 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
    * @param to The address to mint the token to.
    * @param tokenId The token ID to mint.
    */
-  function _baseMint(address to, uint256 tokenId) internal {
-    _erc1155.safeTransferFrom(msg.sender, address(this), tokenId, 1, '');
-    _mint(to, tokenId);
+  function _baseMint(address to, uint256 tokenId, bool needTransfer) internal {
+    // We only move one
+    if (needTransfer) {
+      _erc1155.safeTransferFrom(msg.sender, address(this), tokenId, AMOUNT, '');
+    }
+    uint256 newTokenId = _counter++;
+    _tokenIds[newTokenId] = tokenId;
+    _mint(to, newTokenId);
 
     emit Mint(msg.sender, tokenId, to);
   }
@@ -124,17 +140,17 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
    * @param tokenId The token ID to burn.
    */
   function _baseBurn(uint256 tokenId, address to) internal {
-    // if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
-    // _burn(tokenId);
-    // _erc721.safeTransferFrom(address(this), to, tokenId);
-    // emit Burn(msg.sender, tokenId, _erc721.ownerOf(tokenId));
+    if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
+    _burn(tokenId);
+    _erc1155.safeTransferFrom(address(this), to, tokenId, AMOUNT, '');
+    emit Burn(msg.sender, tokenId, to);
   }
 
   /**
    * @dev See {ERC721-tokenURI}.
    */
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    // return _erc721.tokenURI(tokenId);
+    return IERC1155MetadataURI(address(_erc1155)).uri(_tokenIds[tokenId]);
   }
 
   /**
@@ -152,41 +168,34 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   }
 
   /**
-   * @dev See {ERC721-onERC721Received}.
+   * @dev See {ERC1155-onERC1155Received}.
    */
-  //   function onERC721Received(
-  //     address,
-  //     address,
-  //     uint256 tokenId,
-  //     bytes calldata data
-  //   ) external virtual override returns (bytes4) {
-  //     if (msg.sender != address(_erc721)) revert Errors.ERC721ReceiverNotSupported();
-
-  //     address unlockdWallet = abi.decode(data, (address));
-  //     preMintChecks(unlockdWallet, tokenId);
-  //     _mint(unlockdWallet, tokenId);
-
-  //     return this.onERC721Received.selector;
-  //   }
 
   function onERC1155Received(
-    address operator,
-    address from,
+    address,
+    address,
     uint256 tokenId,
     uint256 value,
     bytes calldata data
   ) external returns (bytes4) {
     if (msg.sender != address(_erc1155)) revert Errors.ERC721ReceiverNotSupported();
+    if (value != AMOUNT) revert Errors.ERC1155AmountNotValid();
+
+    address unlockdWallet = abi.decode(data, (address));
+    preMintChecks(unlockdWallet, tokenId);
+    _baseMint(unlockdWallet, tokenId, false);
+
+    return this.onERC1155Received.selector;
   }
 
   function onERC1155BatchReceived(
-    address operator,
-    address from,
-    uint256[] calldata ids,
-    uint256[] calldata values,
-    bytes calldata data
-  ) external returns (bytes4) {
-    revert Errors.SetApprovalForAllNotSupported();
+    address,
+    address,
+    uint256[] calldata,
+    uint256[] calldata,
+    bytes calldata
+  ) external pure returns (bytes4) {
+    revert Errors.ERC1155BatchNotAllowed();
   }
 
   /*//////////////////////////////////////////////////////////////
