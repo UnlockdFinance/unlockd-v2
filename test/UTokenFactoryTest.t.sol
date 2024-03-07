@@ -28,8 +28,14 @@ contract UTokenVaultTest is Setup {
     super.approveAsset(_WETH, address(_uTokenVault), 2 ether);
     _uTokenVault.deposit(_WETH, 1 ether, _actor);
     vm.stopPrank();
-    // Get DATA
-    // DataTypes.MarketBalance memory balance = _uTokenVault.getBalances(_WETH);
+
+    (bool isActive, bool isFrozen, bool isPaused) = _uTokenVault.getFlags(_WETH);
+    assertEq(isActive, true);
+    assertEq(isFrozen, false);
+    assertEq(isPaused, false);
+
+    Constants.ReserveType rType = _uTokenVault.getReserveType(_WETH);
+    assertEq(uint256(Constants.ReserveType.COMMON), uint256(rType));
   }
 
   function test_basic_withdraw() public {
@@ -105,6 +111,7 @@ contract UTokenVaultTest is Setup {
     _uTokenVault.updateReserveStrategy(_WETH, makeAddr('new_strategy'));
     DataTypes.ReserveData memory data = _uTokenVault.getReserveData(_WETH);
     assertEq(data.strategyAddress, makeAddr('new_strategy'));
+
     vm.stopPrank();
   }
 }

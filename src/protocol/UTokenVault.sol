@@ -25,6 +25,11 @@ import {DataTypes} from '../types/DataTypes.sol';
 
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 
+/**
+ * @title Unlock Vault
+ * @notice Provides functions to interact with the assets
+ * @author Unlockd
+ */
 contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmergency, IUTokenVault {
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
@@ -61,6 +66,20 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     _sharesTokenImp = sharesTokenImp;
   }
 
+  /**
+    @notice Create new market
+    @param params IUTokenVault.CreateMarketParams struct to create the reserve
+    struct CreateMarketParams {
+      address interestRateAddress;
+      address strategyAddress;
+      uint16 reserveFactor;
+      address underlyingAsset;
+      Constants.ReserveType reserveType;
+      uint8 decimals;
+      string tokenName;
+      string tokenSymbol;
+    }
+  */
   function createMarket(IUTokenVault.CreateMarketParams calldata params) external onlyAdmin {
     if (reserves[params.underlyingAsset].lastUpdateTimestamp != 0) {
       revert Errors.UnderlyingMarketAlreadyExist();
@@ -85,6 +104,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     );
   }
 
+  /**
+    @notice Withdraw from the vault
+    @param underlyingAsset asset of the vault
+    @param amount amount to deposit
+    @param onBehalfOf address to recive the scaled tokens
+  */
   function deposit(address underlyingAsset, uint256 amount, address onBehalfOf) external {
     Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(onBehalfOf);
@@ -105,6 +130,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit Deposit(msg.sender, onBehalfOf, reserve.underlyingAsset, amount);
   }
 
+  /**
+    @notice Withdraw from the vault
+    @param underlyingAsset asset of the vault
+    @param amount amount to borrow
+    @param to user to send the funds
+  */
   function withdraw(address underlyingAsset, uint256 amount, address to) external {
     Errors.verifyNotZero(underlyingAsset);
     Errors.verifyNotZero(to);
@@ -126,6 +157,14 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit Withdraw(msg.sender, to, reserve.underlyingAsset, amount);
   }
 
+  /**
+    @notice Borrorw
+    @param underlyingAsset asset of the vault
+    @param loanId loan to asign the debt
+    @param amount amount to borrow
+    @param to user to send the funds
+    @param onBehalfOf address to repay on behalf of other user
+  */
   function borrow(
     address underlyingAsset,
     bytes32 loanId,
@@ -174,6 +213,14 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     );
   }
 
+  /**
+    @notice Repay loan 
+    @param underlyingAsset asset of the vault
+    @param loanId loanId to repay
+    @param amount amount to repay, if you send uint.max you repay all
+    @param from original user from the loan
+    @param onBehalfOf address to repay on behalf of other user
+  */
   function repay(
     address underlyingAsset,
     bytes32 loanId,
@@ -222,10 +269,19 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
   // Update
   /////////////////////////////////////////////////////////
 
+  /**
+    @notice Update state of the reserve, recalculate index
+    @param underlyingAsset asset of the vault
+  */
   function updateState(address underlyingAsset) external {
     reserves[underlyingAsset].updateState(balances[underlyingAsset]);
   }
 
+  /**
+    @notice Active reserve 
+    @param underlyingAsset asset of the vault
+    @param isActive active true/false
+  */
   function setActive(address underlyingAsset, bool isActive) external onlyEmergencyAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
     currentConfig.setActive(isActive);
@@ -233,6 +289,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit ActiveVault(underlyingAsset, isActive);
   }
 
+  /**
+    @notice Frozen reserve 
+    @param underlyingAsset asset of the vault
+    @param isFrozen frozen true/false
+  */
   function setFrozen(address underlyingAsset, bool isFrozen) external onlyEmergencyAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
     currentConfig.setFrozen(isFrozen);
@@ -240,6 +301,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit FrozenVault(underlyingAsset, isFrozen);
   }
 
+  /**
+    @notice Pause or Unpause reserve 
+    @param underlyingAsset asset of the vault
+    @param isPaused pause true/false 
+  */
   function setPaused(address underlyingAsset, bool isPaused) external onlyEmergencyAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = reserves[underlyingAsset].config;
     currentConfig.setPaused(isPaused);
@@ -247,6 +313,13 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit PausedVault(underlyingAsset, isPaused);
   }
 
+  /**
+    @notice Update caps 
+    @param underlyingAsset asset of the vault
+    @param minCap min cap
+    @param depositCap max deposit cap
+    @param borrowCap max borrow cap
+  */
   function setCaps(
     address underlyingAsset,
     uint256 minCap,
@@ -262,14 +335,10 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     emit UpdateCaps(underlyingAsset, minCap, depositCap, borrowCap);
   }
 
-  function getCaps(address underlyingAsset) external view returns (uint256, uint256, uint256) {
-    return reserves[underlyingAsset].config.getCaps();
-  }
-
-  function getFlags(address underlyingAsset) external view returns (bool, bool, bool) {
-    return reserves[underlyingAsset].config.getFlags();
-  }
-
+  /**
+    @notice Withdraw and disable current strategy
+    @param underlyingAsset asset of the vault
+  */
   function disableStrategy(address underlyingAsset) external onlyEmergencyAdmin {
     if (reserves[underlyingAsset].strategyAddress != address(0)) {
       reserves[underlyingAsset].strategyWithdrawAll(balances[underlyingAsset]);
@@ -279,6 +348,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     }
   }
 
+  /**
+    @notice Update strategy on the reserve
+    @param underlyingAsset asset of the vault
+    @param newStrategy address of the new strategy
+  */
   function updateReserveStrategy(
     address underlyingAsset,
     address newStrategy
@@ -295,6 +369,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
   // GET
   /////////////////////////////////////////////////////////
 
+  /**
+    @notice Validate if the configuration of the reserve allows to interact
+    @param currentReserveType reserve type
+    @param reserveType asset reserve type
+    @return bool true or false 
+  */
   function validateReserveType(
     Constants.ReserveType currentReserveType,
     Constants.ReserveType reserveType
@@ -310,20 +390,87 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     return false;
   }
 
+  /**
+    @notice Return reserve data from the vault
+    @param underlyingAsset asset of the reserve
+    @return reserveData ReserveData struct from the vault
+    struct ReserveData {
+        ReserveConfigurationMap config;
+        uint128 liquidityIndex;
+        uint128 variableBorrowIndex;
+        uint128 currentLiquidityRate;
+        uint128 currentVariableBorrowRate;
+        address underlyingAsset;
+        address scaledTokenAddress;
+        address interestRateAddress;
+        address strategyAddress;
+        uint40 lastUpdateTimestamp;
+    }
+  */
   function getReserveData(
     address underlyingAsset
   ) external view returns (DataTypes.ReserveData memory) {
     return reserves[underlyingAsset];
   }
 
+  /**
+    @notice Return scaled token address
+    @param underlyingAsset asset of the reserve
+    @return scaledTokenAddress address of the scaled token
+  */
   function getScaledToken(address underlyingAsset) external view returns (address) {
     return reserves[underlyingAsset].scaledTokenAddress;
+  }
+
+  /**
+    @notice Return the current caps of the reserve
+    @param underlyingAsset asset of the reserve
+    @return borrowCap Max amount to borrow
+    @return depositCap Max amount to deposit
+    @return minCap Min amount to deposit and borrow
+     */
+  function getCaps(address underlyingAsset) external view returns (uint256, uint256, uint256) {
+    return reserves[underlyingAsset].config.getCaps();
+  }
+
+  /**
+    @notice Return the current state of the reserve
+    @param underlyingAsset asset of the reserve
+    @return active Reserve is active
+    @return frozen Reserve is frozen
+    @return paused Reserve is paused
+     */
+  function getFlags(address underlyingAsset) external view returns (bool, bool, bool) {
+    return reserves[underlyingAsset].config.getFlags();
+  }
+
+  /**
+    @notice Return decimals configured for the reserve
+    @param underlyingAsset asset of the reserve
+    @return decimals decimals of the reserve
+  */
+  function getDecimals(address underlyingAsset) external view returns (uint256) {
+    return reserves[underlyingAsset].config.getDecimals();
+  }
+
+  /**
+    @notice Return the type of the reserve
+    @param underlyingAsset asset of the reserve
+    @return reserveType reserve type
+  */
+  function getReserveType(address underlyingAsset) external view returns (Constants.ReserveType) {
+    return reserves[underlyingAsset].config.getReserveType();
   }
 
   /////////////////////////////////////////////////////////
   // DEBT
   /////////////////////////////////////////////////////////
 
+  /**
+    @notice Return scaled total debt market
+    @param underlyingAsset asset of the reserve
+    @return total Total amount scaled
+  */
   function getScaledTotalDebtMarket(address underlyingAsset) external view returns (uint256) {
     return
       balances[underlyingAsset].totalBorrowScaled.rayMul(
@@ -331,6 +478,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
       );
   }
 
+  /**
+    @notice Return total debt from user
+    @param underlyingAsset asset of the reserve
+    @param user address from user
+    @return total Total amount 
+  */
   function getTotalDebtFromUser(
     address underlyingAsset,
     address user
@@ -338,6 +491,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     return borrowScaledBalanceByUser[underlyingAsset][user];
   }
 
+  /**
+    @notice Return scaled total debt from user
+    @param underlyingAsset asset of the reserve
+    @param user address from user
+    @return total Total amount scaled
+  */
   function getScaledTotalDebtFromUser(
     address underlyingAsset,
     address user
@@ -348,6 +507,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
       );
   }
 
+  /**
+    @notice Return total debt from loanId
+    @param underlyingAsset asset of the reserve
+    @param loanId loanId assigned 
+    @return total Total amount 
+  */
   function getDebtFromLoanId(
     address underlyingAsset,
     bytes32 loanId
@@ -355,6 +520,12 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     return borrowScaledBalanceByLoanId[underlyingAsset][loanId];
   }
 
+  /**
+    @notice Return scaled total debt from loanId
+    @param underlyingAsset asset of the reserve
+    @param loanId loanId assigned 
+    @return total Total amount scaled
+  */
   function getScaledDebtFromLoanId(
     address underlyingAsset,
     bytes32 loanId
@@ -369,16 +540,40 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
   // SUPPLY
   /////////////////////////////////////////////////////////
 
+  /**
+    @notice Return supply struct
+    @param underlyingAsset asset of the reserve
+    @return marketBalance DataTypes.MarketBalance
+    struct MarketBalance {
+        uint128 totalSupplyScaledNotInvested;   
+        uint128 totalSupplyAssets;
+        uint128 totalSupplyScaled;
+        uint128 totalBorrowScaled;
+        uint40 lastUpdateTimestamp;
+    }
+  */
   function getBalances(
     address underlyingAsset
   ) external view returns (DataTypes.MarketBalance memory) {
     return balances[underlyingAsset];
   }
 
+  /**
+    @notice Return balance from user
+    @param underlyingAsset asset of the reserve
+    @param user address of the user
+    @return balance balance from user 
+  */
   function getBalanceByUser(address underlyingAsset, address user) external view returns (uint256) {
     return ScaledToken(reserves[underlyingAsset].scaledTokenAddress).balanceOf(user);
   }
 
+  /**
+    @notice Return scaled balance from user
+    @param underlyingAsset asset of the reserve
+    @param user address of the user
+    @return balance scaled balance from user 
+  */
   function getScaledBalanceByUser(
     address underlyingAsset,
     address user
@@ -389,6 +584,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
       );
   }
 
+  /**
+    @notice Return total supply of the pool
+    @param underlyingAsset asset of the reserve
+    @return totalSupply scaled total supply
+  */
   function totalSupply(address underlyingAsset) external view returns (uint256) {
     return
       balances[underlyingAsset].totalSupplyScaled.rayMul(
@@ -396,6 +596,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
       );
   }
 
+  /**
+    @notice Available supply including the invested
+    @param underlyingAsset asset of the reserve
+    @return totalSupply supply 
+  */
   function totalAvailableSupply(address underlyingAsset) external view returns (uint256) {
     uint256 totalSupplyAssets = IERC20(underlyingAsset).balanceOf(address(this));
     if (reserves[underlyingAsset].strategyAddress != address(0)) {
@@ -406,6 +611,11 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     return totalSupplyAssets;
   }
 
+  /**
+    @notice Available supply not invested in the estrategy
+    @param underlyingAsset asset of the reserve
+    @return totalSupply supply not invested
+  */
   function totalSupplyNotInvested(address underlyingAsset) external view returns (uint256) {
     // TotalSupplyNotInvested
     uint256 balance = balances[underlyingAsset].totalSupplyScaledNotInvested;

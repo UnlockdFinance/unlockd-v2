@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
  * @title Unlockd Minimal Proxy
  * @author Unlockd
  * @notice Proxy for the modules
- * @dev frork from https://github.com/euler-xyz/euler-contracts/blob/master/contracts/Proxy.sol
+ * @dev fork from https://github.com/euler-xyz/euler-contracts/blob/master/contracts/Proxy.sol
  */
 contract UnlockdMinimalProxy {
   address immutable creator;

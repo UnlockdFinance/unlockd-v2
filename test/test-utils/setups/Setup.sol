@@ -50,7 +50,7 @@ import {MaxApyStrategy} from '../../../src/protocol/strategies/MaxApy.sol';
 import {ReserveOracle, IReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 import {ReservoirAdapter} from '../../../src/protocol/adapters/ReservoirAdapter.sol';
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
-import {DataTypes} from '../../../src/types/DataTypes.sol';
+import {DataTypes, Constants} from '../../../src/types/DataTypes.sol';
 
 import {ACLManager} from '../../../src/libraries/configuration/ACLManager.sol';
 

@@ -131,8 +131,6 @@ interface IUTokenVault {
   //////////////////////////////////
   // GETTERS
 
-  function getScaledToken(address underlyingAsset) external view returns (address);
-
   function validateReserveType(
     Constants.ReserveType currentReserveType,
     Constants.ReserveType reserveType
@@ -141,6 +139,16 @@ interface IUTokenVault {
   function getReserveData(
     address underlyingAsset
   ) external view returns (DataTypes.ReserveData memory);
+
+  function getScaledToken(address underlyingAsset) external view returns (address);
+
+  function getCaps(address underlyingAsset) external view returns (uint256, uint256, uint256);
+
+  function getFlags(address underlyingAsset) external view returns (bool, bool, bool);
+
+  function getDecimals(address underlyingAsset) external view returns (uint256);
+
+  function getReserveType(address underlyingAsset) external view returns (Constants.ReserveType);
 
   function getScaledTotalDebtMarket(address underlyingAsset) external view returns (uint256);
 
@@ -163,8 +171,6 @@ interface IUTokenVault {
     address underlyingAsset,
     bytes32 loanId
   ) external view returns (uint256);
-
-  //////////// GET /////////////////////
 
   function getBalances(
     address underlyingAsset

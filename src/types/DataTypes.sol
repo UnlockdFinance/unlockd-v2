@@ -32,16 +32,8 @@ library DataTypes {
     uint128 currentLiquidityRate;
     //the current variable borrow rate. Expressed in ray
     uint128 currentVariableBorrowRate;
-    // // Reserve type
-    // Constants.ReserveType reserveType;
-    // // Reserve state
-    // Constants.ReserveState reserveState;
-    // // Reserve factor
-    // uint16 reserveFactor;
     // address asset
     address underlyingAsset;
-    // // Decimals of the underlyingAsset
-    // uint8 decimals; 
     // address scaled token
     address scaledTokenAddress;
     //address of the interest rate strategy
