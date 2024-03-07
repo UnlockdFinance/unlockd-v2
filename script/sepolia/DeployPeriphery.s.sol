@@ -66,9 +66,9 @@ contract DeployPeripheryScript is DeployerHelper {
       address uTokenVaultProxy = address(
         new UnlockdUpgradeableProxy(address(uTokenVaultImp), data)
       );
+      addresses.uTokenVault = uTokenVaultProxy;
 
       UTokenVault _uTokenVault = UTokenVault(uTokenVaultProxy);
-      addresses.uTokenVault = uTokenVaultProxy;
 
       // Deploy weth pool
       _uTokenVault.createMarket(
@@ -117,6 +117,13 @@ contract DeployPeripheryScript is DeployerHelper {
       // Activate Pools
       _uTokenVault.setActive(DeployConfig.WETH, true);
       _uTokenVault.setActive(DeployConfig.USDC, true);
+
+      (bool activeWETH, , ) = _uTokenVault.getFlags(DeployConfig.WETH);
+      (bool activeUSDC, , ) = _uTokenVault.getFlags(DeployConfig.USDC);
+      console.log('-----> ', activeWETH);
+      console.log('-----> ', activeUSDC);
+      console.log('VAULT', address(_uTokenVault));
+      if (!activeWETH || !activeUSDC) revert('not updated');
     }
 
     {

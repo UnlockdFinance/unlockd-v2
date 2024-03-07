@@ -26,6 +26,10 @@ contract Manager is BaseCoreModule, IManagerModule {
     emit SetSafeERC721(safeERC721);
   }
 
+  /**
+   * @dev return the address of this helper
+   * @return address return address safeERC721
+   */
   function getSafeERC721() external view returns (address) {
     return _safeERC721;
   }
@@ -54,6 +58,10 @@ contract Manager is BaseCoreModule, IManagerModule {
     emit SetSigner(signer);
   }
 
+  /**
+   * @dev get address of the signer
+   * @return address Address of the signer
+   */
   function getSigner() external view returns (address) {
     return _signer;
   }
@@ -68,6 +76,10 @@ contract Manager is BaseCoreModule, IManagerModule {
     emit SetWalletRegistry(walletRegistry);
   }
 
+  /**
+   * @dev get wallet registry
+   * @return address of the wallet registry
+   */
   function getWalletRegistry() external view returns (address) {
     return _walletRegistry;
   }
@@ -82,6 +94,10 @@ contract Manager is BaseCoreModule, IManagerModule {
     emit SetAllowedControllers(allowedControllers);
   }
 
+  /**
+   * @dev return allowed controller
+   * @return allowedControllers Address of the allowed controller
+   */
   function getAllowedController() external view returns (address) {
     return _allowedControllers;
   }
@@ -100,18 +116,31 @@ contract Manager is BaseCoreModule, IManagerModule {
     emit AllowCollectionReserveType(collection, uint256(reserveType));
   }
 
+  /**
+   * @dev Get the collection reserve type
+   * @param collection Address of the allowed collection
+   * @return reserveType return stuct Constants.ReserveType
+   */
   function getCollectionReserveType(
     address collection
   ) external view returns (Constants.ReserveType) {
     return _allowedCollections[collection];
   }
 
+  /**
+   * @dev Update the UTokenVault from the protocol
+   * @param uTokenVault address of the uTokenVault
+   */
   function setUTokenVault(address uTokenVault) external onlyAdmin {
     if (uTokenVault == address(0)) revert Errors.ZeroAddress();
     _uTokenVault = uTokenVault;
     emit SetUTokenVault(uTokenVault);
   }
 
+  /**
+   * @dev Get the configured UTokenVault on the protocol
+   * @return address return the address of the uTokenVault
+   */
   function getUTokenVault() external view returns (address) {
     return _uTokenVault;
   }
@@ -131,6 +160,10 @@ contract Manager is BaseCoreModule, IManagerModule {
     }
   }
 
+  /**
+   * @dev check is is a avtived Market Adapter
+   * @return isActive 1 active 0 disabled
+   */
   function isMarketAdapterActive(address adapter) external view returns (uint256) {
     return _allowedMarketAdapter[adapter];
   }
