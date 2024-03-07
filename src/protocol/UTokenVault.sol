@@ -23,9 +23,13 @@ import {Constants} from '../libraries/helpers/Constants.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 
-import {console} from 'forge-std/console.sol';
 import {UnlockdUpgradeableProxy} from '../libraries/proxy/UnlockdUpgradeableProxy.sol';
 
+/**
+ * @title Unlock Vault
+ * @notice Provides functions to interact with the assets
+ * @author Unlockd
+ */
 contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmergency, IUTokenVault {
   using ReserveLogic for DataTypes.ReserveData;
   using SafeERC20 for IERC20;
