@@ -298,14 +298,11 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   /**
    * @dev Unlock the Loan, recover the asset only if the auction is still active
-  
-   * @param amount amount of dept to pay
    * @param assets list of assets on the loan
    * @param signAuction struct of the data needed
    * @param sig validation of this struct
    * */
   function redeem(
-    uint256 amount,
     bytes32[] calldata assets,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
@@ -346,9 +343,8 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     ) = _calculateRedeemAmount(loan, assets);
     // We add the current debt
     totalAmount += totalDebt;
-    if (totalAmount != amount) revert Errors.InvalidAmount();
-    if (assetsToRepay == 0) revert Errors.InvalidAssets();
 
+    if (assetsToRepay == 0) revert Errors.InvalidAssets();
     underlyingAsset.safeTransferFrom(msgSender, address(this), totalAmount);
 
     // payments
