@@ -471,9 +471,12 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loans[order.bid.loanId].activate();
     }
 
+    uint256 amount = order.bid.amountOfDebt + order.bid.amountToPay;
+    if (order.countBids > 1) {
+      amount = amount - order.bidderBonus;
+    }
+    amount = amount - order.bidderDebtPayed;
     // The start amount it was payed as a debt
-    uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) -
-      (order.bidderDebtPayed + order.bidderBonus);
 
     loan.underlyingAsset.safeTransfer(order.owner, amount);
     // Remove the order
