@@ -80,6 +80,8 @@ contract MaxApyTest is Setup {
     test_reservoirAdapter_preSell();
 
     IMarketAdapter.SellParams memory sellParams = IMarketAdapter.SellParams({
+      collection: address(_nft),
+      tokenId: 1,
       wallet: _wallet,
       protocolOwner: _protocolOwner,
       underlyingAsset: makeAsset('WETH'),

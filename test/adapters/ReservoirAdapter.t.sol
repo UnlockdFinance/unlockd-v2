@@ -77,6 +77,8 @@ contract ReservoidAdapterTest is Setup {
     test_reservoirAdapter_preSell();
 
     IMarketAdapter.SellParams memory sellParams = IMarketAdapter.SellParams({
+      collection: address(_nft),
+      tokenId: 1,
       wallet: _wallet,
       protocolOwner: _protocolOwner,
       underlyingAsset: makeAsset('WETH'),
@@ -150,7 +152,6 @@ contract ReservoidAdapterTest is Setup {
   }
 
   function test_reservoirAdapter_emergency_withdraw() public {
-    
     hoax(_actor);
     (bool success, ) = payable(_reservoirAdapter).call{value: 1 ether}('');
     require(success, 'FAIL');

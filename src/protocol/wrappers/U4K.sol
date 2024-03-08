@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import {BaseERC1155Wrapper, Errors} from '../../libraries/base/BaseERC1155Wrapper.sol';
 import {IERC11554KController} from '../../interfaces/wrappers/IERC11554KController.sol';
 import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
-
 import {IERC11554K} from '../../interfaces/wrappers/IERC11554K.sol';
 
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
@@ -79,6 +78,8 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
   function burn(address to, uint256 tokenId) external override(BaseERC1155Wrapper, IUTokenWrapper) {
     _baseBurn(tokenId, to);
   }
+
+  
 
   /**
    * @notice Verifies if the stream is cancelable, transferable, if the token matches our uToken

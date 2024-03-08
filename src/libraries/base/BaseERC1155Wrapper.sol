@@ -72,6 +72,16 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the sender has Emergency ROLE
+   */
+  modifier onlyWrapperAdapter() {
+    if (!IACLManager(_aclManager).isWrapperAdapter(_msgSender())) {
+      revert Errors.EmergencyAccessDenied();
+    }
+    _;
+  }
+
   /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
@@ -206,5 +216,11 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
    */
   function _transfer(address, address, uint256) internal pure override {
     revert Errors.TransferNotSupported();
+  }
+
+  function _rawExec(address to, uint256 value, bytes memory data) internal onlyWrapperAdapter {
+    // Ensure the target is a contract
+    (bool sent, ) = payable(to).call{value: value}(data);
+    if (sent == false) revert Errors.UnsuccessfulExecution();
   }
 }

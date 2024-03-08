@@ -43,6 +43,22 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
   }
 
   /*//////////////////////////////////////////////////////////////
+                            CUSTOM
+    //////////////////////////////////////////////////////////////*/
+
+  function wrappedMaxAmount() external pure returns (uint256) {
+    return 1;
+  }
+
+  function collection() external view returns (address) {
+    return address(_erc721);
+  }
+
+  function wrappedTokenId(uint256 tokenId) external pure returns (uint256) {
+    return tokenId;
+  }
+
+  /*//////////////////////////////////////////////////////////////
                             CONTRACT
     //////////////////////////////////////////////////////////////*/
   /**

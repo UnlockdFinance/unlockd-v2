@@ -82,6 +82,8 @@ library SellNowLogic {
     );
     IMarketAdapter(params.signSellNow.marketAdapter).sell(
       IMarketAdapter.SellParams({
+        collection: params.asset.collection,
+        tokenId: params.asset.tokenId,
         wallet: params.wallet,
         protocolOwner: params.protocolOwner,
         underlyingAsset: params.signSellNow.underlyingAsset,
