@@ -60,7 +60,6 @@ interface IAuctionModule {
   function getOrderAuction(bytes32 orderId) external view returns (DataTypes.Order memory);
 
   function redeem(
-    bytes32[] calldata assets,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
   ) external;

@@ -480,7 +480,7 @@ contract AuctionTest is Setup {
       approveAsset(_WETH, address(getUnlockd()), totalAmount); // APPROVE AMOUNT
 
       hoax(_actor);
-      Auction(_auction).redeem(assets, signAuctionRedeem, sigRedeem);
+      Auction(_auction).redeem(signAuctionRedeem, sigRedeem);
     }
   }
 
@@ -511,7 +511,7 @@ contract AuctionTest is Setup {
 
       hoax(_actor);
       vm.expectRevert(Errors.TimestampExpired.selector);
-      Auction(_auction).redeem(assets, signAuction, sig);
+      Auction(_auction).redeem(signAuction, sig);
     }
   }
 
