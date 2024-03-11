@@ -298,15 +298,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
 
   /**
    * @dev Unlock the Loan, recover the asset only if the auction is still active
-  
-   * @param amount amount of dept to pay
-   * @param assets list of assets on the loan
    * @param signAuction struct of the data needed
    * @param sig validation of this struct
    * */
   function redeem(
-    uint256 amount,
-    bytes32[] calldata assets,
     DataTypes.SignAuction calldata signAuction,
     DataTypes.EIP712Signature calldata sig
   ) external {
@@ -328,7 +323,10 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       underlyingAsset
     );
 
-    if (assets.length != signAuction.loan.totalAssets || loan.totalAssets != assets.length) {
+    if (
+      signAuction.assets.length != signAuction.loan.totalAssets ||
+      loan.totalAssets != signAuction.assets.length
+    ) {
       revert Errors.LoanNotUpdated();
     }
 
@@ -343,20 +341,16 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       ,
       uint256 assetsToRepay,
       bytes32[] memory ordersToUpdate
-    ) = _calculateRedeemAmount(loan, assets);
+    ) = _calculateRedeemAmount(loan, signAuction.assets);
     // We add the current debt
     totalAmount += totalDebt;
-    if (totalAmount != amount) revert Errors.InvalidAmount();
-    if (assetsToRepay == 0) revert Errors.InvalidAssets();
 
+    if (assetsToRepay == 0) revert Errors.InvalidAssets();
     underlyingAsset.safeTransferFrom(msgSender, address(this), totalAmount);
 
     // payments
     for (uint256 i; i < ordersToUpdate.length; i++) {
       {
-        // Check if the assets are correct
-        if (assets[i] != signAuction.assets[i]) revert Errors.AssetsMismatch();
-
         if (ordersToUpdate[i] == 0) continue;
         DataTypes.Order memory cacheOrder = _orders[ordersToUpdate[i]];
 
@@ -475,9 +469,12 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
       _loans[order.bid.loanId].activate();
     }
 
+    uint256 amount = order.bid.amountOfDebt + order.bid.amountToPay;
+    if (order.countBids > 1) {
+      amount = amount - order.bidderBonus;
+    }
+    amount = amount - order.bidderDebtPayed;
     // The start amount it was payed as a debt
-    uint256 amount = (order.bid.amountOfDebt + order.bid.amountToPay) -
-      (order.bidderDebtPayed + order.bidderBonus);
 
     loan.underlyingAsset.safeTransfer(order.owner, amount);
     // Remove the order
