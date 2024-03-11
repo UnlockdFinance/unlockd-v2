@@ -13,4 +13,13 @@ interface IUTokenWrapper {
   function collection() external returns (address);
 
   function wrappedTokenId(uint256 tokenId) external returns (uint256);
+
+  function sellOnMarket(
+    address underlyingAsset,
+    uint256 amount,
+    uint256 tokenId,
+    address to,
+    uint256 value,
+    bytes memory data
+  ) external;
 }

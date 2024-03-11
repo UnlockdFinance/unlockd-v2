@@ -4,12 +4,16 @@ pragma solidity 0.8.19;
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
-import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
+
+import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
+
+import {IACLManager} from '../../interfaces/IACLManager.sol';
+import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
+
+import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
@@ -42,35 +46,33 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter {
       params.tokenId,
       params.underlyingAsset,
       0,
-      params.marketApproval,
+      address(this),
       params.loanId
     );
   }
 
   function sell(SellParams memory params) public payable onlyProtocol {
-    IERC721(params.collection).safeTransferFrom(params.wallet, address(this), tokenId, data);
-    // address collection = IUTokenWrapper(params.collection).exec(params.to,
-    //   params.value,
-    //   params.data);
-
-    // 1 - Execute the sell inside of the wrapper
-    // 2 - Burn the asset and withdraw the money
-    // 2.1 - Send the money to the protocol
+    // Move the asset inside of the adapter
+    IERC721(params.collection).safeTransferFrom(params.wallet, address(this), params.tokenId, '');
+    // Execute the sell
+    IUTokenWrapper(params.collection).sellOnMarket(
+      params.underlyingAsset,
+      params.marketPrice,
+      params.tokenId,
+      params.to,
+      params.value,
+      params.data
+    );
+    // We move the funds from the wallet to the sender
+    IERC20(params.underlyingAsset).safeTransferFrom(params.wallet, msg.sender, params.marketPrice);
   }
 
-  function preBuy(PreBuyParams memory params) public payable onlyProtocol {
+  function preBuy(PreBuyParams memory) public payable onlyProtocol {
     // NOTHING TO DO
   }
 
-  function buy(BuyParams memory params) public payable onlyProtocol returns (uint256) {
+  function buy(BuyParams memory) public payable onlyProtocol returns (uint256) {
     return 0;
-  }
-
-  function _getBalance(address currency) internal view returns (uint256) {
-    if (currency == ETH_RESERVOIR) {
-      return address(this).balance;
-    }
-    return IERC20(currency).balanceOf(address(this));
   }
 
   receive() external payable {}

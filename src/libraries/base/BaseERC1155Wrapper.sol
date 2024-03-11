@@ -218,7 +218,20 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     revert Errors.TransferNotSupported();
   }
 
-  function _rawExec(address to, uint256 value, bytes memory data) internal onlyWrapperAdapter {
+  /**
+   * @dev Funtion to execute raw data, only can be execuited by the WrappedAdapter when this one is the owner
+   * @param tokenId token id of the asset
+   * @param to to address of the execution
+   * @param value value of the data execution
+   * @param data data in bytes for the execution
+   */
+  function _rawExec(
+    uint256 tokenId,
+    address to,
+    uint256 value,
+    bytes memory data
+  ) internal onlyWrapperAdapter {
+    if (ownerOf(tokenId) == address(this)) revert Errors.NotWrapperAdapter();
     // Ensure the target is a contract
     (bool sent, ) = payable(to).call{value: value}(data);
     if (sent == false) revert Errors.UnsuccessfulExecution();

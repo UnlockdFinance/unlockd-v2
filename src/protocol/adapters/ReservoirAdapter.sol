@@ -3,11 +3,14 @@ pragma solidity 0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
+
+import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
+
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
+
+import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 

@@ -172,6 +172,8 @@ library Errors {
 
   error ERC1155AmountNotValid();
   error ERC1155BatchNotAllowed();
+  error NotWrapperAdapter();
+  error SoldForASmallerAmount();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {

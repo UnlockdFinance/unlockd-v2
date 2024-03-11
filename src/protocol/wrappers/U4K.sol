@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.19;
 
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {BaseERC1155Wrapper, Errors} from '../../libraries/base/BaseERC1155Wrapper.sol';
 import {IERC11554KController} from '../../interfaces/wrappers/IERC11554KController.sol';
 import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
@@ -13,6 +15,8 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
  * @dev Implements a wrapper for the ERC1155 assets from 4K to ERC721
  **/
 contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
+  using SafeERC20 for IERC20;
+
   IERC11554KController internal _controller;
 
   error CollectionDisabled();
@@ -79,7 +83,22 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
     _baseBurn(tokenId, to);
   }
 
-  
+  function sellOnMarket(
+    address underlyingAsset,
+    uint256 amount,
+    uint256 tokenId,
+    address to,
+    uint256 value,
+    bytes memory data
+  ) external {
+    _rawExec(tokenId, to, value, data);
+    if (amount > 0) {
+      uint256 currentBalance = IERC20(underlyingAsset).balanceOf(address(this));
+      if (currentBalance < amount) revert Errors.SoldForASmallerAmount();
+      // We transfer all the amount to the wrapper
+      IERC20(underlyingAsset).safeTransfer(ownerOf(tokenId), currentBalance);
+    }
+  }
 
   /**
    * @notice Verifies if the stream is cancelable, transferable, if the token matches our uToken
@@ -94,16 +113,6 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
     if (!_controller.isActiveCollection(address(_erc1155))) revert CollectionDisabled();
     if (_erc1155.balanceOf(msg.sender, tokenId) == 0) revert Errors.CallerNotNFTOwner();
   }
-
-  //   /**
-  //    * @notice Burns a token.
-  //    * @dev Burns an ERC721 token representing a Sablier stream and transfers the underlying asset to its owner.
-  //    * @param to The address to send the NFT to.
-  //    * @param tokenId The token ID to burn.
-  //    */
-  //   function burn(address to, uint256 tokenId) external override {
-  //     _baseBurn(tokenId, to);
-  //   }
 
   /*//////////////////////////////////////////////////////////////
                            UUPSUpgradeable

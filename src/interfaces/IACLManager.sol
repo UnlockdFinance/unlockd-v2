@@ -46,6 +46,12 @@ interface IACLManager is IAccessControl {
   function GOVERNANCE_ADMIN() external view returns (bytes32);
 
   /**
+   * @notice Returns the identifier of the WRAPPER ADAPTER role
+   * @return The id of the PriceUpdater role
+   */
+  function WRAPPER_ADAPTER() external view returns (bytes32);
+
+  /**
    * @notice Set the address of the protocol
    * @dev Is the main address of the protocol.Only can be updated by the ADMIN.
    * @param protocol address of the protocol

@@ -4,11 +4,13 @@ pragma solidity 0.8.19;
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
-import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
-import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
+import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
+
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
+import {IACLManager} from '../../interfaces/IACLManager.sol';
+
+import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
@@ -47,7 +49,7 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter {
   }
 
   function sell(SellParams memory params) public payable onlyProtocol {
-    IERC721(params.collection).safeTransferFrom(params.wallet, address(this), tokenId, data);
+    IERC721(params.collection).safeTransferFrom(params.wallet, address(this), params.tokenId, '');
     // address collection = IUTokenWrapper(params.collection).burn()
     // 1 - UNWRAP THE MONEY FROM SABLIER
     // 2 - We move the funds from the wallet to the sender ( unlockd )
@@ -58,15 +60,8 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter {
     // NOTHING TO DO
   }
 
-  function buy(BuyParams memory params) public payable onlyProtocol returns (uint256) {}
-
- 
-
-  function _getBalance(address currency) internal view returns (uint256) {
-    if (currency == ETH_RESERVOIR) {
-      return address(this).balance;
-    }
-    return IERC20(currency).balanceOf(address(this));
+  function buy(BuyParams memory params) public payable onlyProtocol returns (uint256) {
+    return 0;
   }
 
   receive() external payable {}

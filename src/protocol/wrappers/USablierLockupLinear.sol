@@ -137,6 +137,17 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
     _baseBurn(tokenId, to);
   }
 
+  function sellOnMarket(
+    address underlyingAsset,
+    uint256 amount,
+    uint256 tokenId,
+    address to,
+    uint256 value,
+    bytes memory data
+  ) external {
+    // NOTHING TO DO
+  }
+
   /*//////////////////////////////////////////////////////////////
                            UUPSUpgradeable
     //////////////////////////////////////////////////////////////*/

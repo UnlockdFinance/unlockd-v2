@@ -599,7 +599,7 @@ contract Auction is BaseCoreModule, AuctionSign, IAuctionModule {
     uint256 totalAmount;
 
     address protocolOwner = GenericLogic.getMainWalletProtocolOwner(_walletRegistry, owner);
-    bytes32[] memory ordersIds = new bytes32[](assets.length); // TODO : Aqui esta el problema no todos seran
+    bytes32[] memory ordersIds = new bytes32[](assets.length);
     for (uint256 i; i < assets.length; i++) {
       {
         bytes32 assetId = assets[i];
