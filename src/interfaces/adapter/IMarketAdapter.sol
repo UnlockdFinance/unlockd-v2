@@ -25,6 +25,7 @@ interface IMarketAdapter {
     address protocolOwner;
     address underlyingAsset;
     uint256 marketPrice;
+    address marketApproval;
     address to;
     uint256 value;
     bytes data;

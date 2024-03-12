@@ -88,6 +88,7 @@ library SellNowLogic {
         protocolOwner: params.protocolOwner,
         underlyingAsset: params.signSellNow.underlyingAsset,
         marketPrice: params.signSellNow.marketPrice,
+        marketApproval: params.signSellNow.marketApproval,
         to: params.signSellNow.to,
         value: params.signSellNow.value,
         data: params.signSellNow.data

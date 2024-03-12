@@ -58,6 +58,7 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter {
     IUTokenWrapper(params.collection).sellOnMarket(
       params.underlyingAsset,
       params.marketPrice,
+      params.marketApproval,
       params.tokenId,
       params.to,
       params.value,

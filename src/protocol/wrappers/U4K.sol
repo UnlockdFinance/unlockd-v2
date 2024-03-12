@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import {IERC1155} from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
 import {BaseERC1155Wrapper, Errors} from '../../libraries/base/BaseERC1155Wrapper.sol';
 import {IERC11554KController} from '../../interfaces/wrappers/IERC11554KController.sol';
 import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
@@ -83,15 +84,33 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
     _baseBurn(tokenId, to);
   }
 
+  /**
+   * @notice Sell the asset on the market
+   * @dev this exectuion only can be performed by the wrapper adapter
+   * @param underlyingAsset UnderlyingAsset returned on the sell.
+   * @param amount Amount to transfer once the transaction it was executed.
+   * @param marketAproval The address to mint the token to.
+   * @param tokenId Token id of the asset
+   * @param to Where we are going to send the tx
+   * @param value value in case of ETH
+   * @param data data in bytes to execute the transaction
+   */
   function sellOnMarket(
     address underlyingAsset,
     uint256 amount,
+    address marketAproval,
     uint256 tokenId,
     address to,
     uint256 value,
     bytes memory data
-  ) external {
+  ) external onlyWrapperAdapter {
+    // Set approve for all
+    if (!_erc1155.isApprovedForAll(address(this), marketAproval)) {
+      _erc1155.setApprovalForAll(address(this), marketAproval);
+    }
+    // Execute the sell
     _rawExec(tokenId, to, value, data);
+    // Check the amount we expect
     if (amount > 0) {
       uint256 currentBalance = IERC20(underlyingAsset).balanceOf(address(this));
       if (currentBalance < amount) revert Errors.SoldForASmallerAmount();

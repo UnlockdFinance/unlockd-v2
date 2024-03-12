@@ -16,7 +16,8 @@ interface IUTokenWrapper {
 
   function sellOnMarket(
     address underlyingAsset,
-    uint256 amount,
+    uint256 marketPrice,
+    address marketApproval,
     uint256 tokenId,
     address to,
     uint256 value,

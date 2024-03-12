@@ -86,6 +86,7 @@ contract MaxApyTest is Setup {
       protocolOwner: _protocolOwner,
       underlyingAsset: makeAsset('WETH'),
       marketPrice: 1 ether,
+      marketApproval: address(_market),
       to: address(_market),
       value: 0,
       data: abi.encodeWithSelector(

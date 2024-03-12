@@ -164,20 +164,6 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   }
 
   /**
-   * @dev See {ERC721-approve}.
-   */
-  function approve(address, uint256) public pure override {
-    revert Errors.ApproveNotSupported();
-  }
-
-  /**
-   * @dev See {ERC721-setApprovalForAll}.
-   */
-  function setApprovalForAll(address, bool) public pure override {
-    revert Errors.SetApprovalForAllNotSupported();
-  }
-
-  /**
    * @dev See {ERC1155-onERC1155Received}.
    */
 

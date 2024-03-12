@@ -56,11 +56,11 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter {
     IERC20(params.underlyingAsset).safeTransferFrom(address(this), msg.sender, params.marketPrice);
   }
 
-  function preBuy(PreBuyParams memory params) public payable onlyProtocol {
+  function preBuy(PreBuyParams memory) public payable onlyProtocol {
     // NOTHING TO DO
   }
 
-  function buy(BuyParams memory params) public payable onlyProtocol returns (uint256) {
+  function buy(BuyParams memory) public payable onlyProtocol returns (uint256) {
     return 0;
   }
 
