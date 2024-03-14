@@ -43,9 +43,9 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
   /**
    * @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
    * @dev This constructor sets the Sablier lockup linear address and disables further initializations.
-   * @param fourkAddress The address of the Sablier lockup linear contract,
+   * @param collection_ The address of the Sablier lockup linear contract,
    */
-  constructor(address fourkAddress) BaseERC1155Wrapper(fourkAddress) {
+  constructor(address collection_) BaseERC1155Wrapper(collection_) {
     _disableInitializers();
   }
 
@@ -75,13 +75,13 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
    * @param to The address to mint the token to.
    * @param tokenId The token ID to mint.
    */
-  function mint(address to, uint256 tokenId) external override(BaseERC1155Wrapper, IUTokenWrapper) {
+  function mint(address to, uint256 tokenId) external override {
     preMintChecks(to, tokenId);
     _baseMint(to, tokenId, true);
   }
 
-  function burn(address to, uint256 tokenId) external override(BaseERC1155Wrapper, IUTokenWrapper) {
-    _baseBurn(tokenId, to);
+  function burn(uint256 tokenId) external override {
+    _baseBurn(tokenId, msg.sender);
   }
 
   /**
@@ -131,10 +131,7 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
    *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
    * @param tokenId the token id representing the stream
    */
-  function preMintChecks(
-    address,
-    uint256 tokenId
-  ) public view override(BaseERC1155Wrapper, IUTokenWrapper) {
+  function preMintChecks(address, uint256 tokenId) public view override {
     if (!_controller.isActiveCollection(address(_erc1155))) revert CollectionDisabled();
     if (_erc1155.balanceOf(msg.sender, tokenId) == 0) revert Errors.CallerNotNFTOwner();
   }

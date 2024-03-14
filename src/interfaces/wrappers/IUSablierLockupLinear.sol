@@ -20,13 +20,13 @@ interface IUSablierLockupLinear is IUTokenWrapper {
    */
   function isERC20Allowed(address asset) external view returns (bool);
 
-  /**
-   * @notice Verifies if the stream is cancelable, transferable, if the token matches our uToken
-   *  and if the owner is not the user or this contract.
-   *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
-   * @param tokenId the token id representing the stream
-   */
-  function preMintChecks(address, uint256 tokenId) external view;
+  // /**
+  //  * @notice Verifies if the stream is cancelable, transferable, if the token matches our uToken
+  //  *  and if the owner is not the user or this contract.
+  //  *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
+  //  * @param tokenId the token id representing the stream
+  //  */
+  // function preMintChecks(address, uint256 tokenId) external view;
 
   /*//////////////////////////////////////////////////////////////
                                 ERC721
@@ -39,12 +39,4 @@ interface IUSablierLockupLinear is IUTokenWrapper {
    * @param tokenId The token ID to mint.
    */
   function mint(address to, uint256 tokenId) external;
-
-  /**
-   * @notice Burns a token.
-   * @dev Burns a token, can only be called by the owner or approved address of the token.
-   * @param to The address to burn the token to.
-   * @param tokenId The token ID to burn.
-   */
-  function burn(address to, uint256 tokenId) external;
 }

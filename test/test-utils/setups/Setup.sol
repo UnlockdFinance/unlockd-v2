@@ -49,6 +49,9 @@ import {Market, MarketSign} from '../../../src/protocol/modules/Market.sol';
 import {MaxApyStrategy} from '../../../src/protocol/strategies/MaxApy.sol';
 import {ReserveOracle, IReserveOracle} from '../../../src/libraries/oracles/ReserveOracle.sol';
 import {ReservoirAdapter} from '../../../src/protocol/adapters/ReservoirAdapter.sol';
+import {WrapperAdapter} from '../../../src/protocol/adapters/WrapperAdapter.sol';
+import {SablierAdapter} from '../../../src/protocol/adapters/SablierAdapter.sol';
+
 import {Unlockd} from '../../../src/protocol/Unlockd.sol';
 import {DataTypes, Constants} from '../../../src/types/DataTypes.sol';
 
@@ -199,6 +202,16 @@ contract Setup is Base, ActorsBase, NFTBase {
         0x0000000000000000000000000000000000000000
       )
     );
+
+    _wrapperAdapter = address(
+      new WrapperAdapter(
+        address(_aclManager),
+        config.reservoirRouter,
+        0x0000000000000000000000000000000000000000
+      )
+    );
+    _sablierAdapter = address(new SablierAdapter(address(_aclManager)));
+
     _mockAdapter = address(
       new MockAdapter(
         config.reservoirRouter,
@@ -211,21 +224,22 @@ contract Setup is Base, ActorsBase, NFTBase {
 
     // Configure
     vm.startPrank(_admin);
-
+    // WRAPPER ADAPTER
+    _aclManager.addWrapperAdapter(_wrapperAdapter);
     // Add DAI to the Oracle
-    // https://data.chain.link/ethereum/mainnet/stablecoins/dai-usd
-    Source daiSource = new Source(8, 100006060);
-    // https://data.chain.link/ethereum/mainnet/stablecoins/usdc-usd
-    Source usdcSource = new Source(8, 100000000);
-    // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
-    Source wethSource = new Source(8, 224136576100);
+    // // https://data.chain.link/ethereum/mainnet/stablecoins/dai-usd
+    // Source daiSource = new Source(8, 100006060);
+    // // https://data.chain.link/ethereum/mainnet/stablecoins/usdc-usd
+    // Source usdcSource = new Source(8, 100000000);
+    // // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
+    // Source wethSource = new Source(8, 224136576100);
     // SPECIAL ASSET
-    Source specialSource = new Source(8, 200000000);
+    // Source specialSource = new Source(8, 200000000);
 
-    ReserveOracle(_reserveOracle).addAggregator(makeAsset('WETH'), address(wethSource));
-    ReserveOracle(_reserveOracle).addAggregator(makeAsset('USDC'), address(usdcSource));
-    ReserveOracle(_reserveOracle).addAggregator(makeAsset('DAI'), address(daiSource));
-    ReserveOracle(_reserveOracle).addAggregator(makeAsset('SPECIAL'), address(specialSource));
+    // ReserveOracle(_reserveOracle).addAggregator(makeAsset('WETH'), address(wethSource));
+    // ReserveOracle(_reserveOracle).addAggregator(makeAsset('USDC'), address(usdcSource));
+    // ReserveOracle(_reserveOracle).addAggregator(makeAsset('DAI'), address(daiSource));
+    // ReserveOracle(_reserveOracle).addAggregator(makeAsset('SPECIAL'), address(specialSource));
 
     vm.stopPrank();
   }
@@ -351,9 +365,11 @@ contract Setup is Base, ActorsBase, NFTBase {
 
     _aclManager.setProtocol(address(_unlock));
 
-    address[] memory listMarketAdapters = new address[](2);
+    address[] memory listMarketAdapters = new address[](4);
     listMarketAdapters[0] = _reservoirAdapter;
-    listMarketAdapters[1] = _mockAdapter;
+    listMarketAdapters[1] = _wrapperAdapter;
+    listMarketAdapters[2] = _sablierAdapter;
+    listMarketAdapters[3] = _mockAdapter;
 
     {
       Manager managerImp = new Manager(Constants.MODULEID__MANAGER, 0);

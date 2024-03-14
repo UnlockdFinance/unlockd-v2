@@ -15,11 +15,9 @@ import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
-contract WrapperAdapter is BaseEmergency, IMarketAdapter {
+contract SablierAdapter is BaseEmergency, IMarketAdapter {
   using SafeERC20 for IERC20;
   using Address for address;
-  address private immutable RESERVOIR;
-  address private immutable ETH_RESERVOIR;
 
   ///////////////////////////////////////////////
   // MODIFIERS
@@ -32,10 +30,7 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter {
     _;
   }
 
-  constructor(address aclManager, address reservoir, address eth) BaseEmergency(aclManager) {
-    RESERVOIR = reservoir;
-    ETH_RESERVOIR = eth;
-  }
+  constructor(address aclManager) BaseEmergency(aclManager) {}
 
   function preSell(PreSellParams memory params) public payable onlyProtocol {
     IProtocolOwner(params.protocolOwner).approveSale(

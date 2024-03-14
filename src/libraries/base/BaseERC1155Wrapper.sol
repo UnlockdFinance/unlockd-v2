@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 import {IERC1155} from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
 import {IERC1155MetadataURI} from '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol';
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
+import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
 import {IERC1155ReceiverUpgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC1155/IERC1155ReceiverUpgradeable.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
@@ -115,10 +116,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   /*//////////////////////////////////////////////////////////////
                             ERC721
     //////////////////////////////////////////////////////////////*/
-
-  function mint(address, uint256) external virtual;
-
-  function burn(address, uint256) external virtual;
+  function burn(uint256 tokenId) public virtual;
 
   /**
    * @notice in case the underlying asset needs some specific checks before minting.
@@ -151,8 +149,9 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
    */
   function _baseBurn(uint256 tokenId, address to) internal {
     if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
+    _erc1155.safeTransferFrom(address(this), to, _tokenIds[tokenId], AMOUNT, '');
     _burn(tokenId);
-    _erc1155.safeTransferFrom(address(this), to, tokenId, AMOUNT, '');
+
     emit Burn(msg.sender, tokenId, to);
   }
 
@@ -174,12 +173,11 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     uint256 value,
     bytes calldata data
   ) external returns (bytes4) {
-    if (msg.sender != address(_erc1155)) revert Errors.ERC721ReceiverNotSupported();
-    if (value != AMOUNT) revert Errors.ERC1155AmountNotValid();
+    // if (value != AMOUNT) revert Errors.ERC1155AmountNotValid();
 
-    address unlockdWallet = abi.decode(data, (address));
-    preMintChecks(unlockdWallet, tokenId);
-    _baseMint(unlockdWallet, tokenId, false);
+    // address unlockdWallet = abi.decode(data, (address));
+    // preMintChecks(unlockdWallet, tokenId);
+    // _baseMint(unlockdWallet, tokenId, false);
 
     return this.onERC1155Received.selector;
   }

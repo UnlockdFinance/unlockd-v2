@@ -115,10 +115,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
    *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
    * @param tokenId the token id representing the stream
    */
-  function preMintChecks(
-    address,
-    uint256 tokenId
-  ) public view override(BaseERC721Wrapper, IUSablierLockupLinear) {
+  function preMintChecks(address, uint256 tokenId) public view override {
     ISablierV2LockupLinear sablier = ISablierV2LockupLinear(address(_erc721));
     if (!_ERC20Allowed[address(sablier.getAsset(tokenId))]) revert Errors.StreamERC20NotSupported();
     if (sablier.ownerOf(tokenId) != msg.sender && sablier.ownerOf(tokenId) != address(this))
@@ -133,8 +130,8 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
    * @param to The address to send the NFT to.
    * @param tokenId The token ID to burn.
    */
-  function burn(address to, uint256 tokenId) external override {
-    _baseBurn(tokenId, to);
+  function burn(uint256 tokenId) external override {
+    _baseBurn(tokenId, msg.sender);
   }
 
   function sellOnMarket(
