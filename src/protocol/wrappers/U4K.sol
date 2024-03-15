@@ -124,6 +124,8 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
     } catch {
       // ON Revert ignore
     }
+    // We burn the asset
+    _burn(tokenId);
   }
 
   /**

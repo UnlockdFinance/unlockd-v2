@@ -82,16 +82,6 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
   /*//////////////////////////////////////////////////////////////
                             SABLIER
     //////////////////////////////////////////////////////////////*/
-  /**
-   * @notice The protocol will call to withdraw from the stream
-   * if HF < 1, and enough funds are available in the stream to make the position green.
-   * Otherwise the protocol will wait for a bidder/redeem or the stream to end.
-   * @param tokenId the token id representing the stream
-   * @param to the address to send the funds to
-   */
-  function withdrawFromStream(uint256 tokenId, address to) external onlyProtocol {
-    ISablierV2LockupLinear(address(_erc721)).withdrawMaxAndTransfer(tokenId, to);
-  }
 
   /*//////////////////////////////////////////////////////////////
                                 ERC721
@@ -129,6 +119,7 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
    * @param tokenId The token ID to burn.
    */
   function burn(uint256 tokenId) external {
+    ISablierV2LockupLinear(address(_erc721)).withdrawMaxAndTransfer(tokenId, amountTo);
     _baseBurn(tokenId, msg.sender);
   }
 
@@ -143,6 +134,8 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
     address amountTo
   ) external {
     // NOTHING TO DO
+    ISablierV2LockupLinear(address(_erc721)).withdrawMaxAndTransfer(tokenId, amountTo);
+    _burn(tokenId);
   }
 
   /*//////////////////////////////////////////////////////////////

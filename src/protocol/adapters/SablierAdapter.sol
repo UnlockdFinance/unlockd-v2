@@ -45,10 +45,17 @@ contract SablierAdapter is BaseEmergency, IMarketAdapter {
 
   function sell(SellParams memory params) public payable onlyProtocol {
     IERC721(params.collection).safeTransferFrom(params.wallet, address(this), params.tokenId, '');
-    // address collection = IUTokenWrapper(params.collection).burn()
-    // 1 - UNWRAP THE MONEY FROM SABLIER
-    // 2 - We move the funds from the wallet to the sender ( unlockd )
-    IERC20(params.underlyingAsset).safeTransferFrom(address(this), msg.sender, params.marketPrice);
+    // Execute the sell
+    IUTokenWrapper(params.collection).sellOnMarket(
+      params.underlyingAsset,
+      params.marketPrice,
+      params.marketApproval,
+      params.tokenId,
+      params.to,
+      params.value,
+      params.data,
+      msg.sender
+    );
   }
 
   function preBuy(PreBuyParams memory) public payable onlyProtocol {
