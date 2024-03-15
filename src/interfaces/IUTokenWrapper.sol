@@ -19,6 +19,7 @@ interface IUTokenWrapper {
     uint256 tokenId,
     address to,
     uint256 value,
-    bytes memory data
+    bytes memory data,
+    address amountTo
   ) external;
 }

@@ -102,7 +102,8 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
     uint256 tokenId,
     address to,
     uint256 value,
-    bytes memory data
+    bytes memory data,
+    address amountTo
   ) external onlyWrapperAdapter {
     // Set approve for all
     if (!_erc1155.isApprovedForAll(address(this), marketAproval)) {
@@ -115,7 +116,7 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
       uint256 currentBalance = IERC20(underlyingAsset).balanceOf(address(this));
       if (currentBalance < amount) revert Errors.SoldForASmallerAmount();
       // We transfer all the amount to the wrapper
-      IERC20(underlyingAsset).safeTransfer(ownerOf(tokenId), currentBalance);
+      IERC20(underlyingAsset).safeTransfer(amountTo, currentBalance);
     }
 
     try _erc1155.setApprovalForAll(marketAproval, false) {

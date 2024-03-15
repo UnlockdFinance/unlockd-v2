@@ -116,8 +116,6 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   /*//////////////////////////////////////////////////////////////
                             ERC721
     //////////////////////////////////////////////////////////////*/
-  function burn(uint256 tokenId) public virtual;
-
   /**
    * @notice in case the underlying asset needs some specific checks before minting.
    * the params are supposed to be collection:tokenId.
@@ -165,7 +163,6 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   /**
    * @dev See {ERC1155-onERC1155Received}.
    */
-
   function onERC1155Received(
     address,
     address,
@@ -173,12 +170,6 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     uint256 value,
     bytes calldata data
   ) external returns (bytes4) {
-    // if (value != AMOUNT) revert Errors.ERC1155AmountNotValid();
-
-    // address unlockdWallet = abi.decode(data, (address));
-    // preMintChecks(unlockdWallet, tokenId);
-    // _baseMint(unlockdWallet, tokenId, false);
-
     return this.onERC1155Received.selector;
   }
 
@@ -195,12 +186,6 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   /*//////////////////////////////////////////////////////////////
                             INTERNAL
     //////////////////////////////////////////////////////////////*/
-  /**
-   * @dev See {ERC721-_transfer}.
-   */
-  function _transfer(address, address, uint256) internal pure override {
-    revert Errors.TransferNotSupported();
-  }
 
   /**
    * @dev Funtion to execute raw data, only can be execuited by the WrappedAdapter when this one is the owner

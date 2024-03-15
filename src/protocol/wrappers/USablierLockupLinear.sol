@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import {ISablierV2LockupLinear} from '../../interfaces/wrappers/ISablierV2LockupLinear.sol';
 import {IUSablierLockupLinear} from '../../interfaces/wrappers/IUSablierLockupLinear.sol';
 import {BaseERC721Wrapper, Errors} from '../../libraries/base/BaseERC721Wrapper.sol';
-
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
 
 /**
@@ -127,10 +126,9 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
   /**
    * @notice Burns a token.
    * @dev Burns an ERC721 token representing a Sablier stream and transfers the underlying asset to its owner.
-   * @param to The address to send the NFT to.
    * @param tokenId The token ID to burn.
    */
-  function burn(uint256 tokenId) external override {
+  function burn(uint256 tokenId) external {
     _baseBurn(tokenId, msg.sender);
   }
 
@@ -141,7 +139,8 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
     uint256 tokenId,
     address to,
     uint256 value,
-    bytes memory data
+    bytes memory data,
+    address amountTo
   ) external {
     // NOTHING TO DO
   }

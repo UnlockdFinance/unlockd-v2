@@ -11,11 +11,7 @@ import {Errors} from '../helpers/Errors.sol';
  * @title ERC721 Base Wrapper
  * @dev Implements a generic ERC721 wrapper for any NFT that needs to be "managed"
  **/
-abstract contract BaseERC721Wrapper is
-  ERC721Upgradeable,
-  ERC721Burnable,
-  IERC721ReceiverUpgradeable
-{
+abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgradeable {
   /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
@@ -104,8 +100,6 @@ abstract contract BaseERC721Wrapper is
   /*//////////////////////////////////////////////////////////////
                             ERC721
     //////////////////////////////////////////////////////////////*/
-  function burn(uint256 tokenId) public virtual;
-
   /**
    * @notice in case the underlying asset needs some specific checks before minting.
    * the params are supposed to be collection:tokenId.
