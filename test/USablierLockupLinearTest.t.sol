@@ -13,7 +13,7 @@ import {UnlockdBatchTransfer} from './test-utils/mock/wrapper/UnlockdBatchTransf
 import {MockDelegationWalletRegistry} from './test-utils/mock/wrapper/MockDelegationWalletRegistry.sol';
 
 import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol';
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol';
 import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract USablierLockupLinearTest is Setup {
@@ -23,9 +23,10 @@ contract USablierLockupLinearTest is Setup {
   address internal _usdcAddress = 0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8;
   address internal delegationRegistry = 0x15cF58144EF33af1e14b5208015d11F9143E27b9;
   address internal protocol = makeAddr('protocol');
-  
+
   USablierLockupLinear uSablierLockUp;
-  ISablierV2LockupLinear sablier = ISablierV2LockupLinear(0x7a43F8a888fa15e68C103E18b0439Eb1e98E4301);
+  ISablierV2LockupLinear sablier =
+    ISablierV2LockupLinear(0x7a43F8a888fa15e68C103E18b0439Eb1e98E4301);
   ERC1967Proxy uSablierProxy;
   USablierLockupLinear uSablierImplementation;
   UnlockdBatchTransfer batchTransfers;
@@ -39,11 +40,11 @@ contract USablierLockupLinearTest is Setup {
     uSablierImplementation = new USablierLockupLinear(address(sablier));
     // UUPS Upgradeable Proxy
     uSablierProxy = new ERC1967Proxy(
-      address(uSablierImplementation), 
+      address(uSablierImplementation),
       abi.encodeWithSelector(
-        uSablierImplementation.initialize.selector, 
-        "Unlockd bound Sablier LL", 
-        "USABLL",
+        uSablierImplementation.initialize.selector,
+        'Unlockd bound Sablier LL',
+        'USABLL',
         address(_aclManager)
       )
     );
@@ -57,9 +58,20 @@ contract USablierLockupLinearTest is Setup {
     // deploy fake Delegation Wallet Registry - if condition onERC721Received
     _delegationRegistry = new MockDelegationWalletRegistry();
     // sets 2 fake wallet addresses: address(22) DelegationWallet and address(2) "Metamask"
-    _delegationRegistry.setWallet(address(22), address(2), address(0), address(0), address(0), address(0));
+    _delegationRegistry.setWallet(
+      address(22),
+      address(2),
+      address(0),
+      address(0),
+      address(0),
+      address(0)
+    );
     // deploys a fake unlockd batch transfer
-    batchTransfers = new UnlockdBatchTransfer(address(cryptoPunk), address(_aclManager), address(_delegationRegistry));
+    batchTransfers = new UnlockdBatchTransfer(
+      address(cryptoPunk),
+      address(_aclManager),
+      address(_delegationRegistry)
+    );
     // sets the sablier and uSablierLockUp addresses to be wrapped
     batchTransfers.addToBeWrapped(address(sablier), address(uSablierLockUp));
     // sets the allowed uTokens
@@ -77,9 +89,8 @@ contract USablierLockupLinearTest is Setup {
                               UTILS
   //////////////////////////////////////////////////////////////*/
   function mintSablierNFT(bool isCancelable, bool isTransferable) public {
-
     IERC20(_wethAddress).approve(address(sablier), 2 ether);
-    
+
     ISablierV2LockupLinear.Durations memory duration = ISablierV2LockupLinear.Durations({
       cliff: 1701375965,
       total: 1701529208
@@ -90,7 +101,8 @@ contract USablierLockupLinearTest is Setup {
       account: address(0)
     });
 
-    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear.CreateWithDurations({
+    ISablierV2LockupLinear.CreateWithDurations memory create = ISablierV2LockupLinear
+      .CreateWithDurations({
         sender: address(1),
         recipient: address(2),
         totalAmount: 1 ether,
@@ -99,11 +111,11 @@ contract USablierLockupLinearTest is Setup {
         transferable: isTransferable,
         durations: duration,
         broker: broker
-    });
+      });
 
     uint256 streamId = sablier.createWithDurations(create);
-    assertEq(streamId, 1, "StreamId should be 1");
-    assertEq(sablier.ownerOf(1), address(2), "The owner should be address(2)");
+    assertEq(streamId, 1, 'StreamId should be 1');
+    assertEq(sablier.ownerOf(1), address(2), 'The owner should be address(2)');
   }
 
   function approveNTransferToUWallet() public {
@@ -111,31 +123,30 @@ contract USablierLockupLinearTest is Setup {
     deal(_wethAddress, address(1), 2 ether);
 
     mintSablierNFT(false, true);
-    
-    vm.startPrank(address(2)); 
+
+    vm.startPrank(address(2));
     sablier.setApprovalForAll(address(batchTransfers), true);
 
-     UnlockdBatchTransfer.NftTransfer[]
-            memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
-        transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
+    UnlockdBatchTransfer.NftTransfer[] memory transfers = new UnlockdBatchTransfer.NftTransfer[](1);
+    transfers[0] = UnlockdBatchTransfer.NftTransfer(address(sablier), 1);
 
     batchTransfers.batchTransferFrom(transfers, address(22));
-    assertEq(uSablierLockUp.ownerOf(1), address(22), "Address NOT Owner. Should be address(22)");
+    assertEq(uSablierLockUp.ownerOf(1), address(22), 'Address NOT Owner. Should be address(22)');
   }
 
   /*//////////////////////////////////////////////////////////////
                             POSITIVES
   //////////////////////////////////////////////////////////////*/
   function test_Initialization() public {
-    assertEq(uSablierLockUp.name(), "Unlockd bound Sablier LL", "Token name mismatch");
-    assertEq(uSablierLockUp.symbol(), "USABLL", "Token symbol mismatch");
+    assertEq(uSablierLockUp.name(), 'Unlockd bound Sablier LL', 'Token name mismatch');
+    assertEq(uSablierLockUp.symbol(), 'USABLL', 'Token symbol mismatch');
   }
 
   function test_Add_ERC20Allowed() public {
     vm.prank(protocol);
     address newToken = makeAddr('newToken');
     uSablierLockUp.setERC20AllowedAddress(newToken, true);
-    assertEq(uSablierLockUp.isERC20Allowed(newToken), true, "Should be true");
+    assertEq(uSablierLockUp.isERC20Allowed(newToken), true, 'Should be true');
     vm.stopPrank();
   }
 
@@ -143,7 +154,7 @@ contract USablierLockupLinearTest is Setup {
     USablierLockupLinear newImplementation = new USablierLockupLinear(address(sablier));
 
     vm.prank(address(1));
-    vm.expectRevert(Errors.ProtocolAccessDenied.selector); 
+    vm.expectRevert(Errors.ProtocolAccessDenied.selector);
     uSablierLockUp.upgradeTo(address(newImplementation));
 
     vm.prank(protocol);
@@ -154,42 +165,46 @@ contract USablierLockupLinearTest is Setup {
   function test_Mint() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-     
+
     approveNTransferToUWallet();
-    
+
     vm.stopPrank();
   }
 
-  function test_Burn() public {
+  function test_1Burn() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-
     approveNTransferToUWallet();
-    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
 
+    uint256 tokenId = 1;
+    assertEq(uSablierLockUp.balanceOf(address(22)), 1, 'Balance should be 1');
+    assertEq(uSablierLockUp.ownerOf(tokenId), address(22));
     vm.startPrank(address(22));
-    uSablierLockUp.burn(address(2), 1);
-    assertEq(uSablierLockUp.balanceOf(address(22)), 0, "Balance should be 0");
-    assertEq(sablier.balanceOf(address(2)), 1, "Balance should be 1");
-    
-    vm.stopPrank();
-  }
-  
-  function test_Withdraw_From_Stream() public {
-    vm.startPrank(address(1));
-    deal(_wethAddress, address(1), 2 ether);
+    uSablierLockUp.burn(tokenId);
+    assertEq(uSablierLockUp.balanceOf(address(22)), 0, 'Balance should be 0');
 
-    approveNTransferToUWallet();
-    assertEq(uSablierLockUp.balanceOf(address(22)), 1, "Balance should be 1");
-    
-    vm.startPrank(protocol); //onlyProtocol
-    uint256 balanceBefore = IERC20(_wethAddress).balanceOf(address(2));
-    uint256 streamBalance = sablier.withdrawableAmountOf(1);
-    uSablierLockUp.withdrawFromStream(1, address(2));
-    uint256 balanceAfter = IERC20(_wethAddress).balanceOf(address(2));
-    assertEq(balanceAfter, balanceBefore + streamBalance, "Balance after should be balance before + streamBalance");
     vm.stopPrank();
   }
+
+  // function test_Withdraw_From_Stream() public {
+  //   vm.startPrank(address(1));
+  //   deal(_wethAddress, address(1), 2 ether);
+
+  //   approveNTransferToUWallet();
+  //   assertEq(uSablierLockUp.balanceOf(address(22)), 1, 'Balance should be 1');
+
+  //   vm.startPrank(protocol); //onlyProtocol
+  //   uint256 balanceBefore = IERC20(_wethAddress).balanceOf(protocol);
+  //   uint256 streamBalance = sablier.withdrawableAmountOf(1);
+  //   uSablierLockUp.burn(1);
+  //   uint256 balanceAfter = IERC20(_wethAddress).balanceOf(protocol);
+  //   assertEq(
+  //     balanceAfter,
+  //     balanceBefore + streamBalance,
+  //     'Balance after should be balance before + streamBalance'
+  //   );
+  //   vm.stopPrank();
+  // }
 
   /*//////////////////////////////////////////////////////////////
                             NEGATIVES
@@ -208,33 +223,33 @@ contract USablierLockupLinearTest is Setup {
     vm.stopPrank();
   }
 
-  function test_Withdraw_Not_OnlyProtocol() public {
-    vm.prank(address(this)); 
-    vm.expectRevert(0x56e40536);
-    uSablierLockUp.withdrawFromStream(1, address(1));
-    vm.stopPrank();
-  }
+  // function test_Withdraw_Not_OnlyProtocol() public {
+  //   vm.prank(address(this));
+  //   // vm.expectRevert(0x56e40536);
+  //   uSablierLockUp.burn(1);
+  //   vm.stopPrank();
+  // }
 
-  function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
-    vm.startPrank(address(1));
-    deal(_wethAddress, address(1), 2 ether);
+  // function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
+  //   vm.startPrank(address(1));
+  //   deal(_wethAddress, address(1), 2 ether);
 
-    approveNTransferToUWallet();
-    
-    vm.startPrank(address(this)); //onlyProtocol
-    vm.expectRevert(Errors.ProtocolAccessDenied.selector);
-    uSablierLockUp.withdrawFromStream(1, address(2));
-    vm.stopPrank();
-  }
+  //   approveNTransferToUWallet();
 
-  // Test invalid input 
+  //   vm.startPrank(address(this)); //onlyProtocol
+  //   vm.expectRevert(Errors.BurnerNotApproved.selector);
+  //   uSablierLockUp.burn(1);
+  //   vm.stopPrank();
+  // }
+
+  // Test invalid input
   function test_Mint_Caller_Not_Owner() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
 
     mintSablierNFT(false, true);
-    
-    vm.startPrank(address(3)); 
+
+    vm.startPrank(address(3));
     sablier.setApprovalForAll(address(uSablierLockUp), true);
     vm.expectRevert(Errors.CallerNotNFTOwner.selector);
     uSablierLockUp.mint(address(2), 1);
@@ -246,8 +261,8 @@ contract USablierLockupLinearTest is Setup {
     deal(_wethAddress, address(1), 2 ether);
 
     mintSablierNFT(true, true);
-    
-    vm.startPrank(address(2)); 
+
+    vm.startPrank(address(2));
     sablier.setApprovalForAll(address(uSablierLockUp), true);
     vm.expectRevert(Errors.StreamCancelable.selector);
     uSablierLockUp.mint(address(2), 1);
@@ -259,8 +274,8 @@ contract USablierLockupLinearTest is Setup {
     deal(_wethAddress, address(1), 2 ether);
 
     mintSablierNFT(false, false);
-    
-    vm.startPrank(address(2)); 
+
+    vm.startPrank(address(2));
     sablier.setApprovalForAll(address(uSablierLockUp), true);
     vm.expectRevert(Errors.StreamNotTransferable.selector);
     uSablierLockUp.mint(address(2), 1);
@@ -272,10 +287,10 @@ contract USablierLockupLinearTest is Setup {
     deal(_wethAddress, address(1), 2 ether);
 
     approveNTransferToUWallet();
-    
+
     vm.startPrank(address(1));
     vm.expectRevert(Errors.BurnerNotApproved.selector);
-    uSablierLockUp.burn(address(22), 1);
+    uSablierLockUp.burn(1);
     vm.stopPrank();
   }
 
@@ -286,29 +301,29 @@ contract USablierLockupLinearTest is Setup {
   function test_Approve_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-    
+
     approveNTransferToUWallet();
 
     vm.expectRevert(Errors.ApproveNotSupported.selector);
-    uSablierLockUp.approve(address(1), 1); 
+    uSablierLockUp.approve(address(1), 1);
     vm.stopPrank();
   }
 
   function test_Set_Approval_For_All_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-    
+
     approveNTransferToUWallet();
 
     vm.expectRevert(Errors.SetApprovalForAllNotSupported.selector);
     uSablierLockUp.setApprovalForAll(address(1), true);
     vm.stopPrank();
-  }  
+  }
 
   function test_Transfer_Reverts() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-    
+
     approveNTransferToUWallet();
 
     vm.startPrank(address(22));

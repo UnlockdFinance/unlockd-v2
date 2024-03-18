@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.19;
-
+import {IERC1155} from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import {IERC1155MetadataURI} from '@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol';
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
-import {IERC721ReceiverUpgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/IERC721ReceiverUpgradeable.sol';
 import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
+import {IERC1155ReceiverUpgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC1155/IERC1155ReceiverUpgradeable.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
 
 /**
- * @title ERC721 Base Wrapper
- * @dev Implements a generic ERC721 wrapper for any NFT that needs to be "managed"
+ * @title ERC1155 Base Wrapper
+ * @dev Implements a generic ERC1155 wrapper for any NFT that needs to be "managed"
  **/
-abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgradeable {
+abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgradeable {
   /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
-  ERC721Upgradeable internal immutable _erc721;
+  uint256 internal constant AMOUNT = 1;
+
+  IERC1155 internal immutable _erc1155;
+  uint256 internal _counter = 1;
+  // Old token ID => new Token ID
+  mapping(uint256 => uint256) internal _tokenIds;
   address internal _aclManager;
 
   /*//////////////////////////////////////////////////////////////
@@ -67,6 +73,16 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     _;
   }
 
+  /**
+   * @dev Modifier that checks if the sender has Emergency ROLE
+   */
+  modifier onlyWrapperAdapter() {
+    if (!IACLManager(_aclManager).isWrapperAdapter(_msgSender())) {
+      revert Errors.EmergencyAccessDenied();
+    }
+    _;
+  }
+
   /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
@@ -79,7 +95,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    * @param symbol The symbol for the ERC721 token.
    * @param aclManager The address of the ACL (Access Control List) manager contract.
    */
-  function __BaseERC721Wrapper_init(
+  function __BaseERC1155Wrapper_init(
     string memory name,
     string memory symbol,
     address aclManager
@@ -93,7 +109,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    * @param underlyingAsset The address of the underlying asset to be wrapped.
    */
   constructor(address underlyingAsset) {
-    _erc721 = ERC721Upgradeable(underlyingAsset);
+    _erc1155 = IERC1155(underlyingAsset);
     _disableInitializers();
   }
 
@@ -112,9 +128,14 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    * @param to The address to mint the token to.
    * @param tokenId The token ID to mint.
    */
-  function _baseMint(address to, uint256 tokenId) internal {
-    _erc721.safeTransferFrom(msg.sender, address(this), tokenId);
-    _mint(to, tokenId);
+  function _baseMint(address to, uint256 tokenId, bool needTransfer) internal {
+    // We only move one
+    if (needTransfer) {
+      _erc1155.safeTransferFrom(msg.sender, address(this), tokenId, AMOUNT, '');
+    }
+    uint256 newTokenId = _counter++;
+    _tokenIds[newTokenId] = tokenId;
+    _mint(to, newTokenId);
 
     emit Mint(msg.sender, tokenId, to);
   }
@@ -128,8 +149,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    */
   function _baseBurn(uint256 tokenId, address to, bool needTransfer) internal {
     if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
-    if (needTransfer) _erc721.safeTransferFrom(address(this), to, tokenId);
-
+    if (needTransfer) _erc1155.safeTransferFrom(address(this), to, _tokenIds[tokenId], AMOUNT, '');
     _burn(tokenId);
     emit Burn(msg.sender, tokenId, to);
   }
@@ -138,48 +158,70 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    * @dev See {ERC721-tokenURI}.
    */
   function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    return _erc721.tokenURI(tokenId);
+    return IERC1155MetadataURI(address(_erc1155)).uri(_tokenIds[tokenId]);
   }
 
   /**
-   * @dev See {ERC721-approve}.
+   * @dev See {ERC1155-onERC1155Received}.
    */
-  function approve(address, uint256) public pure override {
-    revert Errors.ApproveNotSupported();
-  }
-
-  /**
-   * @dev See {ERC721-setApprovalForAll}.
-   */
-  function setApprovalForAll(address, bool) public pure override {
-    revert Errors.SetApprovalForAllNotSupported();
-  }
-
-  /**
-   * @dev See {ERC721-onERC721Received}.
-   */
-  function onERC721Received(
+  function onERC1155Received(
     address operator,
     address,
     uint256 tokenId,
+    uint256 value,
     bytes calldata data
-  ) external virtual override returns (bytes4) {
+  ) external returns (bytes4) {
     if (operator != address(this)) {
+      if (value != 1) revert Errors.ERC1155AmountNotValid();
       address newWallet = abi.decode(data, (address));
       if (newWallet == address(0)) newWallet = operator;
       preMintChecks(newWallet, tokenId);
-      _mint(newWallet, tokenId);
+      _baseMint(newWallet, tokenId, false);
     }
-    return this.onERC721Received.selector;
+
+    return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
+  }
+
+  function onERC1155BatchReceived(
+    address operator,
+    address,
+    uint256[] calldata tokensIds,
+    uint256[] calldata values,
+    bytes calldata data
+  ) external returns (bytes4) {
+    if (operator != address(this)) {
+      address newWallet = abi.decode(data, (address));
+      for (uint256 i; i < tokensIds.length; ) {
+        uint256 tokenId = tokensIds[i];
+        uint256 value = values[i];
+        if (value != 1) revert Errors.ERC1155AmountNotValid();
+        preMintChecks(newWallet, tokenId);
+        _baseMint(newWallet, tokenId, false);
+      }
+    }
+    return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
   }
 
   /*//////////////////////////////////////////////////////////////
                             INTERNAL
     //////////////////////////////////////////////////////////////*/
+
   /**
-   * @dev See {ERC721-_transfer}.
+   * @dev Funtion to execute raw data, only can be execuited by the WrappedAdapter when this one is the owner
+   * @param tokenId token id of the asset
+   * @param to to address of the execution
+   * @param value value of the data execution
+   * @param data data in bytes for the execution
    */
-  function _transfer(address, address, uint256) internal pure override {
-    revert Errors.TransferNotSupported();
+  function _rawExec(
+    uint256 tokenId,
+    address to,
+    uint256 value,
+    bytes memory data
+  ) internal onlyWrapperAdapter {
+    if (ownerOf(tokenId) == address(this)) revert Errors.NotWrapperAdapter();
+    // Ensure the target is a contract
+    (bool sent, ) = payable(to).call{value: value}(data);
+    if (sent == false) revert Errors.UnsuccessfulExecution();
   }
 }

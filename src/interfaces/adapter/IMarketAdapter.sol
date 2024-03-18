@@ -19,10 +19,13 @@ interface IMarketAdapter {
   }
 
   struct SellParams {
+    address collection;
+    uint256 tokenId;
     address wallet;
     address protocolOwner;
     address underlyingAsset;
     uint256 marketPrice;
+    address marketApproval;
     address to;
     uint256 value;
     bytes data;

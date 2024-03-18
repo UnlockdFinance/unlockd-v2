@@ -22,8 +22,6 @@ import {SellNowSign} from '../../libraries/signatures/SellNowSign.sol';
 import {ISellNowModule} from '../../interfaces/modules/ISellNowModule.sol';
 import {IUTokenVault} from '../../interfaces/IUTokenVault.sol';
 
-// import {IUToken} from '../../interfaces/tokens/IUToken.sol';
-
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {Constants} from '../../libraries/helpers/Constants.sol';
 
@@ -54,17 +52,14 @@ contract SellNow is BaseCoreModule, SellNowSign, ISellNowModule {
    *  struct SignSellNow {
    *     SignLoanConfig loan;
    *     bytes32 assetId;
-   *     // approval
    *     address marketAdapter;
    *     address marketApproval;
    *     uint256 marketPrice;
    *     address underlyingAsset;
-   *     // sell data
    *     address from;
    *     address to;
    *     bytes data;
    *     uint256 value;
-   *     // signature
    *     uint256 nonce;
    *     uint256 deadline;
    *  }

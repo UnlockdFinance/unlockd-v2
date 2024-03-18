@@ -46,6 +46,8 @@ contract Base is Test {
 
   // Adapter
   address internal _reservoirAdapter;
+  address internal _wrapperAdapter;
+  address internal _sablierAdapter;
   address internal _mockAdapter;
   address internal _maxApyStrategy;
   address internal _maxApy;

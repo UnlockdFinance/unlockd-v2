@@ -8,6 +8,7 @@ import {Errors} from '../helpers/Errors.sol';
  * @title ReserveConfiguration library
  * @author Unlockd
  * @notice Implements the bitmap logic to handle the reserve configuration
+ * @dev based on Aave ReserveConfiguration https://github.com/aave/aave-v3-core/blob/master/contracts/protocol/libraries/configuration/ReserveConfiguration.sol
  */
 library ReserveConfiguration {
   // @dev each F is x4

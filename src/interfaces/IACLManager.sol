@@ -46,6 +46,12 @@ interface IACLManager is IAccessControl {
   function GOVERNANCE_ADMIN() external view returns (bytes32);
 
   /**
+   * @notice Returns the identifier of the WRAPPER ADAPTER role
+   * @return The id of the PriceUpdater role
+   */
+  function WRAPPER_ADAPTER() external view returns (bytes32);
+
+  /**
    * @notice Set the address of the protocol
    * @dev Is the main address of the protocol.Only can be updated by the ADMIN.
    * @param protocol address of the protocol
@@ -186,4 +192,24 @@ interface IACLManager is IAccessControl {
    * @return True if the given address is Governance Admin, false otherwise
    */
   function isGovernanceAdmin(address admin) external view returns (bool);
+
+  // Wrapper ADAPTER
+  /**
+   * @notice Adds a new adapter as WRAPPER_ADAPTER
+   * @param adapter The address of the new adapter
+   */
+  function addWrapperAdapter(address adapter) external;
+
+  /**
+   * @notice Removes an adapter as WRAPPER_ADAPTER
+   * @param adapter The address of the WRAPPER_ADAPTER to remove
+   */
+  function removeWrapperAdapter(address adapter) external;
+
+  /**
+   * @notice Returns true if the address is WRAPPER_ADAPTER, false otherwise
+   * @param adapter The address to check
+   * @return True if the given address is WRAPPER_ADAPTER, false otherwise
+   */
+  function isWrapperAdapter(address adapter) external view returns (bool);
 }

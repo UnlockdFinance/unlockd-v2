@@ -26,6 +26,8 @@ contract ACLManager is AccessControl, IACLManager {
   bytes32 public constant override EMERGENCY_ADMIN = keccak256('EMERGENCY_ADMIN');
   // @dev modify the configuration of the protocol
   bytes32 public constant override GOVERNANCE_ADMIN = keccak256('GOVERNANCE_ADMIN');
+  // @dev modify the configuration of the protocol
+  bytes32 public constant override WRAPPER_ADAPTER = keccak256('WRAPPER_ADAPTER');
 
   /**
    * @dev Constructor
@@ -143,5 +145,20 @@ contract ACLManager is AccessControl, IACLManager {
   /// @inheritdoc IACLManager
   function isGovernanceAdmin(address admin) external view returns (bool) {
     return hasRole(GOVERNANCE_ADMIN, admin);
+  }
+
+  /// @inheritdoc IACLManager
+  function addWrapperAdapter(address adapter) external {
+    grantRole(WRAPPER_ADAPTER, adapter);
+  }
+
+  /// @inheritdoc IACLManager
+  function removeWrapperAdapter(address adapter) external {
+    revokeRole(WRAPPER_ADAPTER, adapter);
+  }
+
+  /// @inheritdoc IACLManager
+  function isWrapperAdapter(address adapter) external view returns (bool) {
+    return hasRole(WRAPPER_ADAPTER, adapter);
   }
 }

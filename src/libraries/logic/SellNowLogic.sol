@@ -75,17 +75,20 @@ library SellNowLogic {
       })
     );
 
-    // Buy the asset
+    // Sell the asset
     IProtocolOwner(params.protocolOwner).delegateOneExecution(
       params.signSellNow.marketAdapter,
       true
     );
     IMarketAdapter(params.signSellNow.marketAdapter).sell(
       IMarketAdapter.SellParams({
+        collection: params.asset.collection,
+        tokenId: params.asset.tokenId,
         wallet: params.wallet,
         protocolOwner: params.protocolOwner,
         underlyingAsset: params.signSellNow.underlyingAsset,
         marketPrice: params.signSellNow.marketPrice,
+        marketApproval: params.signSellNow.marketApproval,
         to: params.signSellNow.to,
         value: params.signSellNow.value,
         data: params.signSellNow.data

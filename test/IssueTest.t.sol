@@ -28,7 +28,6 @@ contract IssueTest is Test {
   function _fork_sepolia() internal {
     Config.ChainConfig memory config = Config.getConfig(11155111);
     // Chain FORK
-    console.log('---------', config.chainName);
     uint256 chainFork = vm.createFork(config.chainName, 5429256);
     vm.selectFork(chainFork);
   }
