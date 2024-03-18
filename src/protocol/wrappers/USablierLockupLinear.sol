@@ -119,8 +119,8 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
    * @param tokenId The token ID to burn.
    */
   function burn(uint256 tokenId) external {
-    ISablierV2LockupLinear(address(_erc721)).withdrawMaxAndTransfer(tokenId, amountTo);
-    _baseBurn(tokenId, msg.sender);
+    ISablierV2LockupLinear(address(_erc721)).withdrawMaxAndTransfer(tokenId, msg.sender);
+    _baseBurn(tokenId, msg.sender, false);
   }
 
   function sellOnMarket(

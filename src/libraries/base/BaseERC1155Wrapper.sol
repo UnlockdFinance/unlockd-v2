@@ -144,12 +144,13 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
    * @notice Burns a token.
    * @dev Burns an ERC721 token and transfers the underlying asset to its owner.
    * @param tokenId The token ID to burn.
+   * @param to Send the token to.
+   * @param needTransfer Need transfer
    */
-  function _baseBurn(uint256 tokenId, address to) internal {
+  function _baseBurn(uint256 tokenId, address to, bool needTransfer) internal {
     if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
-    _erc1155.safeTransferFrom(address(this), to, _tokenIds[tokenId], AMOUNT, '');
+    if (needTransfer) _erc1155.safeTransferFrom(address(this), to, _tokenIds[tokenId], AMOUNT, '');
     _burn(tokenId);
-
     emit Burn(msg.sender, tokenId, to);
   }
 
@@ -164,23 +165,41 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
    * @dev See {ERC1155-onERC1155Received}.
    */
   function onERC1155Received(
-    address,
+    address operator,
     address,
     uint256 tokenId,
     uint256 value,
     bytes calldata data
   ) external returns (bytes4) {
-    return this.onERC1155Received.selector;
+    if (operator != address(this)) {
+      if (value != 1) revert Errors.ERC1155AmountNotValid();
+      address newWallet = abi.decode(data, (address));
+      if (newWallet == address(0)) newWallet = operator;
+      preMintChecks(newWallet, tokenId);
+      _baseMint(newWallet, tokenId, false);
+    }
+
+    return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
   }
 
   function onERC1155BatchReceived(
+    address operator,
     address,
-    address,
-    uint256[] calldata,
-    uint256[] calldata,
-    bytes calldata
-  ) external pure returns (bytes4) {
-    revert Errors.ERC1155BatchNotAllowed();
+    uint256[] calldata tokensIds,
+    uint256[] calldata values,
+    bytes calldata data
+  ) external returns (bytes4) {
+    if (operator != address(this)) {
+      address newWallet = abi.decode(data, (address));
+      for (uint256 i; i < tokensIds.length; ) {
+        uint256 tokenId = tokensIds[i];
+        uint256 value = values[i];
+        if (value != 1) revert Errors.ERC1155AmountNotValid();
+        preMintChecks(newWallet, tokenId);
+        _baseMint(newWallet, tokenId, false);
+      }
+    }
+    return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
   }
 
   /*//////////////////////////////////////////////////////////////

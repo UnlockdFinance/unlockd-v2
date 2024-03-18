@@ -10,6 +10,7 @@ import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol'
 import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 
+import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
 import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';

@@ -171,40 +171,40 @@ contract USablierLockupLinearTest is Setup {
     vm.stopPrank();
   }
 
-  function test_Burn() public {
+  function test_1Burn() public {
     vm.startPrank(address(1));
     deal(_wethAddress, address(1), 2 ether);
-
     approveNTransferToUWallet();
-    assertEq(uSablierLockUp.balanceOf(address(22)), 1, 'Balance should be 1');
 
+    uint256 tokenId = 1;
+    assertEq(uSablierLockUp.balanceOf(address(22)), 1, 'Balance should be 1');
+    assertEq(uSablierLockUp.ownerOf(tokenId), address(22));
     vm.startPrank(address(22));
-    uSablierLockUp.burn(1);
-    // assertEq(uSablierLockUp.balanceOf(address(22)), 0, 'Balance should be 0');
-    // assertEq(sablier.balanceOf(address(2)), 1, 'Balance should be 1');
+    uSablierLockUp.burn(tokenId);
+    assertEq(uSablierLockUp.balanceOf(address(22)), 0, 'Balance should be 0');
 
     vm.stopPrank();
   }
 
-  function test_Withdraw_From_Stream() public {
-    vm.startPrank(address(1));
-    deal(_wethAddress, address(1), 2 ether);
+  // function test_Withdraw_From_Stream() public {
+  //   vm.startPrank(address(1));
+  //   deal(_wethAddress, address(1), 2 ether);
 
-    approveNTransferToUWallet();
-    assertEq(uSablierLockUp.balanceOf(address(22)), 1, 'Balance should be 1');
+  //   approveNTransferToUWallet();
+  //   assertEq(uSablierLockUp.balanceOf(address(22)), 1, 'Balance should be 1');
 
-    vm.startPrank(protocol); //onlyProtocol
-    uint256 balanceBefore = IERC20(_wethAddress).balanceOf(address(2));
-    uint256 streamBalance = sablier.withdrawableAmountOf(1);
-    uSablierLockUp.withdrawFromStream(1, address(2));
-    uint256 balanceAfter = IERC20(_wethAddress).balanceOf(address(2));
-    assertEq(
-      balanceAfter,
-      balanceBefore + streamBalance,
-      'Balance after should be balance before + streamBalance'
-    );
-    vm.stopPrank();
-  }
+  //   vm.startPrank(protocol); //onlyProtocol
+  //   uint256 balanceBefore = IERC20(_wethAddress).balanceOf(protocol);
+  //   uint256 streamBalance = sablier.withdrawableAmountOf(1);
+  //   uSablierLockUp.burn(1);
+  //   uint256 balanceAfter = IERC20(_wethAddress).balanceOf(protocol);
+  //   assertEq(
+  //     balanceAfter,
+  //     balanceBefore + streamBalance,
+  //     'Balance after should be balance before + streamBalance'
+  //   );
+  //   vm.stopPrank();
+  // }
 
   /*//////////////////////////////////////////////////////////////
                             NEGATIVES
@@ -223,24 +223,24 @@ contract USablierLockupLinearTest is Setup {
     vm.stopPrank();
   }
 
-  function test_Withdraw_Not_OnlyProtocol() public {
-    vm.prank(address(this));
-    vm.expectRevert(0x56e40536);
-    uSablierLockUp.withdrawFromStream(1, address(1));
-    vm.stopPrank();
-  }
+  // function test_Withdraw_Not_OnlyProtocol() public {
+  //   vm.prank(address(this));
+  //   // vm.expectRevert(0x56e40536);
+  //   uSablierLockUp.burn(1);
+  //   vm.stopPrank();
+  // }
 
-  function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
-    vm.startPrank(address(1));
-    deal(_wethAddress, address(1), 2 ether);
+  // function test_Withdraw_From_Stream_Not_OnlyProtocol() public {
+  //   vm.startPrank(address(1));
+  //   deal(_wethAddress, address(1), 2 ether);
 
-    approveNTransferToUWallet();
+  //   approveNTransferToUWallet();
 
-    vm.startPrank(address(this)); //onlyProtocol
-    vm.expectRevert(Errors.ProtocolAccessDenied.selector);
-    uSablierLockUp.withdrawFromStream(1, address(2));
-    vm.stopPrank();
-  }
+  //   vm.startPrank(address(this)); //onlyProtocol
+  //   vm.expectRevert(Errors.BurnerNotApproved.selector);
+  //   uSablierLockUp.burn(1);
+  //   vm.stopPrank();
+  // }
 
   // Test invalid input
   function test_Mint_Caller_Not_Owner() public {

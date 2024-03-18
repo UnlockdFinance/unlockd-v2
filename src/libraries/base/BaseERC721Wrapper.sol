@@ -123,12 +123,15 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    * @notice Burns a token.
    * @dev Burns an ERC721 token and transfers the underlying asset to its owner.
    * @param tokenId The token ID to burn.
+   * @param to Send the token to.
+   * @param needTransfer Need transfer
    */
-  function _baseBurn(uint256 tokenId, address to) internal {
+  function _baseBurn(uint256 tokenId, address to, bool needTransfer) internal {
     if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
-    _erc721.safeTransferFrom(address(this), to, tokenId);
+    if (needTransfer) _erc721.safeTransferFrom(address(this), to, tokenId);
+
     _burn(tokenId);
-    emit Burn(msg.sender, tokenId, _erc721.ownerOf(tokenId));
+    emit Burn(msg.sender, tokenId, to);
   }
 
   /**
@@ -156,17 +159,17 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
    * @dev See {ERC721-onERC721Received}.
    */
   function onERC721Received(
-    address,
+    address operator,
     address,
     uint256 tokenId,
     bytes calldata data
   ) external virtual override returns (bytes4) {
-    if (msg.sender != address(_erc721)) revert Errors.ERC721ReceiverNotSupported();
-
-    address unlockdWallet = abi.decode(data, (address));
-    preMintChecks(unlockdWallet, tokenId);
-    _mint(unlockdWallet, tokenId);
-
+    if (operator != address(this)) {
+      address newWallet = abi.decode(data, (address));
+      if (newWallet == address(0)) newWallet = operator;
+      preMintChecks(newWallet, tokenId);
+      _mint(newWallet, tokenId);
+    }
     return this.onERC721Received.selector;
   }
 

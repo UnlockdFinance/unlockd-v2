@@ -81,7 +81,7 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
   }
 
   function burn(uint256 tokenId) external override {
-    _baseBurn(tokenId, msg.sender);
+    _baseBurn(tokenId, msg.sender, true);
   }
 
   /**
@@ -136,7 +136,6 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
    */
   function preMintChecks(address, uint256 tokenId) public view override {
     if (!_controller.isActiveCollection(address(_erc1155))) revert CollectionDisabled();
-    if (_erc1155.balanceOf(msg.sender, tokenId) == 0) revert Errors.CallerNotNFTOwner();
   }
 
   /*//////////////////////////////////////////////////////////////
