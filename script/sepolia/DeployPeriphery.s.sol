@@ -34,7 +34,7 @@ import {Source} from '../../test/test-utils/mock/chainlink/Source.sol';
 import {UnlockdUpgradeableProxy} from '../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 
 contract DeployPeripheryScript is DeployerHelper {
-  bytes32 public constant VERSION = 0;
+  bytes32 public constant VERSION = '0';
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
@@ -120,9 +120,6 @@ contract DeployPeripheryScript is DeployerHelper {
 
       (bool activeWETH, , ) = _uTokenVault.getFlags(DeployConfig.WETH);
       (bool activeUSDC, , ) = _uTokenVault.getFlags(DeployConfig.USDC);
-      console.log('-----> ', activeWETH);
-      console.log('-----> ', activeUSDC);
-      console.log('VAULT', address(_uTokenVault));
       if (!activeWETH || !activeUSDC) revert('not updated');
     }
 
