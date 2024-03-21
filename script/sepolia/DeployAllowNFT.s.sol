@@ -33,7 +33,7 @@ contract DeployAllowNFTScript is DeployerHelper {
       );
       manager.allowCollectionReserveType(
         0xA6a9AcFDD1F64EC324eE936344cDB1457BDbDDF0,
-        Constants.ReserveType.COMMON
+        Constants.ReserveType.STABLE
       );
     }
   }
