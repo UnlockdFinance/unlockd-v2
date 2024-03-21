@@ -19,8 +19,6 @@ library DeployConfig {
   // ************************ APP ************************
   address public constant DEPLOYER = 0x96A18D883F8C93A1ac8bd7c2388e5c56F72Ba8c6;
   address public constant SIGNER = 0xDe637231FcEdF554e0B012ee01A2E9bf40b85183; // This address need to come from DEFENDER
-  address public constant TREASURY = 0x7a9e9e6af96dD88a02df420FBe693ee69e7A6DE7;
-  address public constant ADMIN = 0x7a9e9e6af96dD88a02df420FBe693ee69e7A6DE7;
 
   // ************************ GNOSIS SAFE ************************
   // SEPOLIA https://github.com/search?q=repo%3Asafe-global%2Fsafe-deployments%2011155111&type=code

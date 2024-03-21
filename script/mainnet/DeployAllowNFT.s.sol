@@ -25,7 +25,8 @@ contract DeployAllowNFTScript is DeployerHelper {
     // Set the new SAFE ERC721
     manager.setSafeERC721(address(safeERC721));
 
-    // WHACHES
+     // WHACHES
+    // https://etherscan.io/address/0xd7AB81881c8a0A8fbfDa70072D56ac6D7b3c3EfF
     {
       AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
         0xd7AB81881c8a0A8fbfDa70072D56ac6D7b3c3EfF,
@@ -36,5 +37,19 @@ contract DeployAllowNFTScript is DeployerHelper {
         Constants.ReserveType.STABLE
       );
     }
+
+    // UNIKURA
+    // https://etherscan.io/address/0xEA89a88284fF9a9A9A54F4c43Fc4efbF099e992F
+    {
+      AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
+        0xEA89a88284fF9a9A9A54F4c43Fc4efbF099e992F,
+        true
+      );
+      manager.allowCollectionReserveType(
+        0xEA89a88284fF9a9A9A54F4c43Fc4efbF099e992F,
+        Constants.ReserveType.STABLE
+      );
+    }
+  }
   }
 }
