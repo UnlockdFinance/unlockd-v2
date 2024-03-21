@@ -10,7 +10,7 @@ library DeployConfig {
   // https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
   address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
-  address public constant MAXAPY = 0x8607F61246753Ff3189243Cc1768E8Cf453A4534;
+  address public constant MAXAPY = 0x0000000000000000000000000000000000000000;
   // ************************ RESERVOIR ************************
   // @dev location addresses https://github.com/reservoirprotocol/indexer/blob/main/packages/sdk/src/router/v6/addresses.ts
   address public constant RESERVOIR_ROUTER = 0xC2c862322E9c97D6244a3506655DA95F05246Fd8;
@@ -18,7 +18,7 @@ library DeployConfig {
 
   // ************************ APP ************************
   address public constant DEPLOYER = 0x879a14507653AD96C5c3727DbE8C88C14057772B;
-  address public constant SIGNER = 0x0; // This address need to come from DEFENDER
+  address public constant SIGNER = 0x89cD4b49AC82D9b3F879a8dc3E21373559Ac3Fb3; // This address need to come from DEFENDER
 
   // ************************ GNOSIS SAFE ************************
   // SEPOLIA https://github.com/search?q=repo%3Asafe-global%2Fsafe-deployments%2011155111&type=code

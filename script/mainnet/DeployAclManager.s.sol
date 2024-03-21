@@ -10,27 +10,25 @@ import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 contract DeployACLManagerScript is DeployerHelper {
   bytes32 public constant VERSION = 0;
 
-  // address public constant FILIPE = 0x94aBa23b9Bbfe7bb62A9eB8b1215D72b5f6F33a1;
-
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
     /******************** ACLMANAGER ********************/
     require(DeployConfig.DEPLOYER == msg.sender, 'Not valid deployer');
 
-    ACLManager aclManager = new ACLManager(msg.sender);
+    ACLManager aclManager = new ACLManager(DeployConfig.DEPLOYER);
 
-    aclManager.addGovernanceAdmin(msg.sender);
+    aclManager.addGovernanceAdmin(DeployConfig.DEPLOYER);
     // Add the admin address in all the places
 
-    aclManager.addUTokenAdmin(msg.sender);
-    aclManager.addProtocolAdmin(msg.sender);
-    aclManager.addGovernanceAdmin(msg.sender);
-    aclManager.addAuctionAdmin(msg.sender);
-    aclManager.addEmergencyAdmin(msg.sender);
-    aclManager.addPriceUpdater(msg.sender);
+    aclManager.addUTokenAdmin(DeployConfig.DEPLOYER);
+    aclManager.addProtocolAdmin(DeployConfig.DEPLOYER);
+    aclManager.addGovernanceAdmin(DeployConfig.DEPLOYER);
+    aclManager.addAuctionAdmin(DeployConfig.DEPLOYER);
+    aclManager.addEmergencyAdmin(DeployConfig.DEPLOYER);
+    aclManager.addPriceUpdater(DeployConfig.DEPLOYER);
 
     addresses.aclManager = address(aclManager);
-    addresses.deployer = msg.sender;
+    addresses.deployer = DeployConfig.DEPLOYER;
 
     _encodeJson(addresses);
   }

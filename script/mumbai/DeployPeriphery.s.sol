@@ -98,10 +98,10 @@ contract DeployPeripheryScript is DeployerHelper {
           interestRateAddress: address(
             new InterestRate(
               addresses.aclManager,
-              900000000000000000000000000,
+              800000000000000000000000000,
               0,
-              60000000000000000000000000,
-              600000000000000000000000000
+              40000000000000000000000000,
+              750000000000000000000000000
             )
           ),
           strategyAddress: address(0),
