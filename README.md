@@ -9,8 +9,6 @@
 ```                                                                                         
 <!-- prettier-ignore-end -->
 
-![Arquitecture](/_images/arquitecutre.png "Arquitecture")
-
 ## This project uses Foundry
 
 Official page : https://book.getfoundry.sh/
@@ -79,8 +77,8 @@ To verify add ' --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA}' on th
 
 2 - make deploy-sep-wallet
 
-3 - make deploy-sep-protocol
+3 - make deploy-mainnet-periphery
 
-4 - make deploy-sep-allow 
+4 - make deploy-sep-protocol
 
-5 - (optional) make deploy-sep-nft
+5 - make deploy-sep-allow
