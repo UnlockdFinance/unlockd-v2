@@ -30,11 +30,11 @@ contract DeployAllowNFTScript is DeployerHelper {
     // // WHACHES
     {
       AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
-        0xd7AB81881c8a0A8fbfDa70072D56ac6D7b3c3EfF,
+        0xA6a9AcFDD1F64EC324eE936344cDB1457BDbDDF0,
         true
       );
       manager.allowCollectionReserveType(
-        0xd7AB81881c8a0A8fbfDa70072D56ac6D7b3c3EfF,
+        0xA6a9AcFDD1F64EC324eE936344cDB1457BDbDDF0,
         Constants.ReserveType.STABLE
       );
     }
