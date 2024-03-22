@@ -9,7 +9,8 @@ import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 
 contract DeployACLManagerScript is DeployerHelper {
   bytes32 public constant VERSION = 0;
-  address public constant FILIPE = 0x94aBa23b9Bbfe7bb62A9eB8b1215D72b5f6F33a1;
+
+  // address public constant FILIPE = 0x94aBa23b9Bbfe7bb62A9eB8b1215D72b5f6F33a1;
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
@@ -28,12 +29,12 @@ contract DeployACLManagerScript is DeployerHelper {
     aclManager.addEmergencyAdmin(msg.sender);
     aclManager.addPriceUpdater(msg.sender);
 
-    aclManager.addUTokenAdmin(FILIPE);
-    aclManager.addProtocolAdmin(FILIPE);
-    aclManager.addGovernanceAdmin(FILIPE);
-    aclManager.addAuctionAdmin(FILIPE);
-    aclManager.addEmergencyAdmin(FILIPE);
-    aclManager.addPriceUpdater(FILIPE);
+    // aclManager.addUTokenAdmin(FILIPE);
+    // aclManager.addProtocolAdmin(FILIPE);
+    // aclManager.addGovernanceAdmin(FILIPE);
+    // aclManager.addAuctionAdmin(FILIPE);
+    // aclManager.addEmergencyAdmin(FILIPE);
+    // aclManager.addPriceUpdater(FILIPE);
 
     addresses.aclManager = address(aclManager);
     addresses.deployer = msg.sender;

@@ -82,11 +82,6 @@ contract DeployPeripheryScript is DeployerHelper {
     }
 
     {
-      // We define the base token to USDC
-      addresses.reserveOracle = address(
-        new ReserveOracle(addresses.aclManager, DeployConfig.WETH, 1 ether)
-      );
-
       // DEPLOY ADAPTER RESERVOIR
       addresses.adapter = address(
         new ReservoirAdapter(

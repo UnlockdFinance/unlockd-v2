@@ -71,7 +71,6 @@ contract DeployProtocolScript is DeployerHelper {
         Manager manager = Manager(managerAddress);
 
         manager.setSigner(DeployConfig.SIGNER);
-        manager.setReserveOracle(addresses.reserveOracle);
         manager.setWalletRegistry(addresses.walletRegistry);
         manager.setAllowedControllers(addresses.allowedControllers);
         manager.setUTokenVault(addresses.uTokenVault);

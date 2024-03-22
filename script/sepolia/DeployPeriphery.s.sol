@@ -118,9 +118,9 @@ contract DeployPeripheryScript is DeployerHelper {
       _uTokenVault.setActive(DeployConfig.WETH, true);
       _uTokenVault.setActive(DeployConfig.USDC, true);
 
-      (bool activeWETH, , ) = _uTokenVault.getFlags(DeployConfig.WETH);
-      (bool activeUSDC, , ) = _uTokenVault.getFlags(DeployConfig.USDC);
-      if (!activeWETH || !activeUSDC) revert('not updated');
+      // (bool activeWETH, , ) = _uTokenVault.getFlags(DeployConfig.WETH);
+      // (bool activeUSDC, , ) = _uTokenVault.getFlags(DeployConfig.USDC);
+      // if (!activeWETH || !activeUSDC) revert('not updated');
     }
 
     {
