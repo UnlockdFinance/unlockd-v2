@@ -124,13 +124,13 @@ contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSU
   }
 
   function sellOnMarket(
-    address underlyingAsset,
-    uint256 amount,
-    address marketApproval,
+    address,
+    uint256,
+    address,
     uint256 tokenId,
-    address to,
-    uint256 value,
-    bytes memory data,
+    address,
+    uint256,
+    bytes memory,
     address amountTo
   ) external {
     // NOTHING TO DO

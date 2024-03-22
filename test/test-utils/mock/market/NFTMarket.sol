@@ -44,26 +44,26 @@ contract NFTMarket is IERC1155Receiver {
   }
 
   function onERC1155Received(
-    address operator,
-    address from,
-    uint256 id,
-    uint256 value,
-    bytes calldata data
-  ) external returns (bytes4) {
+    address,
+    address,
+    uint256,
+    uint256,
+    bytes calldata
+  ) external pure returns (bytes4) {
     return IERC1155Receiver.onERC1155Received.selector;
   }
 
   function onERC1155BatchReceived(
-    address operator,
-    address from,
-    uint256[] calldata ids,
-    uint256[] calldata values,
-    bytes calldata data
-  ) external returns (bytes4) {
+    address,
+    address,
+    uint256[] calldata,
+    uint256[] calldata,
+    bytes calldata
+  ) external pure returns (bytes4) {
     return IERC1155Receiver.onERC1155BatchReceived.selector;
   }
 
-  function supportsInterface(bytes4 interfaceId) external view returns (bool) {
+  function supportsInterface(bytes4) external pure returns (bool) {
     return true;
   }
 }
