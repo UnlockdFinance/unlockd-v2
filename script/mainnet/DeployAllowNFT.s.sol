@@ -8,7 +8,7 @@ import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
 import {SafeERC721} from '../../src/libraries/tokens/SafeERC721.sol';
-import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
+import {DeployConfig} from '../helpers/DeployConfig.mainnet.sol';
 import '../helpers/DeployerHelper.sol';
 
 contract DeployAllowNFTScript is DeployerHelper {

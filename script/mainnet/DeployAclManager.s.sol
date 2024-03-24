@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import 'forge-std/Script.sol';
 import '../helpers/DeployerHelper.sol';
 
-import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
+import {DeployConfig} from '../helpers/DeployConfig.mainnet.sol';
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 
 contract DeployACLManagerScript is DeployerHelper {

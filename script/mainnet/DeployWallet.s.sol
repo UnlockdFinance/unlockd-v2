@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import 'forge-std/Script.sol';
 import '../helpers/DeployerHelper.sol';
 
-import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
+import {DeployConfig} from '../helpers/DeployConfig.mainnet.sol';
 
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
 import {DelegationRecipes} from '@unlockd-wallet/src/libs/recipes/DelegationRecipes.sol';
