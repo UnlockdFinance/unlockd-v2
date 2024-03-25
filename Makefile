@@ -18,13 +18,13 @@ git-diff :
 # Deploys
 
 ## ETHEREUM MAINNET
-deploy-mainnet-aclmanager :; forge script script/mainnet/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv
-deploy-mainnet-wallet :; forge script script/mainnet/DeployWallet.s.sol:DeployWalletScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv 
-deploy-mainnet-periphery :; forge script script/mainnet/DeployPeriphery.s.sol:DeployPeripheryScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
-deploy-mainnet-protocol :; forge script script/mainnet/DeployProtocol.s.sol:DeployProtocolScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
-deploy-mainnet-modules :; forge script script/mainnet/DeployModules.s.sol:DeployModulesScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv
-deploy-mainnet-allow :; forge script script/mainnet/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv
-deploy-mainnet-helper :; forge script script/mainnet/DeployUtilsHelperT.s.sol:DeployUtilHelperScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv
+deploy-mainnet-aclmanager :; forge script script/mainnet/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
+deploy-mainnet-wallet :; forge script script/mainnet/DeployWallet.s.sol:DeployWalletScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow 
+deploy-mainnet-periphery :; forge script script/mainnet/DeployPeriphery.s.sol:DeployPeripheryScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY}  -vvvv --slow
+deploy-mainnet-protocol :; forge script script/mainnet/DeployProtocol.s.sol:DeployProtocolScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY}  -vvvv  --slow
+deploy-mainnet-modules :; forge script script/mainnet/DeployModules.s.sol:DeployModulesScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
+deploy-mainnet-allow :; forge script script/mainnet/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
+deploy-mainnet-helper :; forge script script/mainnet/DeployUtilsHelper.s.sol:DeployUtilsHelperScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
 
 ## ETHEREUM SEPOLIA
 deploy-sep-aclmanager :; forge script script/sepolia/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv

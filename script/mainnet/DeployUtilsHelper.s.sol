@@ -7,7 +7,7 @@ import {console} from 'forge-std/console.sol';
 import {DeployConfig} from '../helpers/DeployConfig.mainnet.sol';
 import {UnlockdHelper} from '../../src/utils/UnlockdHelper.sol';
 
-contract DeployUtilHelperScript is DeployerHelper {
+contract DeployUtilsHelperScript is DeployerHelper {
   bytes32 public constant VERSION = 0;
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
