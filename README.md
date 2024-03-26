@@ -9,9 +9,15 @@
 ```                                                                                         
 <!-- prettier-ignore-end -->
 
+## Oficial link
+
+https://unlockd.finance/
+
+# Run this repo
+
 ## This project uses Foundry
 
-Official page : https://book.getfoundry.sh/
+https://book.getfoundry.sh/
 
 ## Installation
 
@@ -77,7 +83,7 @@ To verify add ' --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA}' on th
 
 2 - make deploy-sep-wallet
 
-3 - make deploy-mainnet-periphery
+3 - make deploy-sep-periphery
 
 4 - make deploy-sep-protocol
 

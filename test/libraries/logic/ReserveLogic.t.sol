@@ -16,11 +16,23 @@ contract ReserveLogicTest is Base {
 
   function test_reserveLogic_updateState() internal {}
 
+  function test_reserveLogic_cumulateToLiquidityIndex() internal {}
+
   function test_reserveLogic_init() internal {}
 
   function test_reserveLogic_updateInterestRates() internal {}
 
-  function test_reserveLogic_calculateAmountToMintToTreasury() internal {}
+  function test_reserveLogic_increaseDebt() internal {}
 
-  function test_reserveLogic_updateIndexes() internal {}
+  function test_reserveLogic_decreaseDebt() internal {}
+
+  function test_reserveLogic_mintScaled() internal {}
+
+  function test_reserveLogic_burnScaled() internal {}
+
+  function test_reserveLogic_strategyInvest() internal {}
+
+  function test_reserveLogic_strategyWithdraw() internal {}
+
+  function test_reserveLogic_strategyWithdrawAll() internal {}
 }
