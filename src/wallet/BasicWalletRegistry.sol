@@ -51,7 +51,7 @@ contract DelegationWalletRegistry is IDelegationWalletRegistry, Ownable {
 
   /**
    * @notice Sets the DelegationWalletFactory address.
-   * @param _delegationWalletFactory - The new DelegationWalletFactory address.
+   * @param walletFactory - Wallet Factory
    */
   function setFactory(address walletFactory) external onlyOwner {
     if (_walletFactory == address(0))

@@ -1,8 +1,11 @@
-import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
-import {Errors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
-import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
+import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
+import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
+import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
+import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
+import {Errors} from '../libraries/helpers/Errors.sol';
 
 contract BasicWalletVault is Initializable, IProtocolOwner {
   /**
@@ -62,12 +65,12 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
 
   modifier onlyOneTimeDelegation() {
     if (oneTimeDelegation[msg.sender] == false)
-      revert Errors.ProtocolOwner__invalidDelegatedAddressAddress();
+      revert WalletErrors.ProtocolOwner__invalidDelegatedAddressAddress();
     _;
   }
 
   modifier onlyOwner() {
-    if (owner != msg.sender) revert Errors.DelegationOwner__onlyOwner();
+    if (owner != msg.sender) revert WalletErrors.DelegationOwner__onlyOwner();
     _;
   }
 
@@ -76,14 +79,11 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
   }
 
   /**
-     * @notice Initializes the proxy state.
-
-     * @param _safe - The DelegationWallet address, the GnosisSafe.
-     * @param _owner - The owner of the DelegationWallet.
-     * @param _delegationOwner - Use delegation owner
-     */
+   * @notice Initializes the proxy state.
+   * @param _owner - The owner of the DelegationWallet.
+   */
   function initialize(address _owner) public initializer {
-    if (_owner == address(0)) revert Errors.DelegationGuard__initialize_invalidOwner();
+    if (_owner == address(0)) revert WalletErrors.DelegationGuard__initialize_invalidOwner();
     owner = _owner;
   }
 
@@ -121,19 +121,6 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
     }
   }
 
-  /*//////////////////////////////////////////////////////////////
-                    Fallback and Receive Functions
-    //////////////////////////////////////////////////////////////*/
-  // Explicitly reject any Ether sent to the contract
-  fallback() external payable {
-    revert Fallback();
-  }
-
-  // Explicitly reject any Ether transfered to the contract
-  receive() external payable {
-    revert CantReceiveETH();
-  }
-
   //////////////////////////////////////////////
   // ONLY PROTOCOL
   //////////////////////////////////////////////
@@ -150,7 +137,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
     oneTimeDelegation[msg.sender] = false;
 
     if (loansIds[AssetLogic.assetId(_collection, _tokenId)] != _loanId) {
-      revert Errors.DelegationOwner__wrongLoanId();
+      revert WalletErrors.DelegationOwner__wrongLoanId();
     }
     // Asset approval to the adapter to perform the sell
     _approveAsset(_collection, _tokenId, _marketApproval);
@@ -173,7 +160,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
   }
 
   function delegateOneExecution(address to, bool value) external onlyProtocol {
-    if (to == address(0)) revert Errors.ProtocolOwner__invalidDelegatedAddressAddress();
+    if (to == address(0)) revert WalletErrors.ProtocolOwner__invalidDelegatedAddressAddress();
     oneTimeDelegation[to] = value;
   }
 
@@ -182,14 +169,13 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
   }
 
   function isAssetLocked(bytes32 _id) external view onlyProtocol returns (bool) {
-    // TODO: Pending to check
     return _isLocked(_id);
   }
 
   function batchSetLoanId(bytes32[] calldata _assets, bytes32 _loanId) external onlyProtocol {
     uint256 cachedAssets = _assets.length;
     for (uint256 i = 0; i < cachedAssets; ) {
-      if (loansIds[_assets[i]] != 0) revert Errors.DelegationOwner__assetAlreadyLocked();
+      if (loansIds[_assets[i]] != 0) revert WalletErrors.DelegationOwner__assetAlreadyLocked();
       _setLoanId(_assets[i], _loanId);
       unchecked {
         i++;
@@ -201,7 +187,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
   function batchSetToZeroLoanId(bytes32[] calldata _assets) external onlyProtocol {
     uint256 cachedAssets = _assets.length;
     for (uint256 i = 0; i < cachedAssets; ) {
-      if (loansIds[_assets[i]] == 0) revert Errors.DelegationOwner__assetNotLocked();
+      if (loansIds[_assets[i]] == 0) revert WalletErrors.DelegationOwner__assetNotLocked();
       _setLoanId(_assets[i], 0);
       unchecked {
         i++;
@@ -217,7 +203,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
     _setLoanId(id, 0);
 
     bool success = _transferAsset(_asset, _id, _newOwner);
-    if (!success) revert Errors.DelegationOwner__changeOwner_notSuccess();
+    if (!success) revert WalletErrors.DelegationOwner__changeOwner_notSuccess();
 
     emit ChangeOwner(_asset, _id, _newOwner);
   }
@@ -244,7 +230,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
   // PRIVATE
   //////////////////////////////////////////////
 
-  function _isLocked(bytes32 _id) internal returns (bool) {
+  function _isLocked(bytes32 _id) internal view returns (bool) {
     return loansIds[_id].length > 0;
   }
 
@@ -259,14 +245,14 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
   }
 
   function _approveAsset(address _asset, uint256 _id, address _receiver) internal {
-    // TODO : Pending
+    IERC721(_asset).approve(_receiver, _id);
   }
 
   function _approveERC20(address _asset, uint256 _amount, address _receiver) internal {
-    // TODO : Pending
+    IERC20(_asset).approve(_receiver, _amount);
   }
 
-  function _transferAsset(address _asset, uint256 _id, address _receiver) internal {
-    // TODO : Pending
+  function _transferAsset(address _asset, uint256 _id, address _receiver) internal returns (bool) {
+    IERC721(_asset).safeTransferFrom(address(this), _receiver, _id, '');
   }
 }

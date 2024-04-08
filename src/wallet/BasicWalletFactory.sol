@@ -6,7 +6,17 @@ import {BasicWalletVault} from './BasicWalletVault.sol';
 
 contract BasicWalletRegistryFactory {
   address internal immutable _walletVaultBeacon;
+  address internal immutable _registry;
   address internal immutable _aclManager;
+
+  event WalletDeployed(
+    address indexed safe,
+    address indexed owner,
+    address indexed guard,
+    address delegationOwner,
+    address protocolOwner,
+    address sender
+  );
 
   /**
    * @dev Modifier that checks if the sender has Protocol ROLE
@@ -28,7 +38,8 @@ contract BasicWalletRegistryFactory {
     _;
   }
 
-  constructor(address aclManager, address walletVaultBeacon) {
+  constructor(address aclManager, address registry, address walletVaultBeacon) {
+    _registry = registry;
     _walletVaultBeacon = walletVaultBeacon;
     _aclManager = aclManager;
   }
@@ -43,14 +54,13 @@ contract BasicWalletRegistryFactory {
   /**
    * @notice Deploys a new DelegationWallet for a given owner.
    * @param _owner - The owner's address.
-   * @param _delegationController - Delegation controller owner
    */
   function deployFor(address _owner, address) public returns (address, address, address, address) {
     address wallletVaultProxy = address(new BeaconProxy(_walletVaultBeacon, new bytes(0)));
     BasicWalletVault(wallletVaultProxy).initialize(_owner);
 
     // Save wallet
-    IDelegationWalletRegistry(registry).setWallet(
+    IDelegationWalletRegistry(_registry).setWallet(
       wallletVaultProxy,
       _owner,
       address(0),
