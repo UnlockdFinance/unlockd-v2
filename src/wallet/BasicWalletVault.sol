@@ -1,5 +1,6 @@
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
+import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
@@ -7,7 +8,7 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 
-contract BasicWalletVault is Initializable, IProtocolOwner {
+contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
   /**
    * @notice ACL Manager that control the access and the permisions
    */
@@ -224,6 +225,26 @@ contract BasicWalletVault is Initializable, IProtocolOwner {
     // Lock asset
     _setLoanId(id, _loanId);
     emit SetLoanId(id, _loanId);
+  }
+
+  //////////////////////////////////////////////
+  // RECIVER
+  //////////////////////////////////////////////
+
+  // receive() external payable {}
+
+  // fallback() external payable {}
+
+  /**
+   * @dev See {ERC721-onERC721Received}.
+   */
+  function onERC721Received(
+    address,
+    address,
+    uint256,
+    bytes calldata
+  ) external virtual override returns (bytes4) {
+    return this.onERC721Received.selector;
   }
 
   //////////////////////////////////////////////

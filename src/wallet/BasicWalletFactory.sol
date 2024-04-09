@@ -4,7 +4,7 @@ import {IACLManager} from '../interfaces/IACLManager.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {BasicWalletVault} from './BasicWalletVault.sol';
 
-contract BasicWalletRegistryFactory {
+contract BasicWalletFactory {
   address internal immutable _walletVaultBeacon;
   address internal immutable _registry;
   address internal immutable _aclManager;

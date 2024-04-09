@@ -8,13 +8,13 @@ import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces//IDelega
 import {Errors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 
 /**
- * @title DelegationWalletRegistry
- * @author BootNode
- * @dev Registry contract that store information related to the Delegation Wallets deployed by the
- * DelegationWalletFactory contract. This contract can be used as a reliable source to validate that a given address is
+ * @title BasicWalletRegistry
+ * @author Unlockd
+ * @dev Registry contract that store information related to the Wallets deployed by the
+ * BasicWalletRegistry contract. This contract can be used as a reliable source to validate that a given address is
  * a valid Delegation Wallet.
  */
-contract DelegationWalletRegistry is IDelegationWalletRegistry, Ownable {
+contract BasicWalletRegistry is IDelegationWalletRegistry, Ownable {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /**
