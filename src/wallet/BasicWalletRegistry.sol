@@ -54,7 +54,7 @@ contract BasicWalletRegistry is IDelegationWalletRegistry, Ownable {
    * @param walletFactory - Wallet Factory
    */
   function setFactory(address walletFactory) external onlyOwner {
-    if (_walletFactory == address(0))
+    if (walletFactory == address(0))
       revert Errors.DelegationWalletRegistry__setFactory_invalidAddress();
     _walletFactory = walletFactory;
   }

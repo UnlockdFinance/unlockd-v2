@@ -1,14 +1,14 @@
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
-import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {IBasicWalletVault} from '../interfaces/IBasicWalletVault.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 
-contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
+contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   /**
    * @notice ACL Manager that control the access and the permisions
    */
@@ -29,20 +29,6 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
    * in tandem with DelegationGuard which do not allow to change the Safe owners, this owner can't change neither.
    */
   address public owner;
-
-  // Struct to encapsulate information about an individual NFT transfer.
-  // It holds the address of the ERC721 contract and the specific token ID to be transferred.
-  struct NftTransfer {
-    address contractAddress;
-    uint256 tokenId;
-  }
-
-  //////////////////////////////////////////////////////////////
-  //                           ERRORS
-  //////////////////////////////////////////////////////////////
-  error TransferFromFailed();
-  error CantReceiveETH();
-  error Fallback();
 
   /**
    * @dev Modifier that checks if the sender has Protocol ROLE
@@ -94,7 +80,11 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
 
   // WITHDRAW ERC20
 
-  // WITHDRAW ERC721
+  /**
+   * @notice Withdraw assets stored in the vault checking if they are locked.
+   * @param nftTransfers - list of assets to withdraw
+   * @param to address to send the assets
+   */
   function withdrawAssets(NftTransfer[] calldata nftTransfers, address to) external onlyOwner {
     uint256 length = nftTransfers.length;
 
@@ -102,9 +92,10 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
     for (uint i = 0; i < length; ) {
       address contractAddress = nftTransfers[i].contractAddress;
       uint256 tokenId = nftTransfers[i].tokenId;
-
-      // TODO : Check if it is locked
-
+      // check if the asset is locked
+      bytes32 id = AssetLogic.assetId(contractAddress, tokenId);
+      bool isLocked = _isLocked(id);
+      if (isLocked) revert Errors.AssetLocked();
       // Dynamically call the `transferFrom` function on the target ERC721 contract.
       (bool success, ) = contractAddress.call(
         abi.encodeWithSignature('transferFrom(address,address,uint256)', address(this), to, tokenId)
@@ -133,7 +124,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
     uint256 _amount,
     address _marketApproval,
     bytes32 _loanId
-  ) external onlyOneTimeDelegation onlyProtocol {
+  ) external onlyOneTimeDelegation {
     // Doesnt' matter if fails, it need to delegate again.
     oneTimeDelegation[msg.sender] = false;
 
@@ -156,7 +147,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
     uint256 _gasPrice,
     address _gasToken,
     address payable _refundReceiver
-  ) external onlyOneTimeDelegation onlyProtocol returns (bool success) {
+  ) external onlyOneTimeDelegation returns (bool success) {
     _rawExec(_to, _value, _data);
   }
 
@@ -169,7 +160,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
     return oneTimeDelegation[to];
   }
 
-  function isAssetLocked(bytes32 _id) external view onlyProtocol returns (bool) {
+  function isAssetLocked(bytes32 _id) external view returns (bool) {
     return _isLocked(_id);
   }
 
@@ -203,8 +194,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
     // We unlock the current asset
     _setLoanId(id, 0);
 
-    bool success = _transferAsset(_asset, _id, _newOwner);
-    if (!success) revert WalletErrors.DelegationOwner__changeOwner_notSuccess();
+    _transferAsset(_asset, _id, _newOwner);
 
     emit ChangeOwner(_asset, _id, _newOwner);
   }
@@ -252,7 +242,7 @@ contract BasicWalletVault is Initializable, IProtocolOwner, IERC721Receiver {
   //////////////////////////////////////////////
 
   function _isLocked(bytes32 _id) internal view returns (bool) {
-    return loansIds[_id].length > 0;
+    return loansIds[_id] != bytes32(0);
   }
 
   function _setLoanId(bytes32 _assetId, bytes32 _loanId) internal {
