@@ -6,7 +6,6 @@ import './test-utils/setups/Setup.sol';
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 
-import {IDelegationWalletFactory} from '@unlockd-wallet/src/interfaces/IDelegationWalletFactory.sol';
 import {ProtocolOwner} from '@unlockd-wallet/src/libs/owners/ProtocolOwner.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
