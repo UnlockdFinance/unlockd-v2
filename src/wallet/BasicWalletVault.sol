@@ -35,7 +35,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
    */
   modifier onlyProtocol() {
     if (!IACLManager(_aclManager).isProtocol(msg.sender)) {
-      revert Errors.ProtocolAccessDenied();
+      revert Errors.ProtocolAccessDenied(); 
     }
     _;
   }

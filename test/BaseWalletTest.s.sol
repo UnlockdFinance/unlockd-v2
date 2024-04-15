@@ -6,6 +6,7 @@ import './test-utils/setups/Setup.sol';
 import {stdStorage, StdStorage, Test, Vm} from 'forge-std/Test.sol';
 import {IDelegationWalletRegistry} from '@unlockd-wallet/src/interfaces/IDelegationWalletRegistry.sol';
 
+import {IDelegationWalletFactory} from '@unlockd-wallet/src/interfaces/IDelegationWalletFactory.sol';
 import {ProtocolOwner} from '@unlockd-wallet/src/libs/owners/ProtocolOwner.sol';
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
@@ -44,14 +45,21 @@ contract BaseWalletTest is Setup {
 
     // Create wallet and mint to the safe wallet
     createWalletAndMintTokens(_actor, 'PUNK');
-    createWalletAndMintTokens(_actorTwo, 'PUNK');
-    createWalletAndMintTokens(_actorThree, 'PUNK');
 
     Unlockd unlockd = super.getUnlockd();
     _action = unlockd.moduleIdToProxy(Constants.MODULEID__ACTION);
     _market = unlockd.moduleIdToProxy(Constants.MODULEID__MARKET);
     _manager = unlockd.moduleIdToProxy(Constants.MODULEID__MANAGER);
     _nft = _nfts.get('PUNK');
+  }
+
+  function test_create_wallet() public {
+    (
+      address wallet,
+      address delegationOwner,
+      address protocolOwner,
+      address guardOwner
+    ) = DelegationWalletFactory(_walletFactory).deployFor(_actorTwo, address(0));
   }
 
   /////////////////////////////////////////////////////////////////////////////////
