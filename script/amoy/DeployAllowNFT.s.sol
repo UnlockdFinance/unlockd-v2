@@ -2,15 +2,15 @@
 pragma solidity ^0.8.19;
 
 import 'forge-std/Script.sol';
+import '../helpers/DeployerHelper.sol';
+import {DeployConfig} from '../helpers/DeployConfig.amoy.sol';
 
-import {DeployConfig} from '../helpers/DeployConfig.sepolia.sol';
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
 import {ACLManager} from '../../src/libraries/configuration/ACLManager.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
 import {SafeERC721} from '../../src/libraries/tokens/SafeERC721.sol';
-import '../helpers/DeployerHelper.sol';
 
 contract DeployAllowNFTScript is DeployerHelper {
   function run() external broadcast {

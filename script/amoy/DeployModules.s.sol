@@ -3,8 +3,7 @@ pragma solidity ^0.8.19;
 
 import 'forge-std/Script.sol';
 import '../helpers/DeployerHelper.sol';
-import {console} from 'forge-std/console.sol';
-import {DeployConfig} from '../helpers/DeployConfig.mumbai.sol';
+import {DeployConfig} from '../helpers/DeployConfig.amoy.sol';
 
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
 import {Constants} from '../../src/libraries/helpers/Constants.sol';
