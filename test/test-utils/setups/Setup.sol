@@ -17,6 +17,12 @@ import {GuardOwner} from '@unlockd-wallet/src/libs/owners/GuardOwner.sol';
 import {DelegationWalletRegistry} from '@unlockd-wallet/src/DelegationWalletRegistry.sol';
 import {DelegationWalletFactory} from '@unlockd-wallet/src/DelegationWalletFactory.sol';
 import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
+
+// BASIC WALLET
+import {BasicWalletFactory} from '../../../src/wallet/BasicWalletFactory.sol';
+import {BasicWalletRegistry} from '../../../src/wallet/BasicWalletRegistry.sol';
+import {BasicWalletVault} from '../../../src/wallet/BasicWalletVault.sol';
+
 import {MaxApyVault} from '@maxapy/MaxApyVault.sol';
 import '../../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 import './../mock/asset/MintableERC20.sol';
@@ -87,7 +93,7 @@ contract Setup is Base, ActorsBase, NFTBase {
 
     deploy_mocks();
 
-    deploy_wallet();
+    deploy_basic_wallet();
 
     deploy_periphery();
 
@@ -117,6 +123,32 @@ contract Setup is Base, ActorsBase, NFTBase {
     _aclManager.addPriceUpdater(_admin);
 
     vm.stopPrank();
+  }
+
+  function deploy_basic_wallet() internal {
+    address[] memory paramsAllowedController;
+    AllowedControllers allowedController = new AllowedControllers(
+      address(_aclManager),
+      paramsAllowedController
+    );
+    // Create Implementations
+    BasicWalletVault walletImp = new BasicWalletVault(address(_aclManager));
+
+    // Create beacons
+    UpgradeableBeacon walletBeacon = new UpgradeableBeacon(address(walletImp));
+
+    BasicWalletRegistry walletRegistry = new BasicWalletRegistry();
+
+    BasicWalletFactory walletFactory = new BasicWalletFactory(
+      address(walletImp),
+      address(walletRegistry),
+      address(walletBeacon)
+    );
+    /******************** CONFIG ********************/
+    walletRegistry.setFactory(address(walletFactory));
+    _allowedControllers = address(allowedController);
+    _walletFactory = address(walletFactory);
+    _walletRegistry = address(walletRegistry);
   }
 
   function deploy_wallet() internal {
