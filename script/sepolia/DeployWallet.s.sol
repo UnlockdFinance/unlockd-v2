@@ -28,7 +28,7 @@ contract DeployWalletScript is DeployerHelper {
 
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
-
+    revert('DEPRECATED IN MAINNET');
     require(DeployConfig.DEPLOYER == msg.sender, 'Not valid deployer');
 
     /******************** WALLET ********************/

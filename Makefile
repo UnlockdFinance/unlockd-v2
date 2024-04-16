@@ -25,6 +25,7 @@ deploy-mainnet-protocol :; forge script script/mainnet/DeployProtocol.s.sol:Depl
 deploy-mainnet-modules :; forge script script/mainnet/DeployModules.s.sol:DeployModulesScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
 deploy-mainnet-allow :; forge script script/mainnet/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
 deploy-mainnet-helper :; forge script script/mainnet/DeployUtilsHelper.s.sol:DeployUtilsHelperScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
+deploy-mainnet-base-wallet :; forge script script/mainnet/DeployBaseWallet.s.sol:DeployBaseWalletScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow 
 
 ## ETHEREUM SEPOLIA
 deploy-sep-aclmanager :; forge script script/sepolia/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
@@ -33,6 +34,7 @@ deploy-sep-periphery :; forge script script/sepolia/DeployPeriphery.s.sol:Deploy
 deploy-sep-protocol :; forge script script/sepolia/DeployProtocol.s.sol:DeployProtocolScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
 deploy-sep-modules :; forge script script/sepolia/DeployModules.s.sol:DeployModulesScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 deploy-sep-allow :; forge script script/sepolia/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
+deploy-sep-base-wallet :; forge script script/sepolia/DeployBaseWallet.s.sol:DeployBaseWalletScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv 
 
 deploy-sep-nft :; forge script script/sepolia/DeployFakeNFT.s.sol:DeployFakeNftsScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv
 execute-sep :; forge script script/sepolia/Execute.s.sol:ExecuteScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
