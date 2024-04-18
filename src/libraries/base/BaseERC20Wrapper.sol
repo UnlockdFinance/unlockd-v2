@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.19;
 
-import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
@@ -11,10 +12,11 @@ import {Errors} from '../helpers/Errors.sol';
  * @dev Implements a generic ERC721 wrapper for any NFT that needs to be "managed"
  **/
 abstract contract BaseERC721Wrapper is ERC721Upgradeable {
+  using SafeERC20 for IERC20;
   /*//////////////////////////////////////////////////////////////
                            VARIABLES
     //////////////////////////////////////////////////////////////*/
-  ERC20 internal immutable _erc20;
+  IERC20 internal _erc20;
   address internal _aclManager;
   uint256 internal _counter = 1;
   // tokenId => amount assets
@@ -94,7 +96,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable {
    * @param underlyingAsset The address of the underlying asset to be wrapped.
    */
   constructor(address underlyingAsset) {
-    _erc20 = ERC20(underlyingAsset);
+    _erc20 = IERC20(underlyingAsset);
     _disableInitializers();
   }
 
@@ -140,7 +142,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable {
   /**
    * @dev See {ERC721-tokenURI}.
    */
-  function tokenURI(uint256) public view override returns (string memory) {
+  function tokenURI(uint256) public pure override returns (string memory) {
     return '';
   }
 

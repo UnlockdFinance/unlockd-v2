@@ -98,6 +98,7 @@ contract DeployWalletScript is DeployerHelper {
         manager.setAllowedControllers(addresses.allowedControllers);
       }
     }
+
     _encodeJson(addresses);
   }
 }

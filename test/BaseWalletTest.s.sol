@@ -59,6 +59,10 @@ contract BaseWalletTest is Setup {
       address protocolOwner,
       address guardOwner
     ) = DelegationWalletFactory(_walletFactory).deployFor(_actorTwo, address(0));
+
+    assertEq(wallet, delegationOwner);
+    assertEq(wallet, protocolOwner);
+    assertEq(wallet, guardOwner);
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +92,7 @@ contract BaseWalletTest is Setup {
     uint256 amountToRepay = 0.5 ether;
     uint256 collateral = 2 ether;
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToRepay, collateral, 2, 2);
+    assertNotEq(loanId, bytes32(0));
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToRepay);
     vm.startPrank(_actor);
     address wallet = getWalletAddress(_actor);
