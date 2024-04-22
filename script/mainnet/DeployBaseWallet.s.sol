@@ -5,7 +5,7 @@ import 'forge-std/Script.sol';
 import {DeployConfig} from '../helpers/DeployConfig.mainnet.sol';
 
 import {AllowedControllers} from '@unlockd-wallet/src/libs/allowed/AllowedControllers.sol';
-
+import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {Unlockd} from '../../src/protocol/Unlockd.sol';
 import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {BasicWalletFactory} from '../../src/wallet/BasicWalletFactory.sol';
@@ -20,7 +20,6 @@ contract DeployBaseWalletScript is DeployerHelper {
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
 
-    AllowedControllers allowedController = AllowedControllers(addresses.allowedControllers);
     // Create Implementations
     BasicWalletVault walletImp = new BasicWalletVault(addresses.aclManager);
     // Create beacons
@@ -44,7 +43,7 @@ contract DeployBaseWalletScript is DeployerHelper {
     address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
       Constants.MODULEID__MANAGER
     );
-    manager.setWalletRegistry(addresses.walletRegistry);
+    Manager(managerAddress).setWalletRegistry(addresses.walletRegistry);
 
     _encodeJson(addresses);
   }

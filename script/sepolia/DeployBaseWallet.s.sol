@@ -10,7 +10,7 @@ import {Manager} from '../../src/protocol/modules/Manager.sol';
 import {BasicWalletFactory} from '../../src/wallet/BasicWalletFactory.sol';
 import {BasicWalletRegistry} from '../../src/wallet/BasicWalletRegistry.sol';
 import {BasicWalletVault} from '../../src/wallet/BasicWalletVault.sol';
-
+import {Constants} from '../../src/libraries/helpers/Constants.sol';
 import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
 
 import '../helpers/DeployerHelper.sol';
@@ -18,8 +18,6 @@ import '../helpers/DeployerHelper.sol';
 contract DeployBaseWalletScript is DeployerHelper {
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
-
-    AllowedControllers allowedController = AllowedControllers(addresses.allowedControllers);
     // Create Implementations
     BasicWalletVault walletImp = new BasicWalletVault(addresses.aclManager);
     // Create beacons
@@ -43,7 +41,7 @@ contract DeployBaseWalletScript is DeployerHelper {
     address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
       Constants.MODULEID__MANAGER
     );
-    manager.setWalletRegistry(addresses.walletRegistry);
+    Manager(managerAddress).setWalletRegistry(addresses.walletRegistry);
 
     _encodeJson(addresses);
   }
