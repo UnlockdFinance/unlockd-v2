@@ -13,7 +13,7 @@ library DeployConfig {
   address public constant MAXAPY = 0x0000000000000000000000000000000000000000;
   // ************************ RESERVOIR ************************
   // @dev location addresses https://github.com/reservoirprotocol/indexer/blob/main/packages/sdk/src/router/v6/addresses.ts
-  address public constant RESERVOIR_ROUTER = 0x1aed60a97192157fda7fb26267a439d523d09c5e;
+  address public constant RESERVOIR_ROUTER = 0x1aeD60A97192157fDA7fb26267A439d523d09c5e;
   address public constant RESERVOIR_ETH = 0x0000000000000000000000000000000000000000;
 
   // ************************ APP ************************
