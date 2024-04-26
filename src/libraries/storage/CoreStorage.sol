@@ -67,4 +67,8 @@ contract CoreStorage {
   mapping(bytes32 => DataTypes.Order) internal _orders;
 
   /////////////////////////////////////////
+
+  mapping(address => DataTypes.TokenData) internal _tokenConfigs;
+
+  address internal _erc20Vault;
 }

@@ -242,4 +242,22 @@ library DataTypes {
     uint256 nonce;
     uint256 deadline;
   }
+
+
+  ///////////////////////////////////////////////////////
+  // TOKEN COLLATERAL 
+  ///////////////////////////////////////////////////////
+
+  struct TokenData {
+    address asset;
+    address oracle;
+    address vault; // This vault need to have KYC
+    uint256 ltv;
+    uint256 liquidationThreshold;
+  }
+
+  //TODO: In some moment we need to transform the TokenData in TokenConfigurationMap
+  struct TokenConfigurationMap{
+     uint256 data;
+  }
 }
