@@ -7,8 +7,8 @@ library DeployConfig {
   // ************************ TOKENS ************************
   // https://testnets.opensea.io/  to wrap
   address public constant WETH = 0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa;
-  // https://staging.aave.com/faucet/?marketName=proto_mumbai_v3 to mint
-  address public constant USDC = 0x52D800ca262522580CeBAD275395ca6e7598C014;
+  // https://faucet.circle.com/
+  address public constant USDC = 0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582;
 
   address public constant MAXAPY = 0x0000000000000000000000000000000000000000;
   // ************************ RESERVOIR ************************

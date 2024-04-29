@@ -16,7 +16,7 @@ contract DeployAllowNFTScript is DeployerHelper {
   function run() external broadcast {
     Addresses memory addresses = _decodeJson();
     // CryptoPunk address
-    SafeERC721 safeERC721 = new SafeERC721(DeployConfig.CRYPTOPUNK);
+    // SafeERC721 safeERC721 = new SafeERC721(DeployConfig.CRYPTOPUNK);
 
     ACLManager(addresses.aclManager).addGovernanceAdmin(msg.sender);
     address managerAddress = Unlockd(addresses.unlockd).moduleIdToProxy(
@@ -24,12 +24,10 @@ contract DeployAllowNFTScript is DeployerHelper {
     );
     Manager manager = Manager(managerAddress);
     // Set the new SAFE ERC721
-    manager.setSafeERC721(address(safeERC721));
+    // manager.setSafeERC721(address(safeERC721));
     // {
-    //
-
     //   manager.allowCollectionReserveType(
-    //     0x987EfDB241fE66275b3594481696f039a82a799e,
+    //     0x6E6DF8330DF6d167F337BFd4CD0158110b8312f7,
     //     Constants.ReserveType.ALL
     //   );
     // }
