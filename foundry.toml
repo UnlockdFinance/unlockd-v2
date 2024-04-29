@@ -13,10 +13,8 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
 sepolia = "${RPC_SEPOLIA}"
-mumbai = "${RPC_MUMBAI}"
+amoy = "${RPC_AMOY}"
 [etherscan]
-mainnet={key="${ETHERSCAN_API_KEY_MAINNET}",chainId=1} 
-sepolia={key="${ETHERSCAN_API_KEY_SEPOLIA}",chainId=11155111}
-mumbai={key="${ETHERSCAN_API_KEY_MUMBAI}",chainId=80001}
+# CATAPULTA
 
 # See more config options https://github.com/gakonst/foundry/tree/master/config
