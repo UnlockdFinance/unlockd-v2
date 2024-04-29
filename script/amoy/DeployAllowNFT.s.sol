@@ -26,10 +26,7 @@ contract DeployAllowNFTScript is DeployerHelper {
     // Set the new SAFE ERC721
     manager.setSafeERC721(address(safeERC721));
     // {
-    //   AllowedControllers(addresses.allowedControllers).setCollectionAllowance(
-    //     0x987EfDB241fE66275b3594481696f039a82a799e,
-    //     true
-    //   );
+    //
 
     //   manager.allowCollectionReserveType(
     //     0x987EfDB241fE66275b3594481696f039a82a799e,

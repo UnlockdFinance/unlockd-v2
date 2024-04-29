@@ -36,14 +36,14 @@ deploy-sep-modules :; forge script script/sepolia/DeployModules.s.sol:DeployModu
 deploy-sep-allow :; forge script script/sepolia/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 deploy-sep-base-wallet :; forge script script/sepolia/DeployBaseWallet.s.sol:DeployBaseWalletScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv 
 
-deploy-sep-nft :; forge script script/sepolia/DeployFakeNFT.s.sol:DeployFakeNftsScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY_SEPOLIA} -vvvv
+deploy-sep-nft :; forge script script/sepolia/DeployFakeNFT.s.sol:DeployFakeNftsScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 execute-sep :; forge script script/sepolia/Execute.s.sol:ExecuteScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 
 ## POLYGON MUMBAI
-deploy-mum-aclmanager :; forge script script/mumbai/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY} -vvvv
-deploy-mum-wallet :; forge script script/mumbai/DeployWallet.s.sol:DeployWalletScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY} -vvvv 
-deploy-mum-periphery :; forge script script/mumbai/DeployPeriphery.s.sol:DeployPeripheryScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
-deploy-mum-protocol :; forge script script/mumbai/DeployProtocol.s.sol:DeployProtocolScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
-deploy-mum-modules :; forge script script/mumbai/DeployModules.s.sol:DeployModulesScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY} -vvvv
-deploy-mum-allow :; forge script script/mumbai/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_MUMBAI} --broadcast --private-key ${PRIVATE_KEY} -vvvv
+deploy-amoy-aclmanager :; forge script script/amoy/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_AMOY} --broadcast --private-key ${PRIVATE_KEY} -vvvv
+deploy-amoy-periphery :; forge script script/amoy/DeployPeriphery.s.sol:DeployPeripheryScript --fork-url ${RPC_AMOY} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
+deploy-amoy-protocol :; forge script script/amoy/DeployProtocol.s.sol:DeployProtocolScript --fork-url ${RPC_AMOY} --broadcast --private-key ${PRIVATE_KEY}  -vvvv
+deploy-amoy-base-wallet :; forge script script/amoy/DeployBaseWallet.s.sol:DeployBaseWalletScript --fork-url ${RPC_AMOY} --broadcast --private-key ${PRIVATE_KEY} -vvvv 
+deploy-amoy-modules :; forge script script/amoy/DeployModules.s.sol:DeployModulesScript --fork-url ${RPC_AMOY} --broadcast --private-key ${PRIVATE_KEY} -vvvv
+deploy-amoy-allow :; forge script script/amoy/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_AMOY} --broadcast --private-key ${PRIVATE_KEY} -vvvv
 
