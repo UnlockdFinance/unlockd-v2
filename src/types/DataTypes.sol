@@ -247,7 +247,11 @@ library DataTypes {
   ///////////////////////////////////////////////////////
   // TOKEN COLLATERAL 
   ///////////////////////////////////////////////////////
-
+  struct TokenLoan {
+    address[] assets;
+    uint256[] amountAssets;    
+    address underlyingAsset;
+  }
   struct TokenData {
     address asset;
     address oracle;

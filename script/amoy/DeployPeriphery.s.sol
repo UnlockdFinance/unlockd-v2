@@ -55,19 +55,19 @@ contract DeployPeripheryScript is DeployerHelper {
 
     /******************** UTokenVault ********************/
     {
-      UTokenVault uTokenVaultImp = new UTokenVault(addresses.aclManager);
+      // UTokenVault uTokenVaultImp = new UTokenVault(addresses.aclManager);
 
-      bytes memory data = abi.encodeWithSelector(
-        UTokenVault.initialize.selector,
-        address(new ScaledToken())
-      );
+      // bytes memory data = abi.encodeWithSelector(
+      //   UTokenVault.initialize.selector,
+      //   address(new ScaledToken())
+      // );
 
-      address uTokenVaultProxy = address(
-        new UnlockdUpgradeableProxy(address(uTokenVaultImp), data)
-      );
+      // address uTokenVaultProxy = address(
+      //   new UnlockdUpgradeableProxy(address(uTokenVaultImp), data)
+      // );
 
-      UTokenVault _uTokenVault = UTokenVault(uTokenVaultProxy);
-      addresses.uTokenVault = uTokenVaultProxy;
+      UTokenVault _uTokenVault = UTokenVault(addresses.uTokenVault);
+      // addresses.uTokenVault = uTokenVaultProxy;
 
       // // Deploy weth pool
       // _uTokenVault.createMarket(
@@ -118,41 +118,41 @@ contract DeployPeripheryScript is DeployerHelper {
       _uTokenVault.setActive(DeployConfig.USDC, true);
     }
 
-    {
-      // We define the base token to USDC
-      addresses.reserveOracle = address(
-        new ReserveOracle(addresses.aclManager, DeployConfig.WETH, 1 ether)
-      );
-      //////////////////////////////
-      // WARNING ONLY FOR TESTING
-      // Add DAI to the Oracle
-      // https://data.chain.link/ethereum/mainnet/stablecoins/usdc-usd
-      // Source usdcSource = new Source(8, 100000000);
-      // // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
-      // Source wethSource = new Source(8, 224136576100);
-
-      // ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.WETH, address(wethSource));
-      // ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.USDC, address(usdcSource));
-
-      // DEPLOY ADAPTER RESERVOIR
-      addresses.adapter = address(
-        new ReservoirAdapter(
-          addresses.aclManager,
-          DeployConfig.RESERVOIR_ROUTER,
-          0x0000000000000000000000000000000000000000
-        )
-      );
-    }
-    /******************** WETHGATEWAY ********************/
     // {
-    //   WETHGateway wethGateway = new WETHGateway(DeployConfig.WETH, addresses.uTokenVault);
-    //   addresses.wethGateway = address(wethGateway);
+    //   // We define the base token to USDC
+    //   addresses.reserveOracle = address(
+    //     new ReserveOracle(addresses.aclManager, DeployConfig.WETH, 1 ether)
+    //   );
+    //   //////////////////////////////
+    //   // WARNING ONLY FOR TESTING
+    //   // Add DAI to the Oracle
+    //   // https://data.chain.link/ethereum/mainnet/stablecoins/usdc-usd
+    //   // Source usdcSource = new Source(8, 100000000);
+    //   // // https://data.chain.link/ethereum/mainnet/crypto-usd/eth-usd
+    //   // Source wethSource = new Source(8, 224136576100);
 
-    //   if (addresses.uTokenVault != address(0)) {
-    //     // Authorize protocol
-    //     wethGateway.authorizeProtocol(addresses.uTokenVault);
-    //   }
+    //   // ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.WETH, address(wethSource));
+    //   // ReserveOracle(addresses.reserveOracle).addAggregator(DeployConfig.USDC, address(usdcSource));
+
+    //   // DEPLOY ADAPTER RESERVOIR
+    //   addresses.adapter = address(
+    //     new ReservoirAdapter(
+    //       addresses.aclManager,
+    //       DeployConfig.RESERVOIR_ROUTER,
+    //       0x0000000000000000000000000000000000000000
+    //     )
+    //   );
     // }
+    // /******************** WETHGATEWAY ********************/
+    // // {
+    // //   WETHGateway wethGateway = new WETHGateway(DeployConfig.WETH, addresses.uTokenVault);
+    // //   addresses.wethGateway = address(wethGateway);
+
+    // //   if (addresses.uTokenVault != address(0)) {
+    // //     // Authorize protocol
+    // //     wethGateway.authorizeProtocol(addresses.uTokenVault);
+    // //   }
+    // // }
 
     _encodeJson(addresses);
   }

@@ -7,6 +7,7 @@ import {BaseCoreModule} from '../../libraries/base/BaseCoreModule.sol';
 import {ITokenModule} from '../../interfaces/modules/ITokenModule.sol';
 import {IReserveOracle} from '../../interfaces/oracle/IReserveOracle.sol';
 import {TokenLogic, DataTypes} from '@unlockd-wallet/src/libs/logic/TokenLogic.sol';
+import {GenericLogic} from '@unlockd-wallet/src/libs/logic/GenericLogic.sol';
 
 contract Token is BaseCoreModule, ITokenModule {
   constructor(uint256 moduleId_, bytes32 moduleVersion_) BaseCoreModule(moduleId_, moduleVersion_) {
@@ -14,6 +15,7 @@ contract Token is BaseCoreModule, ITokenModule {
   }
 
   function borrow(
+    bytes32 loanId,
     address[] calldata assets,
     uint256[] calldata amounts,
     address underlyingAsset,
@@ -23,35 +25,69 @@ contract Token is BaseCoreModule, ITokenModule {
 
     uint256 priceUnit = IReserveOracle(_reserveOracle).getAssetPrice(underlyingAsset);
     uint256 borrowAmountUSD = borrowAmount * priceUnit;
-    uint256 totalValueUSD = 0;
+    uint256 totalValueLTVUSD = 0;
 
     // Create Loan
+    if (loanId == bytes32(0)) {
+      // NEW LOAN
+      loanId = LoanLogic.generateId(msgSender, 0, block.timestamp);
 
-    bytes32 loanId = LoanLogic.generateId(msgSender, 0, block.timestamp);
+      _loans[loanId].createLoan(
+        LoanLogic.ParamsCreateLoan({
+          msgSender: msgSender,
+          underlyingAsset: signAction.underlyingAsset,
+          totalAssets: 0, // TODO: Check if this could create inconsistences
+          loanId: loanId
+        })
+      );
+    }
 
-    _loans[loanId].createLoan(
-      LoanLogic.ParamsCreateLoan({
-        msgSender: msgSender,
-        underlyingAsset: signAction.underlyingAsset,
-        // We added only when we lock the assets
-        totalAssets: 0,
-        loanId: loanId
-      })
-    );
+    // Check previous balance
+    DataTypes.TokenLoan memory loan = _tokenLoan[loanId];
 
-    // Move Collateral
+    if (loan.underlyingAsset != address(0)) {
+      // We calculate the previus amount deposited
+      for (uint i = 0; i < loan.assets.length; i++) {
+        address asset = loan.assets[i];
+        uint256 amount = loan.amountAssets[i];
 
+        DataTypes.TokenData tokenConfig = _tokenConfig[asset];
+        totalValueLTVUSD += TokenLogic.calculateLTVInUSD(tokenConfig, amount);
+      }
+    }
+    // Add new collateral
     for (uint i = 0; i < assets.length; i++) {
       address asset = assets[i];
       uint256 amount = amount[i];
       DataTypes.TokenData tokenConfig = _tokenConfig[asset];
 
       TokenLogic.transferAssets(tokenConfig, amount);
-      totalValueUSD += TokenLogic.calculateLTVInUSD(tokenConfig, amount);
+      totalValueLTVUSD += TokenLogic.calculateLTVInUSD(tokenConfig, amount);
+      // Create UToken For each asset
     }
 
-    if (borrowAmountUSD > totalValueUSD) revert Errors.InvalidAmount();
+    uint256 currentDebt = GenericLogic.calculateLoanDebt(
+      loanId,
+      _uTokenVault,
+      _loans[loanId].underlyingAsset
+    );
 
+    uint256 updatedDebt = currentDebt < amount ? 0 : currentDebt - amount;
+
+    // We calculate the current debt and the HF
+    uint256 healthFactor = GenericLogic.calculateHealthFactorFromBalances(
+      totalValueLTVUSD,
+      updatedDebt,
+      _liquidationThreshold
+    );
+
+    UTokenVault(_uTokenVault).borrow(
+      loan.underlyingAsset,
+      loan.loanId,
+      amount,
+      msgSender,
+      msgSender
+    );
     // Deposit tokens
     // Get value tokens
     // Calculate HF
