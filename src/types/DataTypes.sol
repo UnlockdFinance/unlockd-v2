@@ -249,7 +249,7 @@ library DataTypes {
   ///////////////////////////////////////////////////////
   struct TokenLoan {
     address[] assets;
-    uint256[] amountAssets;    
+    mapping(address => uint256) collateral;   
     address underlyingAsset;
   }
   struct TokenData {

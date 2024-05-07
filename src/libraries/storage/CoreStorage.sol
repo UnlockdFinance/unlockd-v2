@@ -68,7 +68,7 @@ contract CoreStorage {
 
   /////////////////////////////////////////
 
-  mapping(address => DataTypes.TokenData) internal _tokenConfigs;ç
+  mapping(address => DataTypes.TokenData) internal _tokenConfigs;
   // LoanId --> TokenLoan
   mapping(bytes32 => DataTypes.TokenLoan) internal _tokenLoan;
   uint256 internal _liquidationThreshold;
