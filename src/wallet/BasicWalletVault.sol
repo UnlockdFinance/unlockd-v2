@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.19;
+
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
@@ -35,7 +38,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
    */
   modifier onlyProtocol() {
     if (!IACLManager(_aclManager).isProtocol(msg.sender)) {
-      revert Errors.ProtocolAccessDenied(); 
+      revert Errors.ProtocolAccessDenied();
     }
     _;
   }

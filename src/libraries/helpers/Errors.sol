@@ -179,7 +179,6 @@ library Errors {
   ///   TOKENS
   ///////////////////////////////////////////
 
-  error 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
       revert ZeroAddress();
