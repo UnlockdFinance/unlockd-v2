@@ -252,6 +252,7 @@ library DataTypes {
     mapping(address => uint256) collateral;   
     address underlyingAsset;
   }
+  
   struct TokenData {
     address asset;
     address oracle;

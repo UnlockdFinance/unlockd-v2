@@ -26,12 +26,29 @@ library TokenLogic {
     IERC20(_tokenData.asset).safeTransfer(_tokenData.vault, amount);
   }
 
+  function calculateValueInUSD(
+    DataTypes.TokenData memory _tokenData,
+    uint256 amount
+  ) internal returns (uint256 value) {
+    uint256 priceUnit = IReserveOracle(_tokenData.oracle).getAssetPrice(_tokenData.asset);
+    value += amount * priceUnit;
+  }
+
+  function calculateLiquidationThresholdInUSD(
+    DataTypes.TokenData memory _tokenData,
+    uint256 liquidationThreshold,
+    uint256 amount
+  ) internal returns (uint256 value) {
+    uint256 valueInUSD = calculateValueInUSD(_tokenData, amount);
+    value += valueInUSD.percentMul(liquidationThreshold);
+  }
+
   function calculateLTVInUSD(
     DataTypes.TokenData memory _tokenData,
     uint256 amount
   ) internal returns (uint256 value) {
     uint256 priceUnit = IReserveOracle(_tokenData.oracle).getAssetPrice(_tokenData.asset);
-    // TODO: Calculate TVL for this coin and add the result
-    value += amount * priceUnit;
+    uint256 amountLTV = amount.percentMul(_tokenData.ltv);
+    value += amountLTV * priceUnit;
   }
 }
