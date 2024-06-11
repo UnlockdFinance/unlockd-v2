@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
@@ -7,14 +7,13 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 
 import {BaseERC6960Wrapper, Errors} from '../../libraries/base/BaseERC6960Wrapper.sol';
 import {IERC11554KController} from '../../interfaces/wrappers/IERC11554KController.sol';
-import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
 import {IERC11554K} from '../../interfaces/wrappers/IERC11554K.sol';
 
 /**
  * @title Polytrade - ERC721 wrapper representing a ERC6960 Polytrade
  * @dev Implements a wrapper for the ERC6960 assets from polytrade to ERC721
  **/
-contract UPolytrade is IUTokenWrapper, BaseERC6960Wrapper, UUPSUpgradeable {
+contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
   using SafeERC20 for IERC20;
 
   error CollectionDisabled();
@@ -33,7 +32,6 @@ contract UPolytrade is IUTokenWrapper, BaseERC6960Wrapper, UUPSUpgradeable {
     address controller
   ) external initializer {
     __BaseERC6960Wrapper_init(name, symbol, aclManager);
-    _controller = IERC11554KController(controller);
     emit Initialized(name, symbol);
   }
 
@@ -78,14 +76,16 @@ contract UPolytrade is IUTokenWrapper, BaseERC6960Wrapper, UUPSUpgradeable {
    * @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
    * and if the asset in the stream is supported by the protocol.
    * @param to The address to mint the token to.
-   * @param tokenId The token ID to mint.
+   * @param mainId The main ID to mint.
+   * @param subId The sub ID to mint.
+   
    */
-  function mint(address to, uint256 mainId, uint256 subId) external override {
+  function mint(address to, uint256 mainId, uint256 subId) external {
     preMintChecks(to, mainId, subId);
     _baseMint(to, mainId, subId, true);
   }
 
-  function burn(uint256 tokenId) external override {
+  function burn(uint256 tokenId) external {
     _baseBurn(tokenId, msg.sender, true);
   }
 
@@ -139,7 +139,7 @@ contract UPolytrade is IUTokenWrapper, BaseERC6960Wrapper, UUPSUpgradeable {
    *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
     
    */
-  function preMintChecks(address, uint256) public view override {
+  function preMintChecks(address, uint256, uint256) public view override {
     // NOTHING TO DO
   }
 

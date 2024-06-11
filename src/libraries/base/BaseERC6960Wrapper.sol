@@ -128,7 +128,8 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
    * @notice Mints a new token.
    * @dev Mints a new ERC721 token representing the underlying asset and stores the real asset in this contract.
    * @param to The address to mint the token to.
-   * @param tokenId The token ID to mint.
+   * @param mainId The mainId ID to mint.
+   * @param subId the subId to mint
    */
   function _baseMint(address to, uint256 mainId, uint256 subId, bool needTransfer) internal {
     // We only move one
@@ -140,7 +141,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
     _subIds[newTokenId] = subId;
     _mint(to, newTokenId);
 
-    emit Mint(msg.sender, tokenId, to);
+    emit Mint(msg.sender, newTokenId, to);
   }
 
   /**
@@ -153,17 +154,10 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
   function _baseBurn(uint256 tokenId, address to, bool needTransfer) internal {
     if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
     if (needTransfer)
-      _erc6960.safeTransferFrom(
-        address(this),
-        to,
-        _mainIds[newTokenId],
-        _subIds[newTokenId],
-        AMOUNT,
-        ''
-      );
+      _erc6960.safeTransferFrom(address(this), to, _mainIds[tokenId], _subIds[tokenId], AMOUNT, '');
 
-    delete _mainIds[newTokenId];
-    delete _subIds[newTokenId];
+    delete _mainIds[tokenId];
+    delete _subIds[tokenId];
 
     _burn(tokenId);
     emit Burn(msg.sender, tokenId, to);
@@ -182,7 +176,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
       address newWallet = abi.decode(data, (address));
       if (newWallet == address(0)) newWallet = operator;
       preMintChecks(newWallet, mainId, subId);
-      _baseMint(newWallet,  mainId, subId, false);
+      _baseMint(newWallet, mainId, subId, false);
     }
 
     return IDLTReceiver.onDLTReceived.selector;
@@ -204,10 +198,10 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
         uint256 amount = amounts[i];
         if (amount != 1) revert Errors.ERC6960AmountNotValid();
         preMintChecks(newWallet, mainId, subId);
-        _baseMint(newWallet, , mainId, subId, false);
+        _baseMint(newWallet, mainId, subId, false);
       }
     }
-    return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
+    return IDLTReceiver.onDLTBatchReceived.selector;
   }
 
   /*//////////////////////////////////////////////////////////////
