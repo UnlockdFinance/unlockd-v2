@@ -175,6 +175,9 @@ library Errors {
   error NotWrapperAdapter();
   error SoldForASmallerAmount();
 
+  error ERC6960AmountNotValid();
+  error ERC6960BatchNotAllowed();
+
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
       revert ZeroAddress();
