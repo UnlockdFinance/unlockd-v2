@@ -33,7 +33,7 @@ jobs:
         uses: "actions/setup-node@v3"
         with:
           cache: "pnpm"
-          node-version: "lts/*"
+          node-version: "*"
 
       - name: "Install Node.js dependencies"
         run: "pnpm install"
