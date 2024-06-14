@@ -7,11 +7,13 @@ import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IBasicWalletVault} from '../interfaces/IBasicWalletVault.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 
 contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
+  using SafeERC20 for IERC20;
   /**
    * @notice ACL Manager that control the access and the permisions
    */
@@ -81,8 +83,27 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   // PUBLIC
   //////////////////////////////////////////////
 
-  // WITHDRAW ERC20
+  /**
+   * @notice withdrawFt Fungible Tokens and ETH from this contract.
+   * @param ftTransfers list of fungible tokens to withdraw
+   * @param to Recipient address
+   */
+  function withdrawFt(
+    FtTransfer[] calldata ftTransfers,
+    address to
+  ) external onlyOwner {
+    uint256 length = ftTransfers.length;
+    for (uint i = 0; i < length; i++) {
+      uint256 amount = ftTransfers[i].amount;
 
+      if (ftTransfers[i].isETH) {
+        (bool sent, ) = to.call{value: amount}("");
+        if (!sent) revert Errors.InvalidETHWithdrawal();
+      } else {
+        _safeTransferAsset(ftTransfers[i].contractAddress, amount, to);
+      }
+    }
+  }
   /**
    * @notice Withdraw assets stored in the vault checking if they are locked.
    * @param nftTransfers - list of assets to withdraw
@@ -222,7 +243,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   }
 
   //////////////////////////////////////////////
-  // RECIVER
+  // RECEIVER
   //////////////////////////////////////////////
 
   // receive() external payable {}
@@ -261,6 +282,10 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
 
   function _approveAsset(address _asset, uint256 _id, address _receiver) internal {
     IERC721(_asset).approve(_receiver, _id);
+  }
+
+  function _safeTransferAsset(address _asset, uint256 _amount, address _receiver) internal {
+    IERC20(_asset).safeTransfer(_receiver, _amount);
   }
 
   function _approveERC20(address _asset, uint256 _amount, address _receiver) internal {

@@ -122,6 +122,7 @@ library Errors {
   error InvalidWalletOwner();
   error NotEqualWallet();
   error ProtocolOwnerZeroAddress();
+  error InvalidETHWithdrawal();
 
   ///////////////////////////////////////////
   ///   LOAN

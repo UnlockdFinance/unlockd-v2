@@ -97,4 +97,32 @@ contract BaseWalletTest is Setup {
     IBasicWalletVault(wallet).withdrawAssets(transfers, _actor);
     vm.stopPrank();
   }
+
+  /////////////////////////////////////////////////////////////////////////////////
+  // ERC20s
+  /////////////////////////////////////////////////////////////////////////////////
+  function test_deposit_token_basic_wallet() public {
+    uint256 amount = 1 ether;
+    vm.startPrank(_actor);
+    address wallet = getWalletAddress(_actor);
+    mintERC20Token(_actor, 'WETH', amount);
+    assertEq(IERC20(_WETH).balanceOf(_actor), amount);
+    IERC20(_WETH).transfer(wallet, amount);
+    assertEq(IERC20(_WETH).balanceOf(wallet), amount);
+    vm.stopPrank();
+  }
+
+  function test_withdraw_token_basic_wallet() public {
+    uint256 amount = 1 ether;
+    vm.startPrank(_actor);
+    address wallet = getWalletAddress(_actor);
+    mintERC20Token(_actor, 'WETH', amount);
+    assertEq(IERC20(_WETH).balanceOf(_actor), amount);
+    IERC20(_WETH).transfer(wallet, amount);
+    assertEq(IERC20(_WETH).balanceOf(wallet), amount);
+    IBasicWalletVault.FtTransfer[] memory transfers = new IBasicWalletVault.FtTransfer[](1);
+    transfers[0] = IBasicWalletVault.FtTransfer({contractAddress: _WETH, amount: amount, isETH: false});
+    IBasicWalletVault(wallet).withdrawFt(transfers, _actor);
+    vm.stopPrank();
+  }
 }

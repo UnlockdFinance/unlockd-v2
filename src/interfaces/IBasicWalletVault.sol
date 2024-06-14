@@ -11,6 +11,12 @@ interface IBasicWalletVault is IProtocolOwner {
     uint256 tokenId;
   }
 
+  struct FtTransfer {
+    address contractAddress;
+    uint256 amount;
+    bool isETH;
+  }
+
   //////////////////////////////////////////////////////////////
   //                           ERRORS
   //////////////////////////////////////////////////////////////
@@ -19,4 +25,6 @@ interface IBasicWalletVault is IProtocolOwner {
   error Fallback();
 
   function withdrawAssets(NftTransfer[] calldata nftTransfers, address to) external;
+
+  function withdrawFt(FtTransfer[] calldata ftTransfers, address to) external;
 }
