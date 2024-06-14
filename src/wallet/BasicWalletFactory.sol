@@ -59,28 +59,28 @@ contract BasicWalletFactory {
    * @param _owner - The owner's address.
    */
   function deployFor(address _owner, address) public returns (address, address, address, address) {
-    address wallletVaultProxy = address(new BeaconProxy(_walletVaultBeacon, new bytes(0)));
-    BasicWalletVault(wallletVaultProxy).initialize(_owner);
+    address walletVaultProxy = address(new BeaconProxy(_walletVaultBeacon, new bytes(0)));
+    BasicWalletVault(walletVaultProxy).initialize(_owner);
 
     // Save wallet
     IDelegationWalletRegistry(_registry).setWallet(
-      wallletVaultProxy,
+      walletVaultProxy,
       _owner,
       address(0),
-      wallletVaultProxy,
-      wallletVaultProxy,
-      wallletVaultProxy
+      walletVaultProxy,
+      walletVaultProxy,
+      walletVaultProxy
     );
 
     emit WalletDeployed(
-      wallletVaultProxy,
+      walletVaultProxy,
       _owner,
-      wallletVaultProxy,
-      wallletVaultProxy,
-      wallletVaultProxy,
+      walletVaultProxy,
+      walletVaultProxy,
+      walletVaultProxy,
       msg.sender
     );
 
-    return (wallletVaultProxy, wallletVaultProxy, wallletVaultProxy, wallletVaultProxy);
+    return (walletVaultProxy, walletVaultProxy, walletVaultProxy, walletVaultProxy);
   }
 }
