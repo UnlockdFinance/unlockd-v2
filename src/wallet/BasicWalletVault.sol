@@ -82,52 +82,35 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   //////////////////////////////////////////////
   // PUBLIC
   //////////////////////////////////////////////
-
-  /**
-   * @notice withdrawFt Fungible Tokens and ETH from this contract.
-   * @param ftTransfers list of fungible tokens to withdraw
-   * @param to Recipient address
-   */
-  function withdrawFt(
-    FtTransfer[] calldata ftTransfers,
-    address to
-  ) external onlyOwner {
-    uint256 length = ftTransfers.length;
-    for (uint i = 0; i < length; i++) {
-      uint256 amount = ftTransfers[i].amount;
-
-      if (ftTransfers[i].isETH) {
-        (bool sent, ) = to.call{value: amount}("");
-        if (!sent) revert Errors.InvalidETHWithdrawal();
-      } else {
-        _safeTransferAsset(ftTransfers[i].contractAddress, amount, to);
-      }
-    }
-  }
   /**
    * @notice Withdraw assets stored in the vault checking if they are locked.
-   * @param nftTransfers - list of assets to withdraw
+   * @param assetTransfers - list of assets to withdraw
    * @param to address to send the assets
    */
-  function withdrawAssets(NftTransfer[] calldata nftTransfers, address to) external onlyOwner {
-    uint256 length = nftTransfers.length;
-
+  function withdrawAssets(AssetTransfer[] calldata assetTransfers, address to) external onlyOwner {
+    uint256 length = assetTransfers.length;
+    bool success;
     // Iterate through each NFT in the array to facilitate the transfer.
     for (uint i = 0; i < length; ) {
-      address contractAddress = nftTransfers[i].contractAddress;
-      uint256 tokenId = nftTransfers[i].tokenId;
-      // check if the asset is locked
-      bytes32 id = AssetLogic.assetId(contractAddress, tokenId);
-      bool isLocked = _isLocked(id);
-      if (isLocked) revert Errors.AssetLocked();
-      // Dynamically call the `transferFrom` function on the target ERC721 contract.
-      (bool success, ) = contractAddress.call(
-        abi.encodeWithSignature('transferFrom(address,address,uint256)', address(this), to, tokenId)
-      );
+      address contractAddress = assetTransfers[i].contractAddress;
+      uint256 value = assetTransfers[i].value;
 
-      // Check the transfer status.
-      if (!success) {
-        revert TransferFromFailed();
+      if(!assetTransfers[i].isERC20) {
+        // check if the asset is locked
+        bytes32 id = AssetLogic.assetId(contractAddress, value);
+        bool isLocked = _isLocked(id);
+        if (isLocked) revert Errors.AssetLocked();
+        // Dynamically call the `transferFrom` function on the target ERC721 contract.
+        (success, ) = contractAddress.call(
+          abi.encodeWithSignature('transferFrom(address,address,uint256)', address(this), to, value)
+        );
+
+        // Check the transfer status.
+        if (!success) {
+          revert TransferFromFailed();
+        }
+      } else {
+        _safeTransferERC20(contractAddress, value, to);
       }
 
       // Use unchecked block to bypass overflow checks for efficiency.
@@ -246,9 +229,9 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   // RECEIVER
   //////////////////////////////////////////////
 
-  // receive() external payable {}
+  //receive() external payable {}
 
-  // fallback() external payable {}
+  //fallback() external payable {}
 
   /**
    * @dev See {ERC721-onERC721Received}.
@@ -284,7 +267,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
     IERC721(_asset).approve(_receiver, _id);
   }
 
-  function _safeTransferAsset(address _asset, uint256 _amount, address _receiver) internal {
+  function _safeTransferERC20(address _asset, uint256 _amount, address _receiver) internal {
     IERC20(_asset).safeTransfer(_receiver, _amount);
   }
 

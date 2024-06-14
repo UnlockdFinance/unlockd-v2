@@ -6,15 +6,10 @@ import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol'
 interface IBasicWalletVault is IProtocolOwner {
   // Struct to encapsulate information about an individual NFT transfer.
   // It holds the address of the ERC721 contract and the specific token ID to be transferred.
-  struct NftTransfer {
+  struct AssetTransfer {
     address contractAddress;
-    uint256 tokenId;
-  }
-
-  struct FtTransfer {
-    address contractAddress;
-    uint256 amount;
-    bool isETH;
+    uint256 value;
+    bool isERC20;
   }
 
   //////////////////////////////////////////////////////////////
@@ -24,7 +19,5 @@ interface IBasicWalletVault is IProtocolOwner {
   error CantReceiveETH();
   error Fallback();
 
-  function withdrawAssets(NftTransfer[] calldata nftTransfers, address to) external;
-
-  function withdrawFt(FtTransfer[] calldata ftTransfers, address to) external;
+  function withdrawAssets(AssetTransfer[] calldata assetTransfers, address to) external;
 }
