@@ -17,6 +17,7 @@ contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
   using SafeERC20 for IERC20;
 
   error CollectionDisabled();
+  error ApprovalForAllError();
 
   /*//////////////////////////////////////////////////////////////
                             INITIALIZATION
@@ -126,11 +127,11 @@ contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
 
     try _erc6960.setApprovalForAll(marketAproval, false) {
       // SUCCESS
+      // We burn the asset
+      _burn(tokenId);
     } catch {
-      // ON Revert ignore
+      revert ApprovalForAllError();
     }
-    // We burn the asset
-    _burn(tokenId);
   }
 
   /**
