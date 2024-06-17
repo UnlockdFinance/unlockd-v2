@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: agpl-3.0
+pragma solidity ^0.8.19;
+
 import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {Errors as WalletErrors} from '@unlockd-wallet/src/libs/helpers/Errors.sol';
 import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
@@ -35,7 +38,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
    */
   modifier onlyProtocol() {
     if (!IACLManager(_aclManager).isProtocol(msg.sender)) {
-      revert Errors.ProtocolAccessDenied(); 
+      revert Errors.ProtocolAccessDenied();
     }
     _;
   }
@@ -142,13 +145,14 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
     address _to,
     uint256 _value,
     bytes calldata _data,
-    uint256 _safeTxGas,
-    uint256 _baseGas,
-    uint256 _gasPrice,
-    address _gasToken,
-    address payable _refundReceiver
+    uint256,
+    uint256,
+    uint256,
+    address,
+    address payable
   ) external onlyOneTimeDelegation returns (bool success) {
     _rawExec(_to, _value, _data);
+    return true;
   }
 
   function delegateOneExecution(address to, bool value) external onlyProtocol {
