@@ -64,7 +64,7 @@ contract BaseWalletTest is Setup {
   /////////////////////////////////////////////////////////////////////////////////
   // Wallet
   /////////////////////////////////////////////////////////////////////////////////
-  function test_deposit_asset_basic_wallet() public {
+  function test_deposit_nft_asset_basic_wallet() public {
     uint256 tokenId = 101;
     vm.startPrank(_actor);
     address wallet = getWalletAddress(_actor);
@@ -75,11 +75,63 @@ contract BaseWalletTest is Setup {
     vm.stopPrank();
   }
 
-  function test_withdraw_asset_basic_wallet() public {
+  function test_withdraw_nft_asset_basic_wallet() public {
     vm.startPrank(_actor);
     address wallet = getWalletAddress(_actor);
-    IBasicWalletVault.NftTransfer[] memory transfers = new IBasicWalletVault.NftTransfer[](1);
-    transfers[0] = IBasicWalletVault.NftTransfer({contractAddress: address(_nft), tokenId: 1});
+    IBasicWalletVault.AssetTransfer[] memory transfers = new IBasicWalletVault.AssetTransfer[](1);
+    transfers[0] = IBasicWalletVault.AssetTransfer({contractAddress: address(_nft), value: 1, isERC20: false});
+    IBasicWalletVault(wallet).withdrawAssets(transfers, _actor);
+    vm.stopPrank();
+  }
+
+  function test_deposit_asset_basic_wallet() public {
+    uint256 amount = 1 ether;
+    vm.startPrank(_actor);
+    address wallet = getWalletAddress(_actor);
+    mintERC20Token(_actor, 'WETH', amount);
+    assertEq(IERC20(_WETH).balanceOf(_actor), amount);
+    IERC20(_WETH).transfer(wallet, amount);
+    assertEq(IERC20(_WETH).balanceOf(wallet), amount);
+    vm.stopPrank();
+  }
+
+  function test_withdraw_asset_basic_wallet() public {
+    uint256 amount = 2 ether;
+    vm.startPrank(_actor);
+    address wallet = getWalletAddress(_actor);
+    mintERC20Token(wallet, 'WETH', amount);
+    IBasicWalletVault.AssetTransfer[] memory transfers = new IBasicWalletVault.AssetTransfer[](1);
+    transfers[0] = IBasicWalletVault.AssetTransfer({contractAddress: _WETH, value: amount, isERC20: true});
+    IBasicWalletVault(wallet).withdrawAssets(transfers, _actor);
+    vm.stopPrank();
+  }
+
+  function test_deposit_multiple_assets_basic_wallet() public {
+    uint256 tokenId = 101;
+    uint256 amount = 1 ether;
+
+    vm.startPrank(_actor);
+    address wallet = getWalletAddress(_actor);
+
+    mintNFTToken(_actor, 'PUNK', tokenId);
+    assertEq(IERC721(address(_nft)).ownerOf(tokenId), _actor);
+    mintERC20Token(_actor, 'WETH', amount);
+    assertEq(IERC20(_WETH).balanceOf(_actor), amount);
+
+    IERC721(address(_nft)).safeTransferFrom(_actor, wallet, tokenId);
+    assertEq(IERC721(address(_nft)).ownerOf(tokenId), wallet);
+    IERC20(_WETH).transfer(wallet, amount);
+    assertEq(IERC20(_WETH).balanceOf(wallet), amount);
+  }
+
+  function test_withdraw_multiple_assets_basic_wallet() public {
+    uint256 amount = 1 ether;
+    vm.startPrank(_actor);
+    address wallet = getWalletAddress(_actor);
+    mintERC20Token(wallet, 'WETH', amount);
+    IBasicWalletVault.AssetTransfer[] memory transfers = new IBasicWalletVault.AssetTransfer[](2);
+    transfers[0] = IBasicWalletVault.AssetTransfer({contractAddress: address(_nft), value: 1, isERC20: false});
+    transfers[1] = IBasicWalletVault.AssetTransfer({contractAddress: _WETH, value: amount, isERC20: true});
     IBasicWalletVault(wallet).withdrawAssets(transfers, _actor);
     vm.stopPrank();
   }
@@ -91,8 +143,8 @@ contract BaseWalletTest is Setup {
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToRepay);
     vm.startPrank(_actor);
     address wallet = getWalletAddress(_actor);
-    IBasicWalletVault.NftTransfer[] memory transfers = new IBasicWalletVault.NftTransfer[](1);
-    transfers[0] = IBasicWalletVault.NftTransfer({contractAddress: address(_nft), tokenId: 1});
+    IBasicWalletVault.AssetTransfer[] memory transfers = new IBasicWalletVault.AssetTransfer[](1);
+    transfers[0] = IBasicWalletVault.AssetTransfer({contractAddress: address(_nft), value: 1, isERC20: false});
     vm.expectRevert(abi.encodeWithSelector(Errors.AssetLocked.selector));
     IBasicWalletVault(wallet).withdrawAssets(transfers, _actor);
     vm.stopPrank();

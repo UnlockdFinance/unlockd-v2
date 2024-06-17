@@ -8,3 +8,4 @@ solady/=lib/solady/src/
 @unlockd-wallet/=lib/unlockdv2-wallet/
 @solady/=lib/solady/src/
 @maxapy/=lib/maxapy/src/
+openzeppelin/=lib/openzeppelin-contracts/contracts/

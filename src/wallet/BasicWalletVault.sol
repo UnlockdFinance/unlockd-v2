@@ -7,11 +7,13 @@ import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {AssetLogic} from '@unlockd-wallet/src/libs/logic/AssetLogic.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IBasicWalletVault} from '../interfaces/IBasicWalletVault.sol';
 import {IACLManager} from '../interfaces/IACLManager.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 
 contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
+  using SafeERC20 for IERC20;
   /**
    * @notice ACL Manager that control the access and the permisions
    */
@@ -80,33 +82,35 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   //////////////////////////////////////////////
   // PUBLIC
   //////////////////////////////////////////////
-
-  // WITHDRAW ERC20
-
   /**
    * @notice Withdraw assets stored in the vault checking if they are locked.
-   * @param nftTransfers - list of assets to withdraw
+   * @param assetTransfers - list of assets to withdraw
    * @param to address to send the assets
    */
-  function withdrawAssets(NftTransfer[] calldata nftTransfers, address to) external onlyOwner {
-    uint256 length = nftTransfers.length;
-
+  function withdrawAssets(AssetTransfer[] calldata assetTransfers, address to) external onlyOwner {
+    uint256 length = assetTransfers.length;
+    bool success;
     // Iterate through each NFT in the array to facilitate the transfer.
     for (uint i = 0; i < length; ) {
-      address contractAddress = nftTransfers[i].contractAddress;
-      uint256 tokenId = nftTransfers[i].tokenId;
-      // check if the asset is locked
-      bytes32 id = AssetLogic.assetId(contractAddress, tokenId);
-      bool isLocked = _isLocked(id);
-      if (isLocked) revert Errors.AssetLocked();
-      // Dynamically call the `transferFrom` function on the target ERC721 contract.
-      (bool success, ) = contractAddress.call(
-        abi.encodeWithSignature('transferFrom(address,address,uint256)', address(this), to, tokenId)
-      );
+      address contractAddress = assetTransfers[i].contractAddress;
+      uint256 value = assetTransfers[i].value;
 
-      // Check the transfer status.
-      if (!success) {
-        revert TransferFromFailed();
+      if(!assetTransfers[i].isERC20) {
+        // check if the asset is locked
+        bytes32 id = AssetLogic.assetId(contractAddress, value);
+        bool isLocked = _isLocked(id);
+        if (isLocked) revert Errors.AssetLocked();
+        // Dynamically call the `transferFrom` function on the target ERC721 contract.
+        (success, ) = contractAddress.call(
+          abi.encodeWithSignature('transferFrom(address,address,uint256)', address(this), to, value)
+        );
+
+        // Check the transfer status.
+        if (!success) {
+          revert TransferFromFailed();
+        }
+      } else {
+        _safeTransferERC20(contractAddress, value, to);
       }
 
       // Use unchecked block to bypass overflow checks for efficiency.
@@ -222,12 +226,12 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   }
 
   //////////////////////////////////////////////
-  // RECIVER
+  // RECEIVER
   //////////////////////////////////////////////
 
-  // receive() external payable {}
+  //receive() external payable {}
 
-  // fallback() external payable {}
+  //fallback() external payable {}
 
   /**
    * @dev See {ERC721-onERC721Received}.
@@ -261,6 +265,10 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
 
   function _approveAsset(address _asset, uint256 _id, address _receiver) internal {
     IERC721(_asset).approve(_receiver, _id);
+  }
+
+  function _safeTransferERC20(address _asset, uint256 _amount, address _receiver) internal {
+    IERC20(_asset).safeTransfer(_receiver, _amount);
   }
 
   function _approveERC20(address _asset, uint256 _amount, address _receiver) internal {

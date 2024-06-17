@@ -580,6 +580,11 @@ contract Setup is Base, ActorsBase, NFTBase {
     vm.stopPrank();
   }
 
+  function mintERC20Token(address to, string memory asset, uint256 amount) internal {
+    address underlyingAsset = makeAsset(asset);
+    writeTokenBalance(to, underlyingAsset, amount);
+  }
+
   ///////////////////////////////////////////////////////////////
 
   function wasteGas(uint256 slots) internal pure {
