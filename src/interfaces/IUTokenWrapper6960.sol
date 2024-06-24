@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.19;
 
-interface IUTokenWrapper {
-  function mint(address to, uint256 tokenId) external;
+interface IUTokenWrapper6960 {
+    
+  function mint(address to, uint256 mainId, uint256 subId) external;
 
   function burn(uint256 tokenId) external;
 
@@ -10,8 +11,12 @@ interface IUTokenWrapper {
 
   function collection() external returns (address);
 
-  function wrappedTokenId(uint256 tokenId) external returns (uint256);
+  function wrappedMainId(uint256 tokenId) external returns (uint256);
 
+  function wrappedSubId(uint256 tokenId) external returns (uint256);
+
+  function wrappedIds(uint256 tokenId) external returns (uint256, uint256);
+  
   function sellOnMarket(
     address underlyingAsset,
     uint256 marketPrice,

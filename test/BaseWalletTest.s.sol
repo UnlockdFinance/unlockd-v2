@@ -53,12 +53,7 @@ contract BaseWalletTest is Setup {
   }
 
   function test_create_wallet() public {
-    (
-      address wallet,
-      address delegationOwner,
-      address protocolOwner,
-      address guardOwner
-    ) = DelegationWalletFactory(_walletFactory).deployFor(_actorTwo, address(0));
+    DelegationWalletFactory(_walletFactory).deployFor(_actorTwo, address(0));
   }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +134,7 @@ contract BaseWalletTest is Setup {
   function test_borrow_block_withdraw() public {
     uint256 amountToRepay = 0.5 ether;
     uint256 collateral = 2 ether;
-    bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToRepay, collateral, 2, 2);
+    borrow_action(_action, _nft, _WETH, _actor, amountToRepay, collateral, 2, 2);
     assertEq(balanceAssets(makeAsset('WETH'), _actor), amountToRepay);
     vm.startPrank(_actor);
     address wallet = getWalletAddress(_actor);

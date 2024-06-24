@@ -1,27 +1,24 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.19;
-
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
-import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+pragma solidity ^0.8.19;
+ 
+import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol'; 
 import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import {IProtocolOwner} from '@unlockd-wallet/src/interfaces/IProtocolOwner.sol';
 
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {IUTokenWrapper} from '../../interfaces/IUTokenWrapper.sol';
-import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol';
-import {IACLManager} from '../../interfaces/IACLManager.sol';
+import {IMarketAdapter} from '../../interfaces/adapter/IMarketAdapter.sol'; 
 
 import {BaseEmergency} from '../../libraries/base/BaseEmergency.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {DataTypes} from '../../types/DataTypes.sol';
 
 contract WrapperAdapter is BaseEmergency, IMarketAdapter, IERC721Receiver {
-  using SafeERC20 for IERC20;
+ 
   using Address for address;
-  address private immutable RESERVOIR;
-  address private immutable ETH_RESERVOIR;
+  address private immutable MARKET;
+  address private immutable ETH_ADDRESS;
 
   ///////////////////////////////////////////////
   // MODIFIERS
@@ -34,9 +31,9 @@ contract WrapperAdapter is BaseEmergency, IMarketAdapter, IERC721Receiver {
     _;
   }
 
-  constructor(address aclManager, address reservoir, address eth) BaseEmergency(aclManager) {
-    RESERVOIR = reservoir;
-    ETH_RESERVOIR = eth;
+  constructor(address aclManager, address market, address eth) BaseEmergency(aclManager) {
+    MARKET = market;
+    ETH_ADDRESS = eth;
   }
 
   function preSell(PreSellParams memory params) public payable onlyProtocol {

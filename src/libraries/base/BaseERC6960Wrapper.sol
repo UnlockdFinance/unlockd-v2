@@ -165,7 +165,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
 
   function onDLTReceived(
     address operator,
-    address from,
+    address ,
     uint256 mainId,
     uint256 subId,
     uint256 amount,
@@ -184,7 +184,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
 
   function onDLTBatchReceived(
     address operator,
-    address from,
+    address ,
     uint256[] memory mainIds,
     uint256[] memory subIds,
     uint256[] memory amounts,

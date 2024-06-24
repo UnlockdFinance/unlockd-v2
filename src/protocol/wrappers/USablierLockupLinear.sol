@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.19;
+// SPDX-License-Identifier: agpl-3.0 
+pragma solidity ^0.8.19;
 
 import {ISablierV2LockupLinear} from '../../interfaces/wrappers/ISablierV2LockupLinear.sol';
 import {IUSablierLockupLinear} from '../../interfaces/wrappers/IUSablierLockupLinear.sol';

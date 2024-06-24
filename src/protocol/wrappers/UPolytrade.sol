@@ -8,12 +8,13 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 import {BaseERC6960Wrapper, Errors} from '../../libraries/base/BaseERC6960Wrapper.sol';
 import {IERC11554KController} from '../../interfaces/wrappers/IERC11554KController.sol';
 import {IERC11554K} from '../../interfaces/wrappers/IERC11554K.sol';
+import {IUTokenWrapper6960} from '../../interfaces/IUTokenWrapper6960.sol';
 
 /**
  * @title Polytrade - ERC721 wrapper representing a ERC6960 Polytrade
  * @dev Implements a wrapper for the ERC6960 assets from polytrade to ERC721
  **/
-contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
+contract UPolytrade is IUTokenWrapper6960, BaseERC6960Wrapper, UUPSUpgradeable {
   using SafeERC20 for IERC20;
 
   error CollectionDisabled();
@@ -23,23 +24,25 @@ contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
   /**
-   * @dev Initializes the contract with 4K Controller
+   * @dev Initialize the contract 
+   * @param name Name of the wrapper
+   * @param symbol Symbol of the wrapper
+   * @param aclManager access manager for the wrapper
    */
 
   function initialize(
     string memory name,
     string memory symbol,
-    address aclManager,
-    address controller
+    address aclManager 
   ) external initializer {
     __BaseERC6960Wrapper_init(name, symbol, aclManager);
     emit Initialized(name, symbol);
   }
 
   /**
-   * @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
-   * @dev This constructor sets the Sablier lockup linear address and disables further initializations.
-   * @param collection_ The address of the Sablier lockup linear contract,
+   * @notice Initializes the UPolytrade 
+   * @dev This constructor sets the UPolytrade address and disables further initializations.
+   * @param collection_ The address of the supported collection
    */
   constructor(address collection_) BaseERC6960Wrapper(collection_) {
     _disableInitializers();
@@ -74,8 +77,7 @@ contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
     //////////////////////////////////////////////////////////////*/
   /**
    * @notice Mints a new token.
-   * @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
-   * and if the asset in the stream is supported by the protocol.
+   * @dev Mints a new ERC721 token representing a Polytrade 
    * @param to The address to mint the token to.
    * @param mainId The main ID to mint.
    * @param subId The sub ID to mint.
@@ -135,10 +137,7 @@ contract UPolytrade is BaseERC6960Wrapper, UUPSUpgradeable {
   }
 
   /**
-   * @notice Verifies if the stream is cancelable, transferable, if the token matches our uToken
-   *  and if the owner is not the user or this contract.
-   *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
-    
+   * @notice Verification for mint
    */
   function preMintChecks(address, uint256, uint256) public view override {
     // NOTHING TO DO
