@@ -24,7 +24,10 @@ contract ExecuteScript is DeployerHelper {
       Constants.MODULEID__MANAGER
     );
     Manager manager = Manager(managerAddress);
-    manager.allowCollectionReserveType(0x388043e55a388e07A75E9A1412FE2d64e48343A5, Constants.ReserveType.ALL);
+    manager.allowCollectionReserveType(
+      0x388043e55a388e07A75E9A1412FE2d64e48343A5,
+      Constants.ReserveType.STABLE
+    );
     // manager.emergencyActivateLoan(
     //   0x0c55e62e379946b598dc89288aae8cffe3027561c0810021286b9620684c9dff
     // );
@@ -37,6 +40,7 @@ contract ExecuteScript is DeployerHelper {
     //   0,
     //   0
     // );
-    // console.log('RESULT', result);
+     
+    console.log('UPDATE TO ', uint256(Constants.ReserveType.STABLE));
   }
 }
