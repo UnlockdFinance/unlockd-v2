@@ -14,7 +14,7 @@ import {Manager} from '../../src/protocol/modules/Manager.sol';
 
 import {UnlockdUpgradeableProxy} from '../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 
-contract ExecuteScript is DeployerHelper {
+contract DeployPolytradeScript is DeployerHelper {
   function run() external broadcast onlyInChain(DeployConfig.CHAINID) {
     Addresses memory addresses = _decodeJson();
 
