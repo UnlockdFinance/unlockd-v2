@@ -26,7 +26,10 @@ library DeployConfig {
   address public constant GNOSIS_SAFE_TEMPLATE = 0x69f4D1788e39c87893C980c06EdF4b7f686e2938;
   address public constant COMPATIBILITY_FALLBACK_HANDLER =
     0x017062a1dE2FE6b99BE3d9d37841FeD19F573804;
-
+  //0x57c63d268C7f8B316d1A2bcE6A91C4b47BE1b942 
+  // ************************ POLYTRADE ************************
+  address public constant POLYTRADE_WRAPPER = 0x60800F856D3De2Ae31f96D62db09306de547aB1c;
+  address public constant POLYTRADE_MARKET = 0x57c63d268C7f8B316d1A2bcE6A91C4b47BE1b942;
   // Sepolia doesnt' have CRYPTO PUNK
   address public constant CRYPTOPUNK = 0x987EfDB241fE66275b3594481696f039a82a799e;
 }

@@ -129,11 +129,10 @@ contract UPolytrade is IUTokenWrapper6960, BaseERC6960Wrapper, UUPSUpgradeable {
 
     try _erc6960.setApprovalForAll(marketAproval, false) {
       // SUCCESS
-      // We burn the asset
-      _burn(tokenId);
     } catch {
-      revert ApprovalForAllError();
+       // ON Revert ignore
     }
+     _burn(tokenId);
   }
 
   /**
