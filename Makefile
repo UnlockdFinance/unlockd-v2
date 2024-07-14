@@ -26,6 +26,7 @@ deploy-mainnet-modules :; forge script script/mainnet/DeployModules.s.sol:Deploy
 deploy-mainnet-allow :; forge script script/mainnet/DeployAllowNFT.s.sol:DeployAllowNFTScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
 deploy-mainnet-helper :; forge script script/mainnet/DeployUtilsHelper.s.sol:DeployUtilsHelperScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow
 deploy-mainnet-base-wallet :; forge script script/mainnet/DeployBaseWallet.s.sol:DeployBaseWalletScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow 
+deploy-mainnet-update-permissions  :; forge script script/mainnet/UpdatePermissions.s.sol:UpdatePermissionsScript --fork-url ${RPC_MAINNET} --broadcast --private-key ${PRIVATE_KEY} -vvvv --slow 
 
 ## ETHEREUM SEPOLIA
 deploy-sep-aclmanager :; forge script script/sepolia/DeployAclManager.s.sol:DeployACLManagerScript --fork-url ${RPC_SEPOLIA} --broadcast --private-key ${PRIVATE_KEY} -vvvv
