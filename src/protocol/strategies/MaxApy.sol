@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
-import {IMaxApyVault} from '@maxapy/interfaces/IMaxApyVault.sol';
+import {IMaxApyVault} from '../../interfaces/IMaxApyVault.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
@@ -18,7 +18,7 @@ contract MaxApyStrategy is IStrategy {
 
   uint256 internal _minAmountToInvest;
   uint256 internal _ratio;
- 
+
   uint256 internal _minCap;
   uint256 internal _percentageToInvest;
 
@@ -64,7 +64,7 @@ contract MaxApyStrategy is IStrategy {
   function balanceOf(address owner) external view returns (uint256) {
     uint256 shares = IMaxApyVault(_vault).balanceOf(owner);
     if (shares == 0) return 0;
-    return IMaxApyVault(_vault).shareValue(shares);
+    return IMaxApyVault(_vault).convertToShares(shares);
   }
 
   //////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ contract MaxApyStrategy is IStrategy {
 
   // Function to withdraw specific amount
   function withdraw(address vault_, address to_, uint256 amount_) external returns (uint256) {
-    return IMaxApyVault(vault_).withdraw(amount_, to_, MAX_LOSS);
+    return IMaxApyVault(vault_).redeem(amount_, to_, MAX_LOSS);
   }
 
   function updateDeepConfig(uint256 minAmountToInvest_, uint256 ratio_) external onlyAdmin {
