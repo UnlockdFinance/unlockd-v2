@@ -281,7 +281,7 @@ contract Setup is Base, ActorsBase, NFTBase {
     uint256 percentageToInvest = 10000; // 50%
 
     _maxApy = address(
-      new MaxApyVault(IERC20(underlyingAsset), 'maxETH', 'MAXETH', makeAddr('treasury'))
+      new MaxApyVault(_admin, underlyingAsset, 'maxETH', 'MAXETH', makeAddr('treasury'))
     );
     _maxApyStrategy = address(
       new MaxApyStrategy(

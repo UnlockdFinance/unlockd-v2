@@ -179,6 +179,12 @@ library Errors {
   error ERC6960AmountNotValid();
   error ERC6960BatchNotAllowed();
 
+  ///////////////////////////////////////////
+  ///   STRATEGY
+  ///////////////////////////////////////////
+
+  error ExceedsMaxLoss();
+
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
       revert ZeroAddress();

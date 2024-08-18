@@ -64,7 +64,7 @@ contract MaxApyStrategy is IStrategy {
   function balanceOf(address owner) external view returns (uint256) {
     uint256 shares = IMaxApyVault(_vault).balanceOf(owner);
     if (shares == 0) return 0;
-    return IMaxApyVault(_vault).convertToShares(shares);
+    return IMaxApyVault(_vault).convertToAssets(shares);
   }
 
   //////////////////////////////////////////////////////////////////
@@ -111,9 +111,18 @@ contract MaxApyStrategy is IStrategy {
     return amountToWithdraw;
   }
 
+  // Function to redeem specific amount
+  function redeem(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256) {
+    uint256 redeemValue = IMaxApyVault(vault_).previewRedeem(amount_);
+    _checkMaxLoss(amount_, redeemValue);
+    return IMaxApyVault(vault_).redeem(amount_, to_, owner_);
+  }
+
   // Function to withdraw specific amount
-  function withdraw(address vault_, address to_, uint256 amount_) external returns (uint256) {
-    return IMaxApyVault(vault_).redeem(amount_, to_, MAX_LOSS);
+  function withdraw(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256) {
+    uint256 withdrawValue = IMaxApyVault(vault_).previewWithdraw(amount_);
+    _checkMaxLoss(amount_, withdrawValue);
+    return IMaxApyVault(vault_).withdraw(amount_, to_, owner_);
   }
 
   function updateDeepConfig(uint256 minAmountToInvest_, uint256 ratio_) external onlyAdmin {
@@ -138,5 +147,11 @@ contract MaxApyStrategy is IStrategy {
       return amount;
     }
     return 0;
+  }
+
+  function _checkMaxLoss(uint256 expectedAmount, uint256 actualAmount) internal pure {
+    if (actualAmount <= expectedAmount - ((expectedAmount * MAX_LOSS) / 10000)) {
+      revert Errors.ExceedsMaxLoss();
+    }
   }
 }

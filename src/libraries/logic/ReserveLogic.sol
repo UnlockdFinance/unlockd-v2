@@ -404,7 +404,7 @@ library ReserveLogic {
       IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
 
       bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
-        abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
+        abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), address(this), amountNeed)
       );
 
       // Because of the slippage we need to ensure the exact withdraw

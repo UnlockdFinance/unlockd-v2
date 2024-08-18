@@ -37,5 +37,8 @@ interface IStrategy {
   ) external view returns (uint256);
 
   // Function to withdraw specific amount
-  function withdraw(address vault_, address to_, uint256 amount_) external returns (uint256);
+  function withdraw(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256);
+
+  // Function to redeem specific amount_
+  function redeem(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256);
 }
