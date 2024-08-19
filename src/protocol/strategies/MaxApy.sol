@@ -8,6 +8,8 @@ import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 
+import "forge-std/console.sol";
+
 contract MaxApyStrategy is IStrategy {
   using PercentageMath for uint256;
 
@@ -77,27 +79,27 @@ contract MaxApyStrategy is IStrategy {
     uint256 amount_
   ) external view returns (uint256) {
     from_;
+    amount_;
     if (totalSupplyNotInvested <= _minCap) return 0;
-    uint256 investAmount = MathUtils.minOf(amount_, (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest));
+    uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
     return investAmount > _minAmountToInvest ? investAmount : 0;
   }
 
   // Function that invest on the this strategy
   function supply(
-    address vault_,
     address asset_,
     address from_,
     uint256 amount_
   ) external returns (uint256) {
-    IERC20(asset_).approve(vault_, amount_);
-    return IMaxApyVault(vault_).deposit(amount_, from_);
+    IERC20(asset_).approve(_vault, amount_);
+    return IMaxApyVault(_vault).deposit(amount_, from_);
   }
 
   function calculateAmountToWithdraw(
     uint256 totalSupplyNotInvested_,
     address from_,
     uint256 amount_
-  ) external view returns (uint256) {
+  ) external view returns (uint256 sharesToWithdraw) {
     uint256 amountToWithdraw = _getAmountToWithdraw(totalSupplyNotInvested_, amount_);
     uint256 currentBalance = this.balanceOf(from_);
     if (currentBalance == 0 || amountToWithdraw == 0) return 0;
@@ -108,21 +110,26 @@ contract MaxApyStrategy is IStrategy {
       // We check if we have liquidity on this strategy
       amountToWithdraw = currentBalance > updatedAmount ? updatedAmount : currentBalance;
     }
-    return amountToWithdraw;
+    return sharesToWithdraw = IMaxApyVault(_vault).convertToShares(amountToWithdraw);
   }
 
-  // Function to redeem specific amount of shares
-  function redeem(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256) {
-    uint256 redeemValue = IMaxApyVault(vault_).previewRedeem(amount_);
-    _checkMaxLoss(amount_, redeemValue);
-    return IMaxApyVault(vault_).redeem(amount_, to_, owner_);
+  function maxWithdraw(address owner_) external view returns (uint256) {
+    return IMaxApyVault(_vault).maxWithdraw(owner_);
   }
 
   // Function to withdraw specific amount of assets
-  function withdraw(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256) {
-    uint256 withdrawValue = IMaxApyVault(vault_).previewWithdraw(amount_);
-    _checkMaxLoss(amount_, withdrawValue);
-    return IMaxApyVault(vault_).withdraw(amount_, to_, owner_);
+  function withdraw(address to_, address owner_, uint256 amount_) external returns (uint256) {
+    //uint256 withdrawValue = IMaxApyVault(vault_).previewWithdraw(amount_);
+    //_checkMaxLoss(amount_, withdrawValue);
+    return IMaxApyVault(_vault).withdraw(amount_, to_, owner_);
+  }
+
+  function maxRedeem(address owner) external view virtual returns (uint256 maxShares) {
+    return IMaxApyVault(_vault).maxRedeem(owner);
+  }
+
+  function redeem(address to_, address owner_, uint256 shares_) external returns (uint256) {
+    return IMaxApyVault(_vault).redeem(shares_, to_, owner_);
   }
 
   function updateDeepConfig(uint256 minAmountToInvest_, uint256 ratio_) external onlyAdmin {

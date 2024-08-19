@@ -62,13 +62,15 @@ contract RepayTest is Setup {
     _market = unlockd.moduleIdToProxy(Constants.MODULEID__MARKET);
     _manager = unlockd.moduleIdToProxy(Constants.MODULEID__MANAGER);
     _nft = _nfts.get('PUNK');
+
+    console.log("INITBALANCE:::::::", balanceAssets(makeAsset('WETH'), address(_uTokenVault)));
   }
 
   /////////////////////////////////////////////////////////////////////////////////
   // Repay
   /////////////////////////////////////////////////////////////////////////////////
 
-  function test_action_repay_full_borrow() public {
+  function test_action_repay_full_borrow_banana() public {
     uint256 amountToRepay = 0.5 ether;
     uint256 collateral = 2 ether;
     bytes32 loanId = borrow_action(_action, _nft, _WETH, _actor, amountToRepay, collateral, 2, 2);
@@ -100,10 +102,10 @@ contract RepayTest is Setup {
 
     hoax(_actor);
     approveAsset(_WETH, address(_uTokenVault), amountToRepay);
-
+    console.log("BALANCE:::::::", balanceAssets(makeAsset('WETH'), address(_uTokenVault)));
     hoax(_actor);
     Action(_action).repay(type(uint256).max, signAction, sig);
-
+    console.log("BALANCE2:::::::", balanceAssets(makeAsset('WETH'), address(_uTokenVault)));
     for (uint256 i = 0; i < assets.length; ) {
       assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
       unchecked {

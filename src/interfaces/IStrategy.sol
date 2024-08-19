@@ -24,7 +24,6 @@ interface IStrategy {
 
   // Function that invest on the this strategy
   function supply(
-    address vault_,
     address asset_,
     address from_,
     uint256 amount_
@@ -36,9 +35,12 @@ interface IStrategy {
     uint256 amount_
   ) external view returns (uint256);
 
-  // Function to withdraw specific amount
-  function withdraw(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256);
+  function maxWithdraw(address owner_) external view returns (uint256);
 
-  // Function to redeem specific amount_
-  function redeem(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256);
+  // Function to withdraw specific amount
+  function withdraw(address to_, address owner_, uint256 amount_) external returns (uint256);
+
+  function maxRedeem(address owner) external view returns (uint256 maxShares);
+
+  function redeem(address to_, address owner_, uint256 shares_) external returns (uint256);
 }
