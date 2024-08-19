@@ -28,7 +28,7 @@ interface IStrategy {
     uint256 amount_
   ) external returns (uint256);
 
-  function calculateAmountToWithdraw(
+  function calculateShareForAmount(
     uint256 totalSupplyNotInvested_,
     address from_,
     uint256 amount_

@@ -390,7 +390,7 @@ library ReserveLogic {
       reserve.getNormalizedIncome()
     );
 
-    uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateAmountToWithdraw(
+    uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateShareForAmount(
       totalSupplyNotInvested,
       address(this),
       amount

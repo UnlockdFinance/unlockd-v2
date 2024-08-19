@@ -174,18 +174,18 @@ contract MaxApyStrategy is IStrategy {
   }
 
   /**
-   * @dev Calculates the amount to withdraw based on various parameters.
+   * @dev Calculates the amount to redeem based on various parameters.
    * @param totalSupplyNotInvested_ Total supply not invested.
    * @param from_ Address to withdraw from.
    * @param amount_ Amount requested to withdraw.
    * @return Amount of shares to withdraw.
    */
-  function calculateAmountToWithdraw(
+  function calculateShareForAmount(
     uint256 totalSupplyNotInvested_,
     address from_,
     uint256 amount_
   ) external view returns (uint256) {
-    uint256 amountToWithdraw = _getAmountToWithdraw(totalSupplyNotInvested_, amount_);
+    uint256 amountToWithdraw = _getAmountToRedeem(totalSupplyNotInvested_, amount_);
     uint256 currentBalance = this.balanceOf(from_);
     if (currentBalance == 0 || amountToWithdraw == 0) return 0;
     if (totalSupplyNotInvested_ < _minCap) {
@@ -252,7 +252,7 @@ contract MaxApyStrategy is IStrategy {
    * @param amount Requested amount to withdraw.
    * @return Amount to withdraw.
    */
-  function _getAmountToWithdraw(
+  function _getAmountToRedeem(
     uint256 currentSupply,
     uint256 amount
   ) internal view returns (uint256) {
