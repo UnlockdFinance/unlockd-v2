@@ -490,7 +490,7 @@ contract RepayTest is Setup {
       - Create a Loan with 2 assets
       - Create a Market auction
       - Bid on one of this auctions
-      - Repay and remove the assets 
+      - Repay and remove the assets
     */
 
     // //  // // // // // // // // // // // //

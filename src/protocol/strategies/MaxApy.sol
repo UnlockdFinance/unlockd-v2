@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 import {IMaxApyVault} from '../../interfaces/IMaxApyVault.sol';
 import {IStrategy} from '../../interfaces/IStrategy.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {MathUtils} from '../../libraries/math/MathUtils.sol';
 import {PercentageMath} from '../../libraries/math/PercentageMath.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
@@ -76,9 +77,8 @@ contract MaxApyStrategy is IStrategy {
     uint256 amount_
   ) external view returns (uint256) {
     from_;
-    amount_;
     if (totalSupplyNotInvested <= _minCap) return 0;
-    uint256 investAmount = (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest);
+    uint256 investAmount = MathUtils.minOf(amount_, (totalSupplyNotInvested - _minCap).percentMul(_percentageToInvest));
     return investAmount > _minAmountToInvest ? investAmount : 0;
   }
 
@@ -111,14 +111,14 @@ contract MaxApyStrategy is IStrategy {
     return amountToWithdraw;
   }
 
-  // Function to redeem specific amount
+  // Function to redeem specific amount of shares
   function redeem(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256) {
     uint256 redeemValue = IMaxApyVault(vault_).previewRedeem(amount_);
     _checkMaxLoss(amount_, redeemValue);
     return IMaxApyVault(vault_).redeem(amount_, to_, owner_);
   }
 
-  // Function to withdraw specific amount
+  // Function to withdraw specific amount of assets
   function withdraw(address vault_, address to_, address owner_, uint256 amount_) external returns (uint256) {
     uint256 withdrawValue = IMaxApyVault(vault_).previewWithdraw(amount_);
     _checkMaxLoss(amount_, withdrawValue);
