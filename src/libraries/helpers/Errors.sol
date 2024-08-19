@@ -184,6 +184,8 @@ library Errors {
   ///////////////////////////////////////////
 
   error ExceedsMaxLoss();
+  error MaxLossReached();
+  error PercentageOutOfRange();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {

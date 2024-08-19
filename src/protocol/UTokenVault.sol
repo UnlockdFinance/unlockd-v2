@@ -125,7 +125,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
 
     reserve.mintScaled(balance, msg.sender, onBehalfOf, amount);
 
-    reserve.strategyInvest(balance, amount);
+    reserve.strategyInvest(balance);
 
     emit Deposit(msg.sender, onBehalfOf, reserve.underlyingAsset, amount);
   }
@@ -253,7 +253,7 @@ contract UTokenVault is Initializable, UUPSUpgradeable, UVaultStorage, BaseEmerg
     // @dev Because we update the debt with increaseDebt, we don't need to pass the current amount into the calculation.
     reserve.updateInterestRates(balance.totalBorrowScaled, balance.totalSupplyAssets, 0, 0);
 
-    reserve.strategyInvest(balance, amount);
+    reserve.strategyInvest(balance);
 
     emit Repay(
       msg.sender,

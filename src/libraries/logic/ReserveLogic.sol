@@ -352,16 +352,13 @@ library ReserveLogic {
 
   function strategyInvest(
     DataTypes.ReserveData storage reserve,
-    DataTypes.MarketBalance storage balances,
-    uint256 amount
+    DataTypes.MarketBalance storage balances
   ) internal {
     // If there is no strategy just ignore
     if (reserve.strategyAddress == address(0)) return;
 
     uint256 amountToInvest = IStrategy(reserve.strategyAddress).calculateAmountToSupply(
-      balances.totalSupplyScaledNotInvested.rayMul(reserve.getNormalizedIncome()),
-      address(this),
-      amount
+      balances.totalSupplyScaledNotInvested.rayMul(reserve.getNormalizedIncome())
     );
 
     if (amountToInvest > 0) {
