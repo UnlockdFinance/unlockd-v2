@@ -154,7 +154,7 @@ contract U4KWrapperTest is Setup {
     assertEq(IERC1155(_activeCollection).balanceOf(_tokenOwner, 42), 0);
 
     hoax(makeAddr('abwallet'));
-    IUTokenWrapper(u4KWrapper).burn(0);
+    IUTokenWrapper(u4KWrapper).burn(1);
 
     assertEq(IERC1155(_activeCollection).balanceOf(makeAddr('abwallet'), 42), 1);
   }
@@ -168,7 +168,7 @@ contract U4KWrapperTest is Setup {
     IUTokenWrapper(u4KWrapper).mint(walletAddress, 42);
     vm.stopPrank();
 
-    DataTypes.Asset memory asset = DataTypes.Asset({collection: address(u4KWrapper), tokenId: 0});
+    DataTypes.Asset memory asset = DataTypes.Asset({collection: address(u4KWrapper), tokenId: 1});
 
     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_tokenOwner) == 0);
     vm.assume(IERC721(asset.collection).ownerOf(asset.tokenId) == walletAddress);

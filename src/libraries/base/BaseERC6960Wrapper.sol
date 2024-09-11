@@ -106,6 +106,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
   ) internal onlyInitializing {
     __ERC721_init(name, symbol);
     _aclManager = aclManager;
+    _counter = 1;
   }
 
   /**

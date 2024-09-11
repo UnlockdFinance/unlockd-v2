@@ -104,6 +104,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   ) internal onlyInitializing {
     __ERC721_init(name, symbol);
     _aclManager = aclManager;
+    _counter = 1;
   }
 
   /**
