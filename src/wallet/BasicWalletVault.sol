@@ -20,12 +20,12 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
   address internal immutable _aclManager;
 
   /**
-   * @notice List of loans Id
+   * @notice A List of loan Ids
    */
   mapping(bytes32 => bytes32) loansIds;
 
   /**
-   * @notice Check to on time execution delegation
+   * @notice Check execution of the oneTimeDelegation
    */
   mapping(address => bool) oneTimeDelegation;
 
@@ -68,6 +68,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
 
   constructor(address aclManager) {
     _aclManager = aclManager;
+    _disableInitializers();
   }
 
   /**
@@ -100,9 +101,9 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
         bytes32 id = AssetLogic.assetId(contractAddress, value);
         bool isLocked = _isLocked(id);
         if (isLocked) revert Errors.AssetLocked();
-        // Dynamically call the `transferFrom` function on the target ERC721 contract.
+        // Dynamically call the `safeTransferFrom` function on the target ERC721 contract.
         (success, ) = contractAddress.call(
-          abi.encodeWithSignature('transferFrom(address,address,uint256)', address(this), to, value)
+          abi.encodeWithSignature('safeTransferFrom(address,address,uint256)', address(this), to, value)
         );
 
         // Check the transfer status.
@@ -138,7 +139,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
     if (loansIds[AssetLogic.assetId(_collection, _tokenId)] != _loanId) {
       revert WalletErrors.DelegationOwner__wrongLoanId();
     }
-    // Asset approval to the adapter to perform the sell
+    // Approves the asset to be sold
     _approveAsset(_collection, _tokenId, _marketApproval);
     // Approval of the ERC20 to repay the debs
     _approveERC20(_underlyingAsset, _amount, msg.sender);
@@ -155,6 +156,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
     address,
     address payable
   ) external onlyOneTimeDelegation returns (bool success) {
+    oneTimeDelegation[msg.sender] = false;
     _rawExec(_to, _value, _data);
     return true;
   }
@@ -275,7 +277,7 @@ contract BasicWalletVault is Initializable, IBasicWalletVault, IERC721Receiver {
     IERC20(_asset).approve(_receiver, _amount);
   }
 
-  function _transferAsset(address _asset, uint256 _id, address _receiver) internal returns (bool) {
+  function _transferAsset(address _asset, uint256 _id, address _receiver) internal {
     IERC721(_asset).safeTransferFrom(address(this), _receiver, _id, '');
   }
 }

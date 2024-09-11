@@ -6,6 +6,7 @@ import {IDLTEnumerable} from '../../interfaces/dlt/IDLTEnumerable.sol';
 
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
 import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
+import {AddressUpgradeable} from '@openzeppelin-upgradeable/contracts/utils/AddressUpgradeable.sol';
 
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
@@ -77,11 +78,11 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
   }
 
   /**
-   * @dev Modifier that checks if the sender has Emergency ROLE
+   * @dev Modifier that checks if the sender has Wrapper ROLE
    */
   modifier onlyWrapperAdapter() {
     if (!IACLManager(_aclManager).isWrapperAdapter(_msgSender())) {
-      revert Errors.EmergencyAccessDenied();
+      revert Errors.NotWrapperAdapter();
     }
     _;
   }
@@ -102,7 +103,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
     string memory name,
     string memory symbol,
     address aclManager
-  ) internal initializer {
+  ) internal onlyInitializing {
     __ERC721_init(name, symbol);
     _aclManager = aclManager;
   }
@@ -191,6 +192,9 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
     uint256[] memory amounts,
     bytes calldata data
   ) external returns (bytes4) {
+    if (mainIds.length != subIds.length || mainIds.length != amounts.length) {
+      revert Errors.InvalidArrayLength();
+    }
     if (operator != address(this)) {
       address newWallet = abi.decode(data, (address));
       for (uint256 i; i < mainIds.length; ) {
@@ -224,6 +228,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
   ) internal onlyWrapperAdapter {
     if (ownerOf(tokenId) == address(this)) revert Errors.NotWrapperAdapter();
     // Ensure the target is a contract
+    if(!AddressUpgradeable.isContract(to)) revert Errors.NotContract();
     (bool sent, ) = payable(to).call{value: value}(data);
     if (sent == false) revert Errors.UnsuccessfulExecution();
   }

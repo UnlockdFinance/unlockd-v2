@@ -6,6 +6,7 @@ import {IERC1155MetadataURI} from '@openzeppelin/contracts/token/ERC1155/extensi
 import {ERC721Upgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC721/ERC721Upgradeable.sol';
 import {ERC721Burnable} from '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
 import {IERC1155ReceiverUpgradeable} from '@openzeppelin-upgradeable/contracts/token/ERC1155/IERC1155ReceiverUpgradeable.sol';
+import {AddressUpgradeable} from '@openzeppelin-upgradeable/contracts/utils/AddressUpgradeable.sol';
 import {IACLManager} from '../../interfaces/IACLManager.sol';
 import {Errors} from '../helpers/Errors.sol';
 
@@ -75,11 +76,11 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   }
 
   /**
-   * @dev Modifier that checks if the sender has Emergency ROLE
+   * @dev Modifier that checks if the sender has Wrapper ROLE
    */
   modifier onlyWrapperAdapter() {
     if (!IACLManager(_aclManager).isWrapperAdapter(_msgSender())) {
-      revert Errors.EmergencyAccessDenied();
+      revert Errors.NotWrapperAdapter();
     }
     _;
   }
@@ -100,7 +101,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     string memory name,
     string memory symbol,
     address aclManager
-  ) internal initializer {
+  ) internal onlyInitializing {
     __ERC721_init(name, symbol);
     _aclManager = aclManager;
   }
@@ -152,6 +153,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     if (!_isApprovedOrOwner(_msgSender(), tokenId)) revert Errors.BurnerNotApproved();
     if (needTransfer) _erc1155.safeTransferFrom(address(this), to, _tokenIds[tokenId], AMOUNT, '');
     _burn(tokenId);
+    delete _tokenIds[tokenId];
     emit Burn(msg.sender, tokenId, to);
   }
 
@@ -190,6 +192,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     uint256[] calldata values,
     bytes calldata data
   ) external returns (bytes4) {
+    if(tokensIds.length != values.length) revert Errors.InvalidArrayLength();
     if (operator != address(this)) {
       address newWallet = abi.decode(data, (address));
       for (uint256 i; i < tokensIds.length; ) {
@@ -222,6 +225,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
   ) internal onlyWrapperAdapter {
     if (ownerOf(tokenId) == address(this)) revert Errors.NotWrapperAdapter();
     // Ensure the target is a contract
+    if(!AddressUpgradeable.isContract(to)) revert Errors.NotContract();
     (bool sent, ) = payable(to).call{value: value}(data);
     if (sent == false) revert Errors.UnsuccessfulExecution();
   }

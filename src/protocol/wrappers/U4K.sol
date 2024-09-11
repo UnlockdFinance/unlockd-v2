@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: agpl-3.0 
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.19;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -14,6 +14,7 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 /**
  * @title U4K - ERC721 wrapper representing a ERC1155 4K
  * @dev Implements a wrapper for the ERC1155 assets from 4K to ERC721
+ * @dev DO NOT SEND ERC1155 DIRECTLY TO THIS CONTRACT, THEY WILL BE LOCKED FOREVER
  **/
 contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
   using SafeERC20 for IERC20;
@@ -41,9 +42,9 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
   }
 
   /**
-   * @notice Initializes the USablierLockUpLinear contract by setting the Sablier lockup linear address.
-   * @dev This constructor sets the Sablier lockup linear address and disables further initializations.
-   * @param collection_ The address of the Sablier lockup linear contract,
+   * @notice Initializes the U4K wrapper contract.
+   * @dev This constructor sets the U4K address and disables further initializations.
+   * @param collection_ The address of the 4K contract,
    */
   constructor(address collection_) BaseERC1155Wrapper(collection_) {
     _disableInitializers();
@@ -70,7 +71,7 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
     //////////////////////////////////////////////////////////////*/
   /**
    * @notice Mints a new token.
-   * @dev Mints a new ERC721 token representing a Sablier stream, verifies if the stream is cancelable and
+   * @dev Mints a new ERC721 token representing a 4K NFT, verifies if the stream is cancelable and
    * and if the asset in the stream is supported by the protocol.
    * @param to The address to mint the token to.
    * @param tokenId The token ID to mint.
@@ -132,7 +133,7 @@ contract U4K is IUTokenWrapper, BaseERC1155Wrapper, UUPSUpgradeable {
    * @notice Verifies if the stream is cancelable, transferable, if the token matches our uToken
    *  and if the owner is not the user or this contract.
    *  adding the preMintChecks will bring flexibility to the BASEERC721Wrapper contract.
-    
+
    */
   function preMintChecks(address, uint256) public view override {
     if (!_controller.isActiveCollection(address(_erc1155))) revert CollectionDisabled();

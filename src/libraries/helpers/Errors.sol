@@ -170,6 +170,7 @@ library Errors {
   error StreamNotTransferable();
   error BurnerNotApproved();
   error ERC721ReceiverNotSupported();
+  error NotContract();
 
   error ERC1155AmountNotValid();
   error ERC1155BatchNotAllowed();
