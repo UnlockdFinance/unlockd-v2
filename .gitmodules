@@ -16,6 +16,3 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
-[submodule "lib/maxapy"]
-	path = lib/maxapy
-	url = https://github.com/UnlockdFinance/maxapy

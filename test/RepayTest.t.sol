@@ -100,10 +100,8 @@ contract RepayTest is Setup {
 
     hoax(_actor);
     approveAsset(_WETH, address(_uTokenVault), amountToRepay);
-
     hoax(_actor);
     Action(_action).repay(type(uint256).max, signAction, sig);
-
     for (uint256 i = 0; i < assets.length; ) {
       assertEq(ProtocolOwner(wallet.protocolOwner).isAssetLocked(assets[i]), false);
       unchecked {
@@ -490,7 +488,7 @@ contract RepayTest is Setup {
       - Create a Loan with 2 assets
       - Create a Market auction
       - Bid on one of this auctions
-      - Repay and remove the assets 
+      - Repay and remove the assets
     */
 
     // //  // // // // // // // // // // // //

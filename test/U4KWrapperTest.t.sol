@@ -154,7 +154,7 @@ contract U4KWrapperTest is Setup {
     assertEq(IERC1155(_activeCollection).balanceOf(_tokenOwner, 42), 0);
 
     hoax(makeAddr('abwallet'));
-    IUTokenWrapper(u4KWrapper).burn(0);
+    IUTokenWrapper(u4KWrapper).burn(1);
 
     assertEq(IERC1155(_activeCollection).balanceOf(makeAddr('abwallet'), 42), 1);
   }
@@ -168,7 +168,7 @@ contract U4KWrapperTest is Setup {
     IUTokenWrapper(u4KWrapper).mint(walletAddress, 42);
     vm.stopPrank();
 
-    DataTypes.Asset memory asset = DataTypes.Asset({collection: address(u4KWrapper), tokenId: 0});
+    DataTypes.Asset memory asset = DataTypes.Asset({collection: address(u4KWrapper), tokenId: 1});
 
     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_tokenOwner) == 0);
     vm.assume(IERC721(asset.collection).ownerOf(asset.tokenId) == walletAddress);
@@ -204,7 +204,7 @@ contract U4KWrapperTest is Setup {
     assertEq(IERC1155(_activeCollection).balanceOf(address(_market), 42), 1);
   }
 
-  function test_sellnow_sell_repay_loan() public {
+  function test_sellnow_sell_repay_loan_banana() public {
     // Preparing data to execute
     address walletAddress = getWalletAddress(_tokenOwner);
     hoax(_admin);
@@ -216,31 +216,59 @@ contract U4KWrapperTest is Setup {
     IUTokenWrapper(u4KWrapper).mint(walletAddress, 42);
     vm.stopPrank();
 
-    DataTypes.Asset memory asset = DataTypes.Asset({collection: address(u4KWrapper), tokenId: 0});
+    DataTypes.Asset[] memory asset = new DataTypes.Asset[](1);
+    asset[0] = DataTypes.Asset({collection: address(u4KWrapper), tokenId: 1});
+    uint40 deadline = uint40(block.timestamp + 1000);
 
+    DataTypes.SignAction memory actionData;
+    DataTypes.EIP712Signature memory actionSig;
+    {
+      bytes32[] memory assetIds = new bytes32[](1);
+      assetIds[0] = AssetLogic.assetId(asset[0].collection, asset[0].tokenId);
+      uint256 nonce = ActionSign(_action).getNonce(_tokenOwner);
+      // Create the struct
+      actionData = DataTypes.SignAction({
+        loan: DataTypes.SignLoanConfig({
+          loanId: 0, // Because is new need to be 0
+          aggLoanPrice: uint128(2 ether),
+          aggLtv: 6000,
+          aggLiquidationThreshold: 7000,
+          totalAssets: uint88(1),
+          nonce: nonce,
+          deadline: deadline
+        }),
+        assets: assetIds,
+        underlyingAsset: _WETH,
+        nonce: nonce,
+        deadline: deadline
+      });
+
+      bytes32 digest = Action(_action).calculateDigest(nonce, actionData);
+      (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPrivateKey, digest);
+
+      // Build signature struct
+      actionSig = DataTypes.EIP712Signature({v: v, r: r, s: s, deadline: deadline});
+    }
     vm.assume(IERC20(makeAsset('WETH')).balanceOf(_tokenOwner) == 0);
-    vm.assume(IERC721(asset.collection).ownerOf(asset.tokenId) == walletAddress);
+    vm.assume(IERC721(asset[0].collection).ownerOf(asset[0].tokenId) == walletAddress);
 
-    bytes32 loanId = borrow_action(
-      _action,
-      u4KWrapper,
-      _WETH,
-      _tokenOwner,
-      0.2 ether,
-      2 ether,
-      1,
-      1
-    );
-    // Preparing data to execute
+    vm.startPrank(_tokenOwner);
+    vm.recordLogs();
+
+    Action(_action).borrow(0.2 ether, asset, actionData, actionSig);
+    Vm.Log[] memory entries = vm.getRecordedLogs();
+    bytes32 loanId = bytes32(entries[entries.length - 1].topics[2]);
+
+    vm.stopPrank();
 
     (DataTypes.SignSellNow memory data, DataTypes.EIP712Signature memory sig) = _generate_signature(
       _tokenOwner,
-      AssetLogic.assetId(asset.collection, asset.tokenId),
+      AssetLogic.assetId(asset[0].collection, asset[0].tokenId),
       LoanData({loanId: loanId, aggLoanPrice: 0, totalAssets: 0}),
       ReservoirData({
         blockNumber: block.number,
-        nftAsset: asset.collection,
-        nftTokenId: asset.tokenId,
+        nftAsset: asset[0].collection,
+        nftTokenId: asset[0].tokenId,
         currency: _WETH,
         from: walletAddress,
         to: address(_market),
@@ -259,7 +287,7 @@ contract U4KWrapperTest is Setup {
       })
     );
     hoax(_tokenOwner);
-    SellNow(_sellNow).sell(asset, data, sig);
+    SellNow(_sellNow).sell(asset[0], data, sig);
 
     assertEq(IERC1155(_activeCollection).balanceOf(address(_market), 42), 1);
   }

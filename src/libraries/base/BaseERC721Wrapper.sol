@@ -83,7 +83,7 @@ abstract contract BaseERC721Wrapper is ERC721Upgradeable, IERC721ReceiverUpgrade
     string memory name,
     string memory symbol,
     address aclManager
-  ) internal initializer {
+  ) internal onlyInitializing {
     __ERC721_init(name, symbol);
     _aclManager = aclManager;
   }

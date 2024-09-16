@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 interface IStrategy {
+
   struct StrategyConfig {
     address asset;
     address vault;
@@ -17,25 +18,23 @@ interface IStrategy {
   function balanceOf(address sharesPool) external view returns (uint256);
 
   function calculateAmountToSupply(
-    uint256 totalSupplyNotInvested_,
-    address from_,
-    uint256 amount_
+    uint256 totalSupplyNotInvested_
   ) external returns (uint256);
 
   // Function that invest on the this strategy
   function supply(
-    address vault_,
     address asset_,
     address from_,
     uint256 amount_
   ) external returns (uint256);
 
-  function calculateAmountToWithdraw(
+  function calculateShareForAmount(
     uint256 totalSupplyNotInvested_,
     address from_,
     uint256 amount_
   ) external view returns (uint256);
 
-  // Function to withdraw specific amount
-  function withdraw(address vault_, address to_, uint256 amount_) external returns (uint256);
+  function maxRedeem(address owner) external view returns (uint256 maxShares);
+
+  function redeem(address to_, address owner_, uint256 shares_) external returns (uint256);
 }

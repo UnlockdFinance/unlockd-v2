@@ -23,7 +23,7 @@ import {BasicWalletFactory} from '../../../src/wallet/BasicWalletFactory.sol';
 import {BasicWalletRegistry} from '../../../src/wallet/BasicWalletRegistry.sol';
 import {BasicWalletVault} from '../../../src/wallet/BasicWalletVault.sol';
 
-import {MaxApyVault} from '@maxapy/MaxApyVault.sol';
+import {MaxApyVault} from './../mock/maxapy/MaxApyVault.sol';
 import '../../../src/libraries/proxy/UnlockdUpgradeableProxy.sol';
 import './../mock/asset/MintableERC20.sol';
 import './../mock/adapters/MockAdapter.sol';
@@ -281,7 +281,7 @@ contract Setup is Base, ActorsBase, NFTBase {
     uint256 percentageToInvest = 10000; // 50%
 
     _maxApy = address(
-      new MaxApyVault(IERC20(underlyingAsset), 'maxETH', 'MAXETH', makeAddr('treasury'))
+      new MaxApyVault(_admin, underlyingAsset, 'maxETH', 'MAXETH', makeAddr('treasury'))
     );
     _maxApyStrategy = address(
       new MaxApyStrategy(

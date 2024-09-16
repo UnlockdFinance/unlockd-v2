@@ -13,6 +13,7 @@ import {IUTokenWrapper6960} from '../../interfaces/IUTokenWrapper6960.sol';
 /**
  * @title Polytrade - ERC721 wrapper representing a ERC6960 Polytrade
  * @dev Implements a wrapper for the ERC6960 assets from polytrade to ERC721
+ * @dev DO NOT SEND ERC6960 DIRECTLY TO THIS CONTRACT, THEY WILL BE LOCKED FOREVER
  **/
 contract UPolytrade is IUTokenWrapper6960, BaseERC6960Wrapper, UUPSUpgradeable {
   using SafeERC20 for IERC20;
@@ -24,7 +25,7 @@ contract UPolytrade is IUTokenWrapper6960, BaseERC6960Wrapper, UUPSUpgradeable {
                             INITIALIZATION
     //////////////////////////////////////////////////////////////*/
   /**
-   * @dev Initialize the contract 
+   * @dev Initialize the contract
    * @param name Name of the wrapper
    * @param symbol Symbol of the wrapper
    * @param aclManager access manager for the wrapper
@@ -33,14 +34,14 @@ contract UPolytrade is IUTokenWrapper6960, BaseERC6960Wrapper, UUPSUpgradeable {
   function initialize(
     string memory name,
     string memory symbol,
-    address aclManager 
+    address aclManager
   ) external initializer {
     __BaseERC6960Wrapper_init(name, symbol, aclManager);
     emit Initialized(name, symbol);
   }
 
   /**
-   * @notice Initializes the UPolytrade 
+   * @notice Initializes the UPolytrade
    * @dev This constructor sets the UPolytrade address and disables further initializations.
    * @param collection_ The address of the supported collection
    */
@@ -77,11 +78,11 @@ contract UPolytrade is IUTokenWrapper6960, BaseERC6960Wrapper, UUPSUpgradeable {
     //////////////////////////////////////////////////////////////*/
   /**
    * @notice Mints a new token.
-   * @dev Mints a new ERC721 token representing a Polytrade 
+   * @dev Mints a new ERC721 token representing a Polytrade
    * @param to The address to mint the token to.
    * @param mainId The main ID to mint.
    * @param subId The sub ID to mint.
-   
+
    */
   function mint(address to, uint256 mainId, uint256 subId) external {
     preMintChecks(to, mainId, subId);

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: agpl-3.0 
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.19;
 
 import {ISablierV2LockupLinear} from '../../interfaces/wrappers/ISablierV2LockupLinear.sol';
@@ -9,6 +9,7 @@ import {UUPSUpgradeable} from '@openzeppelin/contracts/proxy/utils/UUPSUpgradeab
 /**
  * @title USablierLockupLinear - ERC721 wrapper representing a Sablier token stream
  * @dev Implements minting and burning for Sablier token streams without transfer capabilities
+ * @dev DO NOT SEND NFTS DIRECTLY TO THIS CONTRACT, THEY WILL BE LOCKED FOREVER
  **/
 contract USablierLockupLinear is IUSablierLockupLinear, BaseERC721Wrapper, UUPSUpgradeable {
   /*//////////////////////////////////////////////////////////////

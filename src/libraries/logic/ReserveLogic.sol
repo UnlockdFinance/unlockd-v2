@@ -352,16 +352,13 @@ library ReserveLogic {
 
   function strategyInvest(
     DataTypes.ReserveData storage reserve,
-    DataTypes.MarketBalance storage balances,
-    uint256 amount
+    DataTypes.MarketBalance storage balances
   ) internal {
     // If there is no strategy just ignore
     if (reserve.strategyAddress == address(0)) return;
 
     uint256 amountToInvest = IStrategy(reserve.strategyAddress).calculateAmountToSupply(
-      balances.totalSupplyScaledNotInvested.rayMul(reserve.getNormalizedIncome()),
-      address(this),
-      amount
+      balances.totalSupplyScaledNotInvested.rayMul(reserve.getNormalizedIncome())
     );
 
     if (amountToInvest > 0) {
@@ -370,7 +367,6 @@ library ReserveLogic {
       reserve.strategyAddress.functionDelegateCall(
         abi.encodeWithSelector(
           IStrategy.supply.selector,
-          config.vault,
           config.asset,
           address(this),
           amountToInvest
@@ -383,7 +379,7 @@ library ReserveLogic {
     }
   }
 
-  function strategyWithdraw(
+  function strategyRedeem(
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balances,
     uint256 amount
@@ -394,17 +390,16 @@ library ReserveLogic {
       reserve.getNormalizedIncome()
     );
 
-    uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateAmountToWithdraw(
+    uint256 amountNeed = IStrategy(reserve.strategyAddress).calculateShareForAmount(
       totalSupplyNotInvested,
       address(this),
       amount
     );
 
     if (amountNeed > 0) {
-      IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
 
       bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
-        abi.encodeWithSelector(IStrategy.withdraw.selector, config.vault, address(this), amountNeed)
+        abi.encodeWithSelector(IStrategy.redeem.selector, address(this), address(this), amountNeed)
       );
 
       // Because of the slippage we need to ensure the exact withdraw
@@ -416,18 +411,20 @@ library ReserveLogic {
     }
   }
 
-  function strategyWithdrawAll(
+  function strategyRedeemAll(
     DataTypes.ReserveData storage reserve,
     DataTypes.MarketBalance storage balances
   ) internal {
-    IStrategy.StrategyConfig memory config = IStrategy(reserve.strategyAddress).getConfig();
+
+    uint256 balance = IStrategy(reserve.strategyAddress).balanceOf(address(this));
+    if (balance == 0) return;
 
     bytes memory returnData = reserve.strategyAddress.functionDelegateCall(
       abi.encodeWithSelector(
-        IStrategy.withdraw.selector,
-        config.vault,
+        IStrategy.redeem.selector,
         address(this),
-        IStrategy(reserve.strategyAddress).balanceOf(address(this))
+        address(this),
+        IStrategy(reserve.strategyAddress).maxRedeem(address(this))
       )
     );
 

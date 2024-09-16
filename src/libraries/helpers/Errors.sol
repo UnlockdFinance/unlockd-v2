@@ -170,6 +170,7 @@ library Errors {
   error StreamNotTransferable();
   error BurnerNotApproved();
   error ERC721ReceiverNotSupported();
+  error NotContract();
 
   error ERC1155AmountNotValid();
   error ERC1155BatchNotAllowed();
@@ -178,6 +179,14 @@ library Errors {
 
   error ERC6960AmountNotValid();
   error ERC6960BatchNotAllowed();
+
+  ///////////////////////////////////////////
+  ///   STRATEGY
+  ///////////////////////////////////////////
+
+  error ExceedsMaxLoss();
+  error MaxLossReached();
+  error PercentageOutOfRange();
 
   function verifyNotZero(address addr) internal pure {
     if (addr == address(0)) {
