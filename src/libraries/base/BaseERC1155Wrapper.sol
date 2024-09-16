@@ -196,6 +196,7 @@ abstract contract BaseERC1155Wrapper is ERC721Upgradeable, IERC1155ReceiverUpgra
     if(tokensIds.length != values.length) revert Errors.InvalidArrayLength();
     if (operator != address(this)) {
       address newWallet = abi.decode(data, (address));
+      if (newWallet == address(0)) newWallet = operator;
       for (uint256 i; i < tokensIds.length; ) {
         uint256 tokenId = tokensIds[i];
         uint256 value = values[i];

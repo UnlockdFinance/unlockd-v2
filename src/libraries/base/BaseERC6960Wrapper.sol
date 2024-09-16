@@ -198,6 +198,7 @@ abstract contract BaseERC6960Wrapper is ERC721Upgradeable, IDLTReceiver {
     }
     if (operator != address(this)) {
       address newWallet = abi.decode(data, (address));
+      if (newWallet == address(0)) newWallet = operator;
       for (uint256 i; i < mainIds.length; ) {
         uint256 mainId = mainIds[i];
         uint256 subId = subIds[i];
